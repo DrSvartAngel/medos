@@ -5,6 +5,27 @@
 import type { Strings } from './en';
 
 const tr: Strings = {
+  examPlan: {
+    title: 'Sınav planı',
+    missing: 'Komite bulunamadı.',
+    error: 'Sınav planı yüklenemedi. Yeniden dene.',
+    backToCommittee: 'Komiteye dön',
+    today: 'Bugün',
+    more: 'Diğer günleri göster',
+    date: (key: string) => new Date(key + 'T12:00:00').toLocaleDateString('tr-TR', { year: 'numeric', month: 'short', day: 'numeric' }),
+    examDate: (key: string) => `Sınav: ${new Date(key + 'T12:00:00').toLocaleDateString('tr-TR')}`,
+    summary: (days: number, topics: number) => `Sınava kadar ${days} çalışma günü · ${topics} konu`,
+    topicCount: (count: number) => `${count} konu`,
+    openTopic: (name: string, subject: string) => `${subject} — ${name}`,
+    unassigned: (days: number) => `Kalan ${days} güne konu atanmadı.`,
+    explanation: 'Hafta sonları dahil, bugünden sınavdan önceki güne kadar oluşturulur. Müfredat sırası korunur; artan konular ilk günlere eklenir. Eşit konu sayısı, eşit çalışma süresi demek değildir. Plan bugüne göre yenilenir, tüm konuları korur ve tamamlanma takibi yapmaz. Odaklanarak çalışmak için bir konuyu aç.',
+    states: {
+      invalid_date: 'Plan oluşturmak için geçerli bir sınav tarihi gerekiyor.',
+      exam_today: 'Sınav bugün. Sınav öncesinde çalışma günü kalmadı. Müfredatını yine de açabilirsin.',
+      exam_past: 'Sınav tarihi geçtiği için plan oluşturulmadı. Müfredatını yine de açabilirsin.',
+      no_topics: 'Bu komitede henüz konu yok.',
+    },
+  },
   // Only built-in study-support messages, never user-authored content.
   studySupportMessages: {
     "A two-minute start may make beginning easier right now.": "İki dakikalık bir başlangıç şu an başlamanı kolaylaştırabilir.",

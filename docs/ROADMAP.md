@@ -1,5 +1,23 @@
 # MedOS — Development Roadmap
 
+## Phase 4.7 — Generated exam planning — IMPLEMENTATION COMPLETE
+
+- Branch phase-4-7-exam-planning from clean main b7b5662; do not merge automatically.
+- Committee detail → /committees/exam-plan/[id]. Direct SQLite parent lookup, distinct missing/error/retry states and verified Committee/tab back fallback.
+- On-demand plan uses every real Topic under the Committee: Subject created_at/id then Topic created_at/id. A names-only Committee-scoped query avoids paginated-list truncation and does not load objectives/history.
+- Study days: today inclusive through day before exam exclusive, all local calendar days including weekends. Equal Topic counts; first days receive the remainder. Every Topic appears exactly once. Equal counts do not imply equal study time, priority or mastery.
+- No persisted schedule/checkoff/debt. Rebuild on screen focus, app foreground and local midnight with focus-scoped cleanup, no polling. All Topics remain included even with study evidence. Missing/invalid date, exam today/past and no Topics have truthful states and safe exit.
+- UI shows localized exam date, remaining study days, total Topics, Today and subsequent day cards. Shows 14 nonempty day sections initially with more on request; trailing days without assignments are explicitly counted. Phone single column, tablet constrained ScreenWrapper and bottom safe area.
+- Topic buttons open existing Topic detail; its existing explicit linked-Focus action is reused. No new direct timer start or Focus redesign, completion signal, Calendar event, reminder, notification or sync.
+- Created utils/examPlanRules.ts and app/committees/exam-plan/[id].tsx. Modified Committee detail, topicRepo, EN/TR catalogs, Phase 4 validator and four canonical docs.
+- Schema remains v8; no migration, dependencies, new store or persistence. Static: TypeScript EXIT 0, dependency tree EXIT 0, Phase 2 21 PASS, Phase 3 85 PASS, Phase 4 43 PASS (149 total). All passed first run; static assertions are not device/UI QA.
+- Phase 4.5/4.6 implementation COMPLETE and physical QA DEFERRED, NOT PASS. Phase 4.6 merged at b7b5662. Phase 4.7 phone/tablet QA PENDING, user-owned; no emulator/ADB/device automation.
+- Master Phase 4 ACTIVE: original advanced weight/priority and broader progress/weak-topic goals remain deferred/unimplemented and require separate scope decisions; no claim of total Phase 4 closure. No mastery or percentages added.
+- Phase 5 NOT STARTED; PDF/Gemini roadmap-only; whole-app localization DEFERRED.
+- Next: user tests future/today/past/missing exam, no Topics, balanced ordering/all Topics, open Topic → linked Focus, unchanged plan after study, return/foreground/day rollover, direct back, EN/TR and phone/tablet long-text/safe-area.
+
+## Previous checkpoint (historical)
+
 ## Phase 4.6 — Topic study evidence — IMPLEMENTATION COMPLETE
 
 - Branch phase-4-6-progress-intelligence from clean main b016d2c. Do not merge automatically.
@@ -11,7 +29,7 @@
 - Minimal runtime Focus Topic ID/name context clears on teardown and ordinary starts. Pause/resume/break retain it; no Topic store, global curriculum cache or new persistence system.
 - Changed: migrations, focusRepo, useFocusStore, Focus screen, Topic detail, EN/TR, Phase 2/3/4 validators, four canonical docs. Memory/Calendar/Dashboard unchanged.
 - Static: TypeScript and dependency tree successful; Phase 2 21 PASS, Phase 3 85 PASS, Phase 4 39 PASS (145 total). Updated old SQL-placeholder/current-version assertions; relevant reruns PASS. Source/in-memory checks are not device QA.
-- Phase 4.5 implementation COMPLETE and merged at b016d2c; physical QA DEFERRED, NOT PASS. Phase 4.6 phone/tablet physical QA PENDING, user-owned. Older explicit QA statuses unchanged.
+- Phase 4.5 implementation COMPLETE and merged at b016d2c; physical QA DEFERRED, NOT PASS. Phase 4.6 phone/tablet physical QA DEFERRED, user-owned; NOT PASS. Older explicit QA statuses unchanged.
 - Master Phase 4 ACTIVE. Memory linkage/weak-topic analysis deferred. Weight/priority, Phase 4.7 and Phase 5 NOT STARTED. PDF/Gemini roadmap-only; no visual redesign or broad localization.
 - Next: user checks linked start/Committee context, normal unlinked start, finish/evidence/restart, zero and short/meaningful cancel, active protection, Topic deletion during/after Focus, error retry, phone/tablet layout. Await approval after handoff.
 
@@ -375,12 +393,14 @@ Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/ta
 
 ### Phase 4.6 — Topic study evidence — IMPLEMENTATION COMPLETE
 
-- Optional Focus → Topic linkage and truthful recorded-study state implemented; schema v8. Physical QA PENDING.
+- Optional Focus → Topic linkage and truthful recorded-study state implemented; schema v8. Physical QA DEFERRED.
 - Memory linkage, weak-topic analysis and any broader progress model remain deferred; no mastery or percentages.
 
-### Phase 4.7 — Exam Planning — NOT STARTED
+### Phase 4.7 — Generated exam planning — IMPLEMENTATION COMPLETE
 
-- Future exam sprint planning and daily distribution. Requires separate approval.
+- On-demand equal-count Topic distribution from today through the day before the Committee exam; all days included, curriculum ordering retained. No persisted schedule or completion tracking.
+- Committee exam-plan screen, Today/day sections and existing Topic-detail/Focus path. Schema v8 unchanged; physical QA PENDING.
+- Master Phase 4 remains ACTIVE: deferred weight/priority and broader progress/weak-topic requirements are not implemented or silently removed from roadmap.
 
 These groupings preserve the original advanced Phase 4 goals, not implementation commitments or new data-model decisions. Master Phase 4 remains ACTIVE.
 
@@ -392,6 +412,6 @@ These groupings preserve the original advanced Phase 4 goals, not implementation
 
 ## Next Required Action
 
-User physical QA of Phase 4.6 linked Focus and Topic evidence; Phase 4.5 physical QA DEFERRED. Wait for separate approval before further implementation. Master Phase 4 ACTIVE; Master Phase 3 retains remaining explicit QA gaps. Whole-app localization DEFERRED; Phase 5 NOT STARTED.
+User physical QA of Phase 4.7 generated exam planning; Phase 4.5/4.6 physical QA DEFERRED. Wait for separate approval before further implementation. Master Phase 4 ACTIVE; Master Phase 3 retains remaining explicit QA gaps. Whole-app localization DEFERRED; Phase 5 NOT STARTED.
 
-Static: TypeScript and dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 39 PASS. Schema v8; dependencies unchanged.
+Static: TypeScript and dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 43 PASS. Schema v8; dependencies unchanged.

@@ -1,5 +1,6 @@
 import { getDB } from '../client';
 import type { Topic, CurriculumListOptions } from '@/models/curriculum';
+import type { ExamPlanTopic } from '@/utils/examPlanRules';
 import { assertCurriculumIdentity, curriculumPage, validateCurriculum, validateLearningObjectives } from '@/utils/curriculumValidation';
 
 interface Row {
@@ -32,6 +33,15 @@ function validate(record: Topic) {
 }
 
 export const topicRepo = {
+  /** Complete Committee scope, names only; never infer total workload from a paginated list. */
+  listForExamPlan(committeeId: string): ExamPlanTopic[] {
+    if (typeof committeeId !== 'string' || !committeeId.trim()) throw new Error('committee_id_required');
+    return getDB().getAllSync<ExamPlanTopic>(
+      `SELECT t.id, t.name, s.name AS subjectName FROM topics t
+       JOIN subjects s ON s.id = t.subject_id WHERE s.committee_id = ?
+       ORDER BY s.created_at ASC, s.id ASC, t.created_at ASC, t.id ASC`, [committeeId]
+    );
+  },
   countBySubject(subjectId: string): number {
     if (typeof subjectId !== 'string' || !subjectId.trim()) throw new Error('subject_id_required');
     const row = getDB().getFirstSync<{ count: number }>(

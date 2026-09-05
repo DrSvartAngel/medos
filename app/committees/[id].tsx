@@ -260,6 +260,8 @@ export default function CommitteeDetailScreen() {
       </Card>
 
       <SubjectList key={committee.id} committeeId={committee.id} />
+      <Button label={t.examPlan.title} variant="secondary"
+        onPress={() => router.push(`/committees/exam-plan/${encodeURIComponent(committee.id)}` as Href)} />
 
       <Button
         label="Remove Committee"

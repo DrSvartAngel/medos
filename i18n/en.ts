@@ -3,6 +3,27 @@
 // Schema v5, study logic, hydration, and preference normalization are unchanged.
 
 const en = {
+  examPlan: {
+    title: 'Exam plan',
+    missing: 'Committee not found.',
+    error: 'The exam plan could not be loaded. Try again.',
+    backToCommittee: 'Back to Committee',
+    today: 'Today',
+    more: 'Show more days',
+    date: (key: string) => new Date(key + 'T12:00:00').toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' }),
+    examDate: (key: string) => `Exam: ${new Date(key + 'T12:00:00').toLocaleDateString('en-GB')}`,
+    summary: (days: number, topics: number) => `${days} study ${days === 1 ? 'day' : 'days'} before the exam · ${topics} ${topics === 1 ? 'topic' : 'topics'}`,
+    topicCount: (count: number) => `${count} ${count === 1 ? 'topic' : 'topics'}`,
+    openTopic: (name: string, subject: string) => `${subject} — ${name}`,
+    unassigned: (days: number) => `${days} remaining ${days === 1 ? 'day has' : 'days have'} no assigned topics.`,
+    explanation: 'Generated from today through the day before the exam, including weekends. Topics stay in curriculum order; earlier days receive any extra topics. Equal counts do not mean equal study time. The plan refreshes from today, keeps all topics and records no completion. Open a topic to study with Focus.',
+    states: {
+      invalid_date: 'A valid exam date is needed to generate a plan.',
+      exam_today: 'The exam is today. No pre-exam study days remain. You can still open your curriculum.',
+      exam_past: 'The exam date has passed. No schedule was generated. You can still open your curriculum.',
+      no_topics: 'There are no topics in this Committee yet.',
+    },
+  },
   // Only built-in study-support messages, never user-authored content.
   studySupportMessages: {
     "A two-minute start may make beginning easier right now.": "A two-minute start may make beginning easier right now.",

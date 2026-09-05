@@ -86,6 +86,69 @@ async function fixture(run) {
 }
 
 async function main() {
+  await check('Exam plan distributes every Topic once in input order with balanced local-day counts', () => {
+    const rules = load('utils/examPlanRules.ts', { './calendarDate': date });
+    const now = new Date(2026, 8, 6, 23, 59).getTime();
+    for (const count of [1, 3, 5, 50, 201]) for (const days of [1, 2, 7, 365]) {
+      const topics = Array.from({length:count}, (_,i)=>({id:String(i),name:'Konu '+i,subjectName:'Ders'}));
+      const exam = new Date(2026,8,6+days).getTime();
+      const plan = rules.buildExamPlan(exam,topics,now);
+      assert.equal(plan.status,'ready'); assert.equal(plan.studyDays,days);
+      assert.deepEqual(plan, rules.buildExamPlan(exam,topics,now));
+      assert.deepEqual(plan.days.flatMap(d=>d.topics),topics);
+      assert.equal(new Set(plan.days.flatMap(d=>d.topics.map(t=>t.id))).size,count);
+      const counts = plan.days.map(d=>d.topics.length); if(plan.unassignedDays) counts.push(0);
+      assert.ok(Math.max(...counts)-Math.min(...counts)<=1);
+      assert.ok(plan.days.every(d=>d.date>=plan.today && d.date<plan.examDate));
+      assert.equal(plan.days.length+plan.unassignedDays,days);
+      assert.deepEqual(topics.map(t=>t.id),Array.from({length:count},(_,i)=>String(i)));
+    }
+  });
+  await check('Exam plan handles missing dates, no Topics, today/past, leap days and regeneration without debt', () => {
+    const {buildExamPlan} = load('utils/examPlanRules.ts', { './calendarDate': date });
+    const now = new Date(2028,1,28,12).getTime(), exam = new Date(2028,2,1).getTime();
+    const topics = [{id:'t',name:'T',subjectName:'S'}];
+    for(const value of [null,undefined,'2028-03-01',NaN,Infinity,1e20]) assert.equal(buildExamPlan(value,topics,now).status,'invalid_date');
+    assert.equal(buildExamPlan(now,topics,now).status,'exam_today');
+    assert.equal(buildExamPlan(now-86400000,topics,now).status,'exam_past');
+    assert.equal(buildExamPlan(exam,[],now).status,'no_topics');
+    assert.equal(buildExamPlan(exam,topics,now).studyDays,2);
+    const next = buildExamPlan(exam,topics,new Date(2028,1,29).getTime());
+    assert.equal(next.studyDays,1); assert.deepEqual(next.days[0].topics,topics);
+    const dst = buildExamPlan(new Date(2026,2,30).getTime(),topics,new Date(2026,2,28).getTime());
+    assert.equal(dst.studyDays,2);
+  });
+  await check('Exam scope query includes all Committee Topics in hierarchy order and ignores metadata/evidence', () => fixture((db,r)=>{
+    committee(db); committee(db,'other');
+    r.subjects.insert(subject('z','c',0)); r.subjects.insert(subject('a','c',1)); r.subjects.insert(subject('outside','other'));
+    r.topics.insert(topic('first','z',1));
+    for(let i=60;i>=0;i--)r.topics.insert({...topic(String(i).padStart(3,'0'),'a',2),learningObjectives:'not workload'});
+    r.topics.insert(topic('outside','outside'));
+    const before = r.topics.listForExamPlan('c');
+    assert.equal(before.length,62); assert.equal(before[0].id,'first'); assert.equal(before[1].id,'000');
+    assert.equal(before.at(-1).id,'060'); assert.deepEqual(r.topics.listForExamPlan("' OR 1=1 --"),[]);
+    r.topics.update({...r.topics.getById('first'),learningObjectives:'changed'});
+    db.execSync("INSERT INTO focus_sessions(id,duration_sec,actual_duration_sec,completed,cancelled,started_at,ended_at,topic_id) VALUES ('evidence',60,60,1,0,1,60001,'first')");
+    assert.deepEqual(r.topics.listForExamPlan('c'),before);
+  }));
+  await check('Exam UI is generated/read-only, focus-scoped, safe and bilingual with unchanged schema', () => {
+    const screen = read('app/committees/exam-plan/[id].tsx');
+    const rules = read('utils/examPlanRules.ts');
+    assert.match(screen,/ScreenWrapper includeBottomSafeArea/);
+    assert.match(screen,/useFocusEffect/); assert.match(screen,/app.remove\(\); hardware.remove\(\)/);
+    assert.match(screen,/setTimeout\(refresh/); assert.match(screen,/subjectFallback\(id\)/);
+    assert.match(screen,/topicRepo.listForExamPlan\(id\)/); assert.match(screen,/setVisibleDays\(14\)/);
+    assert.match(screen,/router.push\(`\/topics\//);
+    assert.doesNotMatch(screen+rules,/calendarRepo|startTopicSession|AsyncStorage|zustand|\.insert\(|\.update\(|mastery|learningObjectives|hasTopicStudyActivity|Gemini|setInterval/);
+    assert.match(read('app/committees/[id].tsx'),/t.examPlan.title/);
+    for(const lang of ['en','tr']) {
+      const t = load('i18n/'+lang+'.ts').default.examPlan;
+      for(const key of ['title','explanation','error','missing']) assert.ok(t[key]);
+      assert.ok(t.summary(1,1)); assert.ok(t.summary(2,3));
+      assert.equal(t.openTopic('İlaç','Ders'), 'Ders — İlaç');
+    }
+    assert.match(migrations,/const CURRENT_VERSION = 8/); assert.doesNotMatch(migrations,/currentVersion < 9/);
+  });
   await check('v8 optional Topic FK preserves legacy rows, rolls back failure and unlinks on deletion', async () => {
     const db = new Adapter();
     try {
