@@ -1,0 +1,35 @@
+{
+  "name": "medos",
+  "version": "1.0.0",
+  "main": "index.ts",
+  "dependencies": {
+    "@expo/vector-icons": "^15.0.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "babel-preset-expo": "~57.0.0",
+    "expo": "~57.0.18",
+    "expo-font": "~57.0.2",
+    "expo-router": "~57.0.17",
+    "expo-sqlite": "~57.0.2",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.0",
+    "zustand": "^5.0.15"
+  },
+  "devDependencies": {
+    "@types/react": "~19.2.2",
+    "babel-plugin-module-resolver": "^5.0.3",
+    "typescript": "~6.0.3"
+  },
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "validate:phase2": "node scripts/validate-phase2.cjs",
+    "validate:phase3": "node scripts/validate-phase3.cjs",
+    "validate:phase4": "node scripts/validate-phase4.cjs"
+  },
+  "private": true
+}
