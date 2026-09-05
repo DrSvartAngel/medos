@@ -1,14 +1,16 @@
 # MedOS — Project Status
 
 **Last Updated:** 2026-09-05  
-**Current Phase:** Phase 3 — ADHD Intelligence Layer  
-**Current Status:** Phase 3.6 Integration / Accessibility / Phase 3 Closure implementation and static/in-memory validation complete; Master Phase 3 remains active pending consolidated physical QA
+**Current Phase:** Phase 4 — Medical School / Committee Engine (4.1 complete; 4.2 not started)  
+**Current Status:** Phase 4.1 curriculum data foundation implementation and static closure complete; Phase 4.2 Subject CRUD not started; Master Phase 3 remains active only because remaining physical QA is pending
 
 ## Phase Status
 
-**Product-first working policy (2026-09-05):** The user owns ALL physical/manual QA. AI work is scoped product implementation plus concise TypeScript, dependency-tree, Phase 2 and Phase 3/localization checks. No emulator/ADB/device/UI automation or QA-environment setup/debugging. Run each static command once; allow one final rerun after a small code fix. Environment failures: maximum two attempts, then record PENDING. Do not change physical status without an explicit user result. Stop at the approved scope; no automatic new phase.
+**Product-first working policy (2026-09-05):** The user owns ALL physical/manual QA. AI work is scoped product implementation plus concise TypeScript, dependency-tree, Phase 2, Phase 3, and Phase 4 static checks. No emulator/ADB/device/UI automation or QA-environment setup/debugging. Run each static command once; allow one final rerun after a small code fix. Environment failures: maximum two attempts, then record PENDING. Do not change physical status without an explicit user result. Stop at the approved scope; no automatic new phase.
 
-**Progress context:** Overall master-roadmap progress is approximately 40% (user estimate, not a measured completion score). Working-app/MVP maturity is substantially further along. Phase 1/2 and Phase 3.1–3.6 implementation are complete; Master Phase 3 is ACTIVE pending physical QA; Phase 4 has not started.
+Product development has priority. Whole-app Turkish localization is **intentionally deferred** until the product is much closer to completion. Do not continue CRUD or Calendar localization now.
+
+**Progress context:** Overall master-roadmap progress is approximately 40% (user estimate, not a measured completion score). Working-app/MVP maturity is substantially further along. Phase 1/2 and Phase 3.1–3.6 implementation are complete; Master Phase 3 is ACTIVE pending physical QA; Phase 4.1 is complete; Phase 4.2 and Phase 5 have not started.
 
 ## Dashboard localization — COMPLETE in source, 2026-09-05
 
@@ -16,10 +18,10 @@
 - Dynamic counts, durations and local dates follow the selected language. User-authored names are untouched. Dashboard rules gained raw presentation metadata only (time, days, response count, Committee name); selection, sorting, fixed 25-minute start, 2-minute entry, active protection, queries and refresh lifecycle are unchanged.
 - Files changed: `app/(tabs)/index.tsx`; four `components/dashboard/*.tsx` cards; `utils/dashboardRules.ts`; `i18n/en.ts`, `i18n/tr.ts`; `scripts/validate-phase3.cjs`; these four project-memory documents. No new files.
 - Static validation: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 **21 PASS**; Phase 3/localization **85 PASS**; **106 checks total**. All existing groups retained. A new literal-copy scan initially matched TypeScript syntax; narrowed it to JSX text and the one final Phase 3 rerun passed.
-- SQLite schema **v5 unchanged**; migrations, dependencies, package versions, preference persistence and domain stores unchanged.
-- AI performed **no emulator or physical QA**. Dashboard localization phone/tablet QA **PENDING**, owned by the user.
-- Whole-app localization remains partial. **Next product scope: Committee / Deck / Card / Event create-edit-detail CRUD localization, only after explicit approval.** Calendar and remaining errors follow later; not implemented in this task.
-- Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Master Phase 3 **ACTIVE** for physical exit gates; Phase 4 **NOT STARTED**.
+- At that checkpoint SQLite schema was **v5**; current schema is **v6** after Phase 4.1. Preference persistence and domain stores were unchanged by Dashboard localization.
+- AI performed **no emulator or physical QA**. Remaining localization QA is **deferred** with whole-app localization.
+- Whole-app localization remains partial and is **deferred** by user decision. Do not continue CRUD/Calendar localization as the next product task.
+- Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Master Phase 3 **ACTIVE** only for remaining physical exit gates; Phase 4.1 **COMPLETE**; Phase 4.2 **NOT STARTED**; Phase 5 **NOT STARTED**.
 
 Manual Dashboard checklist: switch English/Turkish and check immediate copy updates; check no mixed built-in text; try Quick Start / Start Small / Check-In / Continue Focus; check long Turkish text and bottom safe area.
 
@@ -41,6 +43,8 @@ Physical statuses preserved: Phase 3.2 phone/tablet PASSED; Phase 3.3 phone PASS
 | Phase 3.4 — Gentle Return / Distraction Support | Implementation complete; device QA pending | Active-Focus-only inline support, explicit timestamp-derived two-minute break, same-session resume, no detection/history/persistence |
 | Phase 3.5 — Low-Stimulation / Gentle Nudge Preferences | Implementation complete; device QA pending | Profile-owned persisted preferences, active-Focus-only calmer presentation, Gentle Nudges stored with no current behavior |
 | Phase 3.6 — Integration / Accessibility / Phase 3 Closure | Implementation complete; device QA pending | Final copy/contrast/accessibility integration, safe standalone navigation, shared stack bottom safe area, focus-scoped Recovery lifecycle |
+| Phase 4.1 — Curriculum data foundation | Implementation complete | Schema v6 subjects/topics, FK-on client, hierarchy-only cascade, repositories, Phase 4 harness; no UI/store/linkage |
+| Phase 4.2 — Subject CRUD | Not started | Subject create/edit/detail UI and store are out of Phase 4.1 scope |
 
 ## Phase 3.6 Completed Implementation
 
@@ -55,7 +59,7 @@ Physical statuses preserved: Phase 3.2 phone/tablet PASSED; Phase 3.3 phone PASS
 - Review close/back controls now have explicit button semantics and 44dp sizing. Review complete/empty states scroll, essential deck titles may wrap to two lines, and redundant decorative review/Calendar back icons are hidden from accessibility.
 - Narrow contrast corrections set muted text to `#7C8BA1`, inverse primary-button text to `#000000`, ghost-button text to the readable secondary token, and selected labels/checks/primary badges on muted primary surfaces to primary text where needed.
 - Gentle Nudges now states explicitly that MedOS does not use the preference yet and sends no reminders or notifications. `Low-stimulation mode` naming and behavior are unchanged.
-- No Focus, Check-In, Recovery, Gentle Return, Memory rating, Low-Stimulation, persistence, or hydration behavior changed. No state field, table, column, migration, dependency, analytics, telemetry, notification API, or Phase 4 entity was added.
+- No Focus, Check-In, Recovery, Gentle Return, Memory rating, Low-Stimulation, persistence, or hydration behavior changed during Phase 3.6. Phase 4.1 later added schema v6 curriculum tables only; it did not change Phase 3 study-support behavior.
 - Phase 3.6 implementation is complete. Physical phone and tablet QA have not been performed or claimed; Master Phase 3 remains active.
 
 ## Phase 3.5 Completed Implementation
@@ -191,8 +195,8 @@ Physical statuses preserved: Phase 3.2 phone/tablet PASSED; Phase 3.3 phone PASS
 - Migration v2 and v3 now inspect `PRAGMA table_info` before every additive column change.
 - V2/v3 column changes and schema-version updates run in transactions.
 - A real ALTER failure rolls back and cannot falsely advance `_schema_version`.
-- V4/v5 guarded behavior is preserved and schema remains v5.
-- No repair v6 was introduced; no actual missing-column v5 database was discovered in the workspace.
+- V4/v5 guarded behavior is preserved. At Phase 2.6 close schema was v5; Phase 4.1 later added additive v6 curriculum tables.
+- No repair migration was introduced for missing v5 columns; no actual missing-column v5 database was discovered in the workspace.
 
 ### Closure UX and validation
 
@@ -201,6 +205,17 @@ Physical statuses preserved: Phase 3.2 phone/tablet PASSED; Phase 3.3 phone PASS
 - Touched icon buttons and Committee form fields received explicit labels and practical touch/input sizes.
 - Phone, small-tablet, and large-tablet layout branches remain in place.
 - `scripts/validate-phase2.cjs` provides a retained, dependency-free closure harness.
+
+## Phase 4.1 Completed Implementation
+
+- Additive schema **v6** creates empty `subjects` and `topics` tables with required identity/name/description/timestamps, parent foreign keys, and `ON DELETE CASCADE` only inside the Committee → Subject → Topic hierarchy.
+- Order indexes are `idx_subjects_committee_order (committee_id, created_at, id)` and `idx_topics_subject_order (subject_id, created_at, id)`.
+- v6 is transactional, additive, and non-destructive: no ALTER/DROP of existing tables, no data rewrite, and a preexisting `subjects`/`topics` name conflict aborts without repair.
+- `db/client.ts` enables and verifies `PRAGMA foreign_keys = ON` before caching the connection; a failed enablement closes the handle and is not cached.
+- `subjectRepo` / `topicRepo` validate parents, names, descriptions, and timestamps; lists are parent-scoped, bounded, and stably ordered; missing/mismatched updates and deletes return false.
+- Deleting a Subject cascades only its Topics. Deleting a Committee cascades only Subjects/Topics. Existing Focus, Deck/Card/Review, and Calendar rows are preserved.
+- No Subject/Topic Zustand store, Expo Router UI, or Focus/Memory/Calendar `subject_id`/`topic_id` linkage. No new dependency or package version. The only added package script is `validate:phase4`.
+- Phase 4.1 implementation is complete. Phase 4.2 Subject CRUD is not started. Physical QA remains user-owned and was not performed for this closure.
 
 ## Current Architecture
 
@@ -228,16 +243,18 @@ Physical statuses preserved: Phase 3.2 phone/tablet PASSED; Phase 3.3 phone PASS
 | Current Gentle break | Not persisted | `useFocusStore.gentleBreakStartedAt` runtime timestamp only |
 | Current study check-in | Not persisted | `useStudySupportStore` runtime only |
 | Current Lighter Plan candidates | Not persisted | Recovery route-local state only |
+| Subjects / Topics | SQLite `subjects`, `topics` | Repositories only in Phase 4.1; no Zustand store |
 
 ### Database schema
 
-- Current schema version: **v5**.
-- Phase 3.2 through Phase 3.6 add no table, column, or index.
+- Current schema version: **v6**.
+- Phase 3.2 through Phase 3.6 added no table, column, or index. Phase 4.1 added additive curriculum tables only.
 - V2 Committee columns: `description`, `start_date`, `exam_date`, `updated_at`.
 - V3 Focus columns: `actual_duration_sec`, `cancelled`.
 - V4 Memory metadata/review history remains unchanged.
 - Legacy flashcard scheduling columns `interval`, `ease`, and `next_review` remain compatibility-only and hidden.
 - V5 Calendar `event_date`, `updated_at`, and existing bounded-query indexes remain unchanged.
+- V6 `subjects` and `topics` are empty on upgrade; legacy Committee/Deck `subject` text is compatibility-only and is not migrated into relations.
 - Cross-module Committee, Focus, and Memory rows are never copied into Calendar or Dashboard tables.
 
 ### Date handling
@@ -249,26 +266,13 @@ Physical statuses preserved: Phase 3.2 phone/tablet PASSED; Phase 3.3 phone PASS
 
 ## Roadmap Alignment
 
-- Phase 3 is **ADHD Intelligence Layer**.
-- Phase 4 is **Medical School / Committee Engine**.
-- Phase 5 is **Memory & Learning Engine**.
+- Phase 3 is **ADHD Intelligence Layer** (implementation complete; physical exit gates pending).
+- Phase 4 is **Medical School / Committee Engine**. Phase 4.1 data foundation is complete. Phase 4.2 Subject CRUD has not started.
+- Phase 5 is **Memory & Learning Engine** and has not started.
 - Phase 2 interprets basic study items as persisted manual study-plan events optionally linked to a Committee.
-- Subject/Topic hierarchy is deliberately deferred to Phase 4 and is not a Phase 2 exit blocker.
-- No Subject, Topic, Phase 3, AI, reward, notification, or spaced-repetition feature was added in Phase 2.6.
+- Whole-app localization is deferred by user decision and is not the next product task.
 
 ## Latest Validation
-
-```powershell
-npm.cmd run validate:phase3
-```
-
-Result: **EXIT 0** — 74 grouped Phase 3.1–3.6 static and in-memory checks passed. Phase 3.6 coverage includes final copy, destination-aware navigation and direct-route fallbacks, Check-In radio semantics, timer/review accessibility and large-text behavior, shared standalone bottom safe area, focus-scoped Recovery lifecycle, contrast corrections, unchanged schema/dependencies, and all earlier Phase regressions.
-
-```powershell
-npm.cmd run validate:phase2
-```
-
-Result: **EXIT 0** — all 19 Phase 2 regression checks passed, including strict boolean normalization, old-state and malformed-value fallback, true/false restart persistence, rapid toggles, pre-hydration write protection, failed-read retry recovery, runtime-state exclusion, Focus defaults, Committee safety, Memory retry behavior, Dashboard rules, migration paths, accessibility, and responsive branches.
 
 ```powershell
 .\node_modules\.bin\tsc.cmd --noEmit
@@ -282,7 +286,25 @@ npm.cmd ls --depth=0
 
 Result: **EXIT 0** — installed dependency tree valid.
 
-No dependency or package version changed. The project directory is not Git-backed, so Git diff/status evidence is unavailable.
+```powershell
+npm.cmd run validate:phase2
+```
+
+Result: **EXIT 0** — 21 grouped Phase 2 checks passed, including schema v6 reachability from a clean install.
+
+```powershell
+npm.cmd run validate:phase3
+```
+
+Result: **EXIT 0** — 85 grouped Phase 3.1–3.6 plus localization static/in-memory checks passed.
+
+```powershell
+npm.cmd run validate:phase4
+```
+
+Result: **EXIT 0** — 16 grouped Phase 4.1 checks passed (FK enablement, additive v6, v5 upgrade preservation, rollback, conflict-without-repair, hierarchy-only cascade, repositories, no UI/store/linkage/new dependency).
+
+No dependency or package version changed during this Phase 4.1 closure. Git working tree may include documentation updates from this audit.
 
 ## Unresolved Issues / Known Warnings
 
@@ -295,7 +317,7 @@ No dependency or package version changed. The project directory is not Git-backe
 - Phase 3.5 has not yet received focused physical Expo Go 57 phone or tablet QA; implementation/static success is not presented as device evidence.
 - Phase 3.6 has not yet received focused physical Expo Go 57 phone or tablet QA; implementation/static success is not presented as device evidence.
 - The previously verified Android bottom tab-bar safe-area fix remains unchanged. A consolidated post-Phase-3.6 safe-area regression walkthrough is still pending as part of the Master Phase 3 physical exit gate.
-- The Expo device database is outside this source workspace; no actual existing v5 device database was available for direct schema inspection. No evidence requiring a v6 repair migration was found.
+- The Expo device database is outside this source workspace. Phase 4.1 added additive v6 curriculum tables; a preexisting `subjects`/`topics` name conflict aborts without repair. No destructive v6 data-repair migration exists.
 - Active Focus survives rerenders, navigation, intervals, and temporary backgrounding, but a full Android process kill still clears its intentionally runtime-only active state.
 - Committee and Calendar dates remain validated text inputs to avoid dependency expansion.
 - The retained migration harness uses the built-in SQLite support in the current Node 24 environment.
@@ -328,7 +350,7 @@ On a physical Android phone the MedOS bottom tab bar overlapped the Android syst
 
 ### Schema / Dependency Changes
 
-None. Schema remains v5. No package added, removed, or version-changed.
+None at the time of this fix. Later Phase 4.1 advanced schema to v6. No package was added, removed, or version-changed by the tab-bar fix.
 
 ### Validation and Physical Retest
 
@@ -345,6 +367,6 @@ None. Schema remains v5. No package added, removed, or version-changed.
 
 ## Exact Next Recommended Action
 
-**Run the consolidated Phase 3 Expo Go 57 closure walkthrough on an Android phone.**
+**Phase 4.2 — Subject CRUD implementation planning/approval.**
 
-Keep Phase 3.3 tablet QA and Phase 3.4–3.6 phone/tablet QA pending. Master Phase 3 remains active until the physical phone/tablet and safe-area exit gates pass. Phase 4 has not started and must not begin without explicit approval.
+Do not implement Phase 4.2 until that planning/approval step is explicit. Do not resume whole-app localization. Master Phase 3 remains active only because remaining physical phone/tablet and safe-area QA is pending and user-owned. Phase 5 has not started.

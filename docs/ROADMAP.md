@@ -4,20 +4,21 @@
 
 ## Execution priority — user update, 2026-09-05
 
-The user owns ALL physical/manual QA. AI work is scoped product implementation plus concise TypeScript, dependency-tree, Phase 2 and Phase 3/localization checks. No emulator/ADB/device/UI automation or QA-environment setup/debugging. Run each static command once; allow one final rerun after a small code fix. Environment failures: maximum two attempts, then record PENDING. Do not change physical status without an explicit user result. Stop at the approved scope; no automatic new phase.
+The user owns ALL physical/manual QA. AI work is scoped product implementation plus concise TypeScript, dependency-tree, Phase 2, Phase 3, and Phase 4 static checks. No emulator/ADB/device/UI automation or QA-environment setup/debugging. Run each static command once; allow one final rerun after a small code fix. Environment failures: maximum two attempts, then record PENDING. Do not change physical status without an explicit user result. Stop at the approved scope; no automatic new phase.
 
-Overall roadmap progress is roughly 40% (user estimate); working-app/MVP maturity is further along. Major remaining product scopes are Phase 4 Medical School/Subjects/Topics/advanced Committees; Phase 5 Memory/Learning/spaced repetition; Phase 6 Motivation; Phase 7 Assistant/Automation; Phase 8 Testing/UX/Performance; Phase 9 Production. Listing these is **not implementation approval**. Current approved unfinished work remains localization; Master Phase 3 closure still needs physical QA.
+Product development has priority. Whole-app Turkish localization is **intentionally deferred** until the product is much closer to completion. Do not continue CRUD or Calendar localization now. The user explicitly approved moving into Phase 4.
 
-## Current approved follow-up — English/Turkish UI (2026-09-05)
+Overall roadmap progress is roughly 40% (user estimate); working-app/MVP maturity is further along. Remaining later scopes include Phase 4.2+ Subjects/Topics/advanced Committees; Phase 5 Memory/Learning/spaced repetition; Phase 6 Motivation; Phase 7 Assistant/Automation; Phase 8 Testing/UX/Performance; Phase 9 Production. Listing later phases is **not implementation approval**. Current approved product work is Phase 4 after 4.1 closure. Master Phase 3 remains ACTIVE only because remaining physical QA is pending.
+
+## Localization — DEFERRED (2026-09-05)
 
 - [x] Manual Profile language choice in the existing hydration-safe preference store.
 - [x] Partial bilingual UI repaired; TypeScript/dependency checks pass, Phase 2 21 checks and Phase 3/localization 85 checks pass.
 - [x] Check-In + Lighter Plan copy/accessibility/recommendation reasons translated without changing selection rules, timing, or state lifecycle (source/static verification; device QA pending).
-- [x] Dashboard English/Turkish presentation, dynamic summaries, dates and accessibility; static checks PASS, user phone/tablet QA PENDING.
-- [ ] Finish all built-in copy, CRUD routes, domain errors, date/duration/accessibility formatting. Do not translate user-authored data or change study behavior.
-- [ ] Complete phone/tablet localization QA and remaining Phase 3 closure QA. Emulator evidence never closes physical QA.
+- [x] Dashboard English/Turkish presentation, dynamic summaries, dates and accessibility; static checks PASS.
+- [ ] Remaining built-in copy, CRUD routes, Calendar, domain errors, and localization QA — **deferred** until the product is much closer to completion.
 
-Localization is **not complete**. Phase 3.3 tablet and Phase 3.4–3.6 phone/tablet QA remain PENDING. Master Phase 3 stays ACTIVE; Phase 4 remains NOT STARTED and requires separate approval. No schema/dependency changes. See `AGENT_HANDOFF.md` for the current Dashboard handoff.
+Do not resume localization as the next product task. Phase 3.3 tablet and Phase 3.4–3.6 phone/tablet QA remain PENDING and user-owned. See `AGENT_HANDOFF.md` for the current Phase 4.1 closure.
 
 ## Phase 1 — Foundation / Scaffold ✅ COMPLETE
 
@@ -201,7 +202,7 @@ Phase 3.3 tablet QA and Phase 3.4 phone/tablet QA remain pending.
 - [x] Review back/close semantics, 44dp target, scrollable completion/empty states, and two-line deck title support
 - [x] Targeted muted/inverse/ghost/selected-state contrast corrections without a new theme
 - [x] Gentle Nudges copy explicitly states the preference is not used yet; Low-Stimulation naming and behavior unchanged
-- [x] No new feature behavior, state, persistence, schema, dependency, notification, analytics, telemetry, or Phase 4 work
+- [x] No new Phase 3 feature behavior, state, persistence, notification, analytics, or telemetry; later Phase 4.1 added schema v6 only
 - [x] TypeScript and dependency-tree checks pass
 - [x] Phase 2 validator passes all 19 grouped checks
 - [x] Phase 3 validator passes all 74 grouped Phase 3.1–3.6 checks
@@ -223,12 +224,29 @@ Phase 3.3 tablet QA and Phase 3.4 phone/tablet QA remain pending.
 
 Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/tablet QA, and the consolidated safe-area regression remain pending. Master Phase 3 is not complete.
 
-## Phase 4 — Medical School / Committee Engine ⬜ NOT STARTED
+## Phase 4 — Medical School / Committee Engine 🟦 ACTIVE (4.1 complete)
 
 - Committee → Subject → Topic hierarchy
 - Learning objectives, weights, priorities, and real progress
 - Weak-topic views, exam sprint planning, and daily distribution
 - Subject/Topic implementation begins here, not in Phase 3
+
+### Phase 4.1 — Curriculum data foundation ✅ IMPLEMENTATION COMPLETE
+
+- [x] Additive schema v6 `subjects` / `topics` with parent FKs and hierarchy-only cascade
+- [x] Order indexes `(parent_id, created_at, id)`
+- [x] Connection-local foreign-key enforcement verified before caching
+- [x] No destructive repair; conflict aborts without data loss
+- [x] Repositories validate parents and affected rows; bounded parent-scoped lists
+- [x] Focus/Memory/Calendar rows are not cascaded
+- [x] No Subject/Topic Zustand store, UI, or cross-module `subject_id`/`topic_id` linkage
+- [x] No new dependency; `validate:phase4` harness retained
+- [x] TypeScript, dependency tree, Phase 2, Phase 3, and Phase 4.1 static checks pass
+
+### Phase 4.2 — Subject CRUD ⬜ NOT STARTED
+
+- Subject create/edit/detail UI and store
+- Not in Phase 4.1 scope; requires explicit planning/approval before implementation
 
 ## Phase 5 — Memory & Learning Engine ⬜ NOT STARTED
 
@@ -238,10 +256,8 @@ Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/ta
 
 ## Next Required Action
 
-Dashboard localization is complete in source. User performs the short Dashboard phone/tablet checklist; AI does not perform manual or emulator QA.
+**Phase 4.2 — Subject CRUD implementation planning/approval.**
 
-Next product scope, **only after explicit approval**: Committee / Deck / Card / Event create-edit-detail CRUD localization. Do not continue to Calendar or Phase 4 automatically.
+Do not implement Phase 4.2 until that step is explicit. Do not resume whole-app localization. Master Phase 3 remains ACTIVE only because outstanding physical phone/tablet and safe-area QA is pending and user-owned. Phase 5 has not started.
 
-Static results: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS; Phase 3/localization 85 PASS (106 total). Schema v5 and dependencies unchanged.
-
-Master Phase 3 remains ACTIVE until outstanding physical phone/tablet and safe-area exit gates pass. Phase 4 NOT STARTED.
+Static results: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS; Phase 3/localization 85 PASS; Phase 4.1 16 PASS. Schema **v6**. No dependency or package-version change.
