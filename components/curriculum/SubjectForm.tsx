@@ -1,5 +1,7 @@
 import React, { useRef, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { View } from 'react-native';
+import { Input } from '@/components/ui/Input';
+import { FormField } from '@/components/ui/FormField';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/hooks/useTheme';
@@ -16,7 +18,7 @@ interface Props {
 
 export function SubjectForm({ initialName = '', initialDescription = '', error, submitLabel, onSubmit }: Props) {
   const t = useTranslation();
-  const { colors, spacing, radius, typography } = useTheme();
+  const { colors, spacing } = useTheme();
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
   const [validationError, setValidationError] = useState<string | null>(null);
@@ -36,20 +38,17 @@ export function SubjectForm({ initialName = '', initialDescription = '', error, 
       if (!saved) { submitting.current = false; setSaving(false); }
     }
   }
-  const inputStyle = {
-    minHeight: 48, borderWidth: 1, borderColor: colors.border, borderRadius: radius.md,
-    padding: spacing.md, color: colors.textPrimary, backgroundColor: colors.surface,
-    fontFamily: typography.fontFamily, fontSize: typography.size.base,
-  };
   return <View style={{ gap: spacing.md }}>
-    {(validationError || error) && <AppText color={colors.error}>{validationError ?? error}</AppText>}
-    <AppText variant="label">{t.subjects.name}</AppText>
-    <TextInput accessibilityLabel={t.subjects.name} value={name} editable={!saving}
-      onChangeText={value => { setName(value); setValidationError(null); }} style={inputStyle} />
-    <AppText variant="label">{t.subjects.description}</AppText>
-    <TextInput accessibilityLabel={t.subjects.description} value={description} editable={!saving}
+    {(validationError || error) && <View accessibilityLiveRegion="polite"><AppText color={colors.error}>{validationError ?? error}</AppText></View>}
+    <FormField label={t.subjects.name}>
+    <Input accessibilityLabel={t.subjects.name} value={name} editable={!saving}
+      onChangeText={value => { setName(value); setValidationError(null); }} />
+    </FormField>
+    <FormField label={t.subjects.description}>
+    <Input accessibilityLabel={t.subjects.description} value={description} editable={!saving}
       multiline textAlignVertical="top" onChangeText={value => { setDescription(value); setValidationError(null); }}
-      style={[inputStyle, { minHeight: 120 }]} />
+      />
+    </FormField>
     <Button label={submitLabel} accessibilityLabel={submitLabel} onPress={save} loading={saving} />
   </View>;
 }

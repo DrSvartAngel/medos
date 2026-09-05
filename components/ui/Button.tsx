@@ -2,6 +2,7 @@ import React from 'react';
 import { TouchableOpacity, ActivityIndicator, StyleSheet, ViewStyle, TextStyle } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { AppText } from './Typography';
+import { Interaction } from '@/theme/interaction';
 
 type Variant = 'primary' | 'secondary' | 'ghost' | 'danger';
 type Size = 'sm' | 'md' | 'lg';
@@ -60,7 +61,7 @@ export function Button({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? label}
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
-      activeOpacity={0.75}
+      activeOpacity={Interaction.pressedOpacity}
       style={[
         styles.btn,
         {
@@ -70,7 +71,7 @@ export function Button({
           borderRadius: radius.md,
           borderColor: variant === 'secondary' ? colors.border : 'transparent',
           borderWidth: variant === 'secondary' ? 1 : 0,
-          opacity: disabled ? 0.5 : 1,
+          opacity: disabled ? Interaction.disabledOpacity : 1,
         },
         style,
       ]}
@@ -92,7 +93,7 @@ export function Button({
 
 const styles = StyleSheet.create({
   btn: {
-    minHeight: 44,
+    minHeight: Interaction.minTarget,
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',

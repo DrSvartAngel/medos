@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, KeyboardAvoidingView, Platform, View } from 'react-native';
+import { KeyboardAvoidingView, Platform } from 'react-native';
+import { Section } from '@/components/ui/Section';
+import { FeedbackState } from '@/components/ui/FeedbackState';
 import { router, type Href } from 'expo-router';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
@@ -66,19 +68,19 @@ export function SubjectEditor({ id, mode }: { id: string; mode: 'create' | 'edit
   }
   return <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
     <ScreenWrapper includeBottomSafeArea>
-      <View style={{ gap: 16 }}>
+      <Section>
         <Button label={t.common.back} variant="ghost" onPress={back} />
         <AppText variant="h2">{mode === 'create' ? t.subjects.add : t.subjects.edit}</AppText>
-        {loaded.status === 'loading' && <><ActivityIndicator /><AppText>{t.common.loading}</AppText></>}
-        {loaded.status === 'missing' && <AppText>{mode === 'create' ? t.subjects.parentMissing : t.subjects.missing}</AppText>}
-        {loaded.status === 'error' && <><AppText>{t.subjects.loadError}</AppText>
-          <Button label={t.common.retry} onPress={() => setAttempt(value => value + 1)} /></>}
+        {loaded.status === 'loading' && <FeedbackState kind="loading" message={t.common.loading} />}
+        {loaded.status === 'missing' && <FeedbackState kind="empty" message={mode === 'create' ? t.subjects.parentMissing : t.subjects.missing} />}
+        {loaded.status === 'error' && <FeedbackState kind="error" message={t.subjects.loadError}
+          action={{ label: t.common.retry, onPress: () => setAttempt(value => value + 1) }} />}
         {loaded.status === 'ready' && <>
           <AppText>{t.subjects.parent(loaded.committee.name)}</AppText>
           <SubjectForm key={id} initialName={loaded.subject?.name} initialDescription={loaded.subject?.description}
             error={saveError} submitLabel={mode === 'create' ? t.subjects.create : t.common.save} onSubmit={save} />
         </>}
-      </View>
+      </Section>
     </ScreenWrapper>
   </KeyboardAvoidingView>;
 }

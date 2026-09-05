@@ -1,5 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, View } from 'react-native';
+import { Alert } from 'react-native';
+import { Section } from '@/components/ui/Section';
+import { FeedbackState } from '@/components/ui/FeedbackState';
 import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { committeeRepo } from '@/db/repositories/committeeRepo';
 import { subjectRepo } from '@/db/repositories/subjectRepo';
@@ -64,23 +66,23 @@ export default function SubjectDetailScreen() {
     ]);
   }
   return <ScreenWrapper includeBottomSafeArea>
-    <View style={{ gap: 16 }}>
+    <Section>
       <Button label={t.common.back} variant="ghost" onPress={back} />
-      {data.status === 'loading' && <><ActivityIndicator /><AppText>{t.common.loading}</AppText></>}
-      {data.status === 'missing' && <AppText>{t.subjects.missing}</AppText>}
-      {data.status === 'error' && <><AppText>{t.subjects.loadError}</AppText>
-        <Button label={t.common.retry} onPress={load} /></>}
+      {data.status === 'loading' && <FeedbackState kind="loading" message={t.common.loading} />}
+      {data.status === 'missing' && <FeedbackState kind="empty" message={t.subjects.missing} />}
+      {data.status === 'error' && <FeedbackState kind="error" message={t.subjects.loadError}
+        action={{ label: t.common.retry, onPress: load }} />}
       {data.status === 'ready' && <>
         <AppText variant="h2">{data.subject.name}</AppText>
         <Button label={t.subjects.parent(data.committee.name)} variant="ghost" onPress={() => router.dismissTo(parentTarget())} />
         {data.subject.description ? <AppText>{data.subject.description}</AppText> : null}
         {count !== null && <AppText>{t.subjects.topicCount(count)}</AppText>}
-        {countError && <><AppText>{t.subjects.countError}</AppText>
-          <Button label={t.common.retry} onPress={loadCount} /></>}
+        {countError && <FeedbackState kind="error" message={t.subjects.countError}
+          action={{ label: t.common.retry, onPress: loadCount }} />}
         <Button label={t.subjects.edit} variant="secondary" onPress={() => router.push(`/subjects/edit/${encodeURIComponent(id)}` as Href)} />
-        {deleteError && <AppText>{t.subjects.deleteError}</AppText>}
+        {deleteError && <FeedbackState kind="error" message={t.subjects.deleteError} />}
         <Button label={t.subjects.remove} variant="danger" onPress={remove} />
       </>}
-    </View>
+    </Section>
   </ScreenWrapper>;
 }

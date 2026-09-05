@@ -1,6 +1,42 @@
 # MedOS — Development Roadmap
 
+## UI Foundation 1 — IMPLEMENTATION COMPLETE (2026-09-05)
+
+- Branch: ui-foundation-1, based on clean main e22cf4e (also verified on origin). Do not merge automatically.
+- Added layout/interaction tokens, Input (multiline), FormField, Section and FeedbackState. Limited adoption: Subject form/editor/detail only. Button and useResponsive now read equal-valued tokens.
+- Appearance preserved except explicit input focus border and polite error semantics. Subject queries, validation, count, mutations, deletion and navigation unchanged.
+- Schema v6; no dependency/version/store/repository change. No visual redesign, Phase 4.3, broad localization or AI/PDF implementation.
+- Static: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 22 PASS (128 total). Phase 2 literal 44dp assertion updated to verify token wiring/value; relevant rerun passed. Phase 4 adds source-contract coverage, not simulated UI tests.
+- Created: theme/layout.ts, theme/interaction.ts; components/ui/Input.tsx, FormField.tsx, Section.tsx, FeedbackState.tsx; docs/UI_FOUNDATION.md.
+- Modified: SubjectForm/SubjectEditor/Subject detail; Button; useResponsive; Phase 2/4 validators; four canonical memory docs.
+- User-confirmed Phase 4.2 phone PASS, tablet PASS, accumulated tablet regression checks PASS. These do not silently close unspecified older Phase 3 checklist items.
+- UI Foundation 1 phone/tablet QA PENDING; no emulator/ADB/device automation performed. User owns physical QA.
+- Phase 4.1/4.2 COMPLETE; Master Phase 3 ACTIVE for remaining explicit QA gaps; Master Phase 4 NOT COMPLETE; Phase 4.3 and Phase 5 NOT STARTED. Whole-app localization DEFERRED.
+- Future PDF / Gemini Study Engine recorded in ROADMAP only: provider-neutral architecture, Gemini API initially, optional notebook/enterprise integration and other providers later subject to feasibility/approval. No implementation or API availability claim.
+- Next: user checks Subject create/edit/detail, validation/error/loading, long text, phone safe area, tablet width and accessible controls; approve next scope separately.
+
 > MedOS is an ADHD-oriented medical-school study OS for Android phones and tablets.
+
+## Future initiative — PDF / Gemini Study Engine (NOT STARTED)
+
+Architecture direction: Source Library → PDF / Book / Lecture Notes → AI Provider
+Layer → Study Processor → Committee / Subject / Topic → Memory / Review / Study Plan.
+
+Future scope, requiring separate approval:
+- PDF import, source metadata and Committee/Subject/Topic association.
+- AI-powered PDF understanding; chapter/section extraction; concise and exam-focused/high-yield summaries; key concepts; table/diagram explanations.
+- Active-recall questions, quizzes and flashcard generation; explicit Memory integration.
+- Source-grounded Q&A with page/section references where feasible and explicit "not found in source" responses when unsupported.
+- Study-plan generation from large books.
+- Optional Gemini Notebook / enterprise notebook integration later, subject to actual available APIs, permissions and feasibility; not promised as an existing integration.
+
+Keep provider adapters behind a provider-neutral AI Provider Layer. Gemini API is
+the initial candidate; OpenAI/other providers and optional notebook adapters may
+follow. Source metadata, curriculum and study artifacts must not depend on one
+provider's response/storage format. Grounding and reference availability must be
+represented truthfully; generated material requires future review UX decisions.
+This is roadmap documentation only: no keys, network calls, PDF uploads, Gemini
+code, new dependencies or automatic phase approval.
 
 ## Execution priority — user update, 2026-09-05
 

@@ -1,10 +1,11 @@
 import { useWindowDimensions } from 'react-native';
+import { Layout } from '@/theme/layout';
 
 /** Breakpoints (dp) */
 const BREAKPOINTS = {
   phone: 0,
-  tablet: 600,
-  largeTablet: 840,
+  tablet: Layout.breakpoints.tablet,
+  largeTablet: Layout.breakpoints.largeTablet,
 } as const;
 
 export type DeviceClass = 'phone' | 'tablet' | 'largeTablet';
@@ -44,11 +45,11 @@ export function useResponsive(): Responsive {
 
   // Max content width prevents full-bleed stretching on large screens
   const contentMaxWidth =
-    isLargeTablet ? 900 :
-    isTablet      ? 720 :
+    isLargeTablet ? Layout.contentWidth.largeTablet :
+    isTablet      ? Layout.contentWidth.tablet :
                     Number.MAX_SAFE_INTEGER; // no cap on phone
 
-  const spacingScale = isLargeTablet ? 1.5 : isTablet ? 1.25 : 1;
+  const spacingScale = isLargeTablet ? Layout.spacingScale.largeTablet : isTablet ? Layout.spacingScale.tablet : Layout.spacingScale.phone;
 
   function columns(base = 1): number {
     if (base === 1) {

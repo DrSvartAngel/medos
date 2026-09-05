@@ -794,7 +794,8 @@ async function main() {
   check('Touched controls have labels and practical minimum targets', () => {
     const button = read('components/ui/Button.tsx');
     assert.match(button, /accessibilityLabel/);
-    assert.match(button, /minHeight: 44/);
+    assert.match(button, /minHeight: Interaction.minTarget/);
+    assert.match(read('theme/interaction.ts'), /minTarget: 44/);
     assert.match(read('app/(tabs)/profile.tsx'), /accessibilityRole="radio"/);
     assert.match(read('app/committees/[id].tsx'), /accessibilityLabel="Go back"/);
     assert.match(read('app/committees/new.tsx'), /minHeight: 48/);

@@ -376,7 +376,8 @@ async function main() {
       assert.match(read(file), /useTranslation/);
       assert.doesNotMatch(read(file), /numberOfLines|zustand/);
     }
-    assert.match(read('components/curriculum/SubjectForm.tsx'), /minHeight: 48/);
+    assert.match(read('components/curriculum/SubjectForm.tsx'), /<Input/);
+    assert.match(read('theme/layout.ts'), /inputMinHeight: 48/);
     assert.match(read('components/curriculum/SubjectForm.tsx'), /accessibilityLabel=\{t.subjects.name\}/);
     assert.match(read('components/layout/ScreenWrapper.tsx'), /contentMaxWidth/);
     const en = load('i18n/en.ts').default.subjects;
@@ -388,6 +389,27 @@ async function main() {
       assert.ok(locale.removeWarning('USER NAME').includes('USER NAME'));
       assert.ok(locale.committeeDeleteWarning('USER NAME').includes('USER NAME'));
     }
+  });
+
+  await check('UI Foundation primitives remain presentation-only with preserved geometry and accessibility', () => {
+    for (const name of ['Input', 'FormField', 'Section', 'FeedbackState']) {
+      const source = read('components/ui/' + name + '.tsx');
+      assert.doesNotMatch(source, /expo-router|repositories|zustand|AsyncStorage|fetch\(/);
+      assert.doesNotMatch(source, /numberOfLines/);
+    }
+    const layout = read('theme/layout.ts');
+    assert.match(layout, /tablet: 600, largeTablet: 840/);
+    assert.match(layout, /tablet: 720, largeTablet: 900/);
+    assert.match(layout, /inputMinHeight: 48/);
+    assert.match(layout, /textAreaMinHeight: 120/);
+    assert.match(read('theme/interaction.ts'), /minTarget: 44/);
+    assert.match(read('components/ui/Input.tsx'), /accessibilityState/);
+    assert.match(read('components/ui/Input.tsx'), /onFocus\?\.\(event\)/);
+    assert.match(read('components/ui/Input.tsx'), /invalid \? colors.error/);
+    assert.match(read('components/ui/FeedbackState.tsx'), /accessibilityLiveRegion/);
+    assert.match(read('components/curriculum/SubjectForm.tsx'), /<FormField/);
+    assert.match(read('components/curriculum/SubjectEditor.tsx'), /<FeedbackState/);
+    assert.match(read('app/subjects/[id].tsx'), /<Section>/);
   });
 
   console.log('\nPhase 4 static/in-memory validation passed: ' + passed + ' checks.');
