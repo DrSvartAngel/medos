@@ -68,6 +68,28 @@ const tr: Strings = {
   },
 
   // ── Genel Bakış ──────────────────────────────────────────────────────────────
+  subjects: {
+    title: 'Dersler', add: 'Ders ekle', create: 'Ders oluştur', edit: 'Dersi düzenle',
+    name: 'Ders adı (zorunlu)', description: 'Açıklama (isteğe bağlı)',
+    empty: 'Henüz ders eklenmedi.', more: 'Daha fazla göster',
+    open: (name: string) => `Dersi aç: ${name}`,
+    parent: (name: string) => `Komite: ${name}`,
+    parentMissing: 'Komite bulunamadı. Silinmiş olabilir.',
+    missing: 'Ders veya bağlı olduğu komite bulunamadı.',
+    loadError: 'Ders yüklenemedi. Yeniden dene.',
+    listError: 'Dersler yüklenemedi. Yeniden dene.',
+    saveError: 'Değişiklikler kaydedilmedi. Yazdıkların korunuyor. Yeniden dene.',
+    deleteError: 'Ders silinmedi. Artık mevcut olmayabilir veya depolamaya erişilemiyor olabilir.',
+    topicCount: (count: number) => `${count} konu`,
+    countError: 'Konu sayısı alınamadı. Yeniden dene.',
+    remove: 'Dersi sil', removeTitle: 'Bu ders silinsin mi?',
+    removeWarning: (name: string) => `“${name}” ve altındaki tüm konular kalıcı olarak silinecek. Odaklanma geçmişi, Bellek verileri ve Takvim etkinlikleri silinmeyecek.`,
+    committeeDeleteWarning: (name: string) => `“${name}” ve altındaki dersler ile konular kalıcı olarak silinecek. Odaklanma geçmişi, Bellek verileri ve Takvim etkinlikleri silinmeyecek.`,
+    validation: {
+      name_required: 'Ders adını gir.', name_too_long: 'Ders adı en fazla 120 karakter olabilir.',
+      description_invalid: 'Metin biçiminde bir açıklama gir.', description_too_long: 'Açıklama en fazla 2000 karakter olabilir.',
+    },
+  },
   dashboard: {
 quickStart: 'Hızlı başlangıç',
     checkInLink: 'Kararsız mısın? Durumunu değerlendir',

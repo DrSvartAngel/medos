@@ -66,6 +66,28 @@ const en = {
   },
 
   // ── Dashboard ────────────────────────────────────────────────────────────────
+  subjects: {
+    title: 'Subjects', add: 'Add Subject', create: 'Create Subject', edit: 'Edit Subject',
+    name: 'Subject name (required)', description: 'Description (optional)',
+    empty: 'No subjects added yet.', more: 'Load more',
+    open: (name: string) => `Open Subject: ${name}`,
+    parent: (name: string) => `Committee: ${name}`,
+    parentMissing: 'The Committee could not be found. It may have been removed.',
+    missing: 'The Subject or its Committee could not be found.',
+    loadError: 'This Subject could not be loaded. Try again.',
+    listError: 'Subjects could not be loaded. Try again.',
+    saveError: 'Changes were not saved. Your input is still here. Try again.',
+    deleteError: 'The Subject was not deleted. It may no longer exist, or storage may be unavailable.',
+    topicCount: (count: number) => `${count} ${count === 1 ? 'topic' : 'topics'}`,
+    countError: 'Topic count is unavailable. Try again.',
+    remove: 'Delete Subject', removeTitle: 'Delete this Subject?',
+    removeWarning: (name: string) => `“${name}” and all Topics under it will be permanently deleted. Focus history, Memory data and Calendar events will not be deleted.`,
+    committeeDeleteWarning: (name: string) => `“${name}” and its Subjects and Topics will be permanently deleted. Focus history, Memory data and Calendar events will not be deleted.`,
+    validation: {
+      name_required: 'Enter a Subject name.', name_too_long: 'Use at most 120 characters for the name.',
+      description_invalid: 'Enter a text description.', description_too_long: 'Use at most 2000 characters for the description.',
+    },
+  },
   dashboard: {
 quickStart: 'Quick Start',
     checkInLink: 'Not sure what fits? Check in',

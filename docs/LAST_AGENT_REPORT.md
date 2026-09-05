@@ -1,5 +1,25 @@
 # MedOS — Last Agent Report
 
+## Phase 4.2 — Subject CRUD — IMPLEMENTATION COMPLETE
+
+- Phase 4.1 remains COMPLETE. Phase 4.2 Subject create/detail/edit/delete now uses route-local state and existing SQLite repositories; no Subject/Topic Zustand store.
+- Committee detail lists Subjects in 50-row pages, created_at ASC / id ASC, with one-row lookahead, retry and focus refresh. No Topic counts on list rows.
+- Subject detail shows a real parameterized Topic COUNT, including valid zero and a distinct count error/retry. No Topic CRUD/list UI.
+- Shared SubjectForm trims/validates name (required, <=120 UTF-16 units) and optional description (<=2000), allows duplicate names and preserves input on failed saves. Writes precede navigation; parent existence is checked.
+- Direct routes load SQLite records, distinguish loading/missing/error, and have safe fallbacks. Deletes return to a valid parent or Committees tab, never the deleted Subject. Subject and Committee warnings explain hierarchy-only cascade and preservation of Focus/Memory/Calendar.
+- New files: app/subjects/new.tsx, app/subjects/[id].tsx, app/subjects/edit/[id].tsx; components/curriculum/SubjectForm.tsx, SubjectEditor.tsx, SubjectList.tsx; utils/subjectRoutes.ts.
+- Modified: Committee detail; topicRepo count helper; EN/TR catalogs (new Subject strings only); Phase 2/4 validators; four canonical docs.
+- Schema remains v6; migrations, dependencies/package versions, Dashboard, domain stores and cross-module linkage unchanged. Whole-app localization remains DEFERRED.
+- Static: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 21 PASS (127 total). Existing data-layer groups retained; UI assertions are source-wiring checks, not runtime/device tests.
+- Narrow fixes during validation: new-route address typing; old Committee-delete back assertion updated for safe dismissal; save-order assertion scoped to save handler.
+- Physical/manual Phase 4.2 phone/tablet QA PENDING, user-owned. No emulator/ADB/device automation performed.
+- Master Phase 3 remains ACTIVE for unchanged physical QA debt. Master Phase 4 NOT COMPLETE. Phase 4.3 Topic CRUD and Phase 5 NOT STARTED.
+- Next action: user manual Phase 4.2 QA; await explicit approval before any Phase 4.3 work. Do not merge to main automatically.
+
+Manual checklist: create, restart persistence, edit, delete warning/cascade, Topic count, direct routes/back, long names, phone/tablet bottom safe area.
+
+## Previous checkpoints (historical)
+
 ## Phase 4.1 closure audit — COMPLETE, 2026-09-05
 
 User decision: whole-app Turkish localization is deferred; product development has priority; Phase 4 is approved; physical QA remains user-owned. No Phase 4.2 implementation in this task.

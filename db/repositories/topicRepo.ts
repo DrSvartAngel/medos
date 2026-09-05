@@ -29,6 +29,15 @@ function validate(record: Topic) {
 }
 
 export const topicRepo = {
+  countBySubject(subjectId: string): number {
+    if (typeof subjectId !== 'string' || !subjectId.trim()) throw new Error('subject_id_required');
+    const row = getDB().getFirstSync<{ count: number }>(
+      'SELECT COUNT(*) AS count FROM topics WHERE subject_id = ?', [subjectId]
+    );
+    if (!row || !Number.isSafeInteger(row.count) || row.count < 0) throw new Error('topic_count_unavailable');
+    return row.count;
+  },
+
   getById(id: string): Topic | null {
     const row = getDB().getFirstSync<Row>(`${SELECT} WHERE id = ?`, [id]);
     return row ? fromRow(row) : null;

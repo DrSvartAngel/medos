@@ -1,26 +1,26 @@
-# MedOS — compact handoff, 2026-09-05
+# MedOS — compact handoff
 
-## Current working rule
+## Phase 4.2 — Subject CRUD — IMPLEMENTATION COMPLETE
 
-The user owns ALL physical/manual QA. AI work is scoped product implementation plus concise TypeScript, dependency-tree, Phase 2, Phase 3, and Phase 4 static checks. No emulator/ADB/device/UI automation or QA-environment setup/debugging. Run each static command once; allow one final rerun after a small code fix. Environment failures: maximum two attempts, then record PENDING. Do not change physical status without an explicit user result. Stop at the approved scope; no automatic new phase.
+- Phase 4.1 remains COMPLETE. Phase 4.2 Subject create/detail/edit/delete now uses route-local state and existing SQLite repositories; no Subject/Topic Zustand store.
+- Committee detail lists Subjects in 50-row pages, created_at ASC / id ASC, with one-row lookahead, retry and focus refresh. No Topic counts on list rows.
+- Subject detail shows a real parameterized Topic COUNT, including valid zero and a distinct count error/retry. No Topic CRUD/list UI.
+- Shared SubjectForm trims/validates name (required, <=120 UTF-16 units) and optional description (<=2000), allows duplicate names and preserves input on failed saves. Writes precede navigation; parent existence is checked.
+- Direct routes load SQLite records, distinguish loading/missing/error, and have safe fallbacks. Deletes return to a valid parent or Committees tab, never the deleted Subject. Subject and Committee warnings explain hierarchy-only cascade and preservation of Focus/Memory/Calendar.
+- New files: app/subjects/new.tsx, app/subjects/[id].tsx, app/subjects/edit/[id].tsx; components/curriculum/SubjectForm.tsx, SubjectEditor.tsx, SubjectList.tsx; utils/subjectRoutes.ts.
+- Modified: Committee detail; topicRepo count helper; EN/TR catalogs (new Subject strings only); Phase 2/4 validators; four canonical docs.
+- Schema remains v6; migrations, dependencies/package versions, Dashboard, domain stores and cross-module linkage unchanged. Whole-app localization remains DEFERRED.
+- Static: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 21 PASS (127 total). Existing data-layer groups retained; UI assertions are source-wiring checks, not runtime/device tests.
+- Narrow fixes during validation: new-route address typing; old Committee-delete back assertion updated for safe dismissal; save-order assertion scoped to save handler.
+- Physical/manual Phase 4.2 phone/tablet QA PENDING, user-owned. No emulator/ADB/device automation performed.
+- Master Phase 3 remains ACTIVE for unchanged physical QA debt. Master Phase 4 NOT COMPLETE. Phase 4.3 Topic CRUD and Phase 5 NOT STARTED.
+- Next action: user manual Phase 4.2 QA; await explicit approval before any Phase 4.3 work. Do not merge to main automatically.
 
-Product development has priority. Whole-app Turkish localization is **intentionally deferred** until the product is much closer to completion. Do **not** continue Committee / Deck / Card / Event / Calendar localization.
+Manual checklist: create, restart persistence, edit, delete warning/cascade, Topic count, direct routes/back, long names, phone/tablet bottom safe area.
 
-## Phase 4.1 — Curriculum data foundation — COMPLETE, 2026-09-05
+## Working rule
 
-- Schema is **v6**. Additive `subjects` and `topics` tables, parent FKs with hierarchy-only `ON DELETE CASCADE`, and order indexes. Legacy Committee/Deck `subject` text is not treated as a relation. Preexisting curriculum-name conflict stops without repair or data loss.
-- `getDB()` enables and verifies `PRAGMA foreign_keys = ON` before caching the connection. Failed enablement is not cached.
-- Repositories: `subjectRepo` / `topicRepo` with parent existence checks, name/description validation, bounded parent-scoped lists, parameterized SQL, and false returns for missing/mismatched updates and deletes.
-- Cascade is limited to Committee → Subject → Topic. Focus, Memory, and Calendar rows are not cascaded.
-- No Subject/Topic Zustand store, UI routes, or cross-module `subject_id` / `topic_id` linkage. No new dependency or package version.
-- Static validation: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 **21 PASS**; Phase 3/localization **85 PASS**; Phase 4.1 **16 PASS**.
-- AI performed **no emulator or physical QA**.
-
-**Phase 4.2 (Subject CRUD UI/store) is NOT STARTED** and must not begin without explicit planning/approval.
-
-## Localization — DEFERRED
-
-Dashboard English/Turkish presentation remains in source. Remaining CRUD/Calendar/error localization is paused by user decision. Do not resume it as the next product task.
+Product first. User performs physical/manual QA; AI runs concise static validation only. No emulator/ADB/device automation. Whole-app localization is deferred. Current branch: phase-4-2-subject-crud; do not merge to main.
 
 ## Physical QA statuses (PRESERVED — never change these from emulator results)
 
@@ -44,4 +44,4 @@ Verified against canonical/user-confirmed physical statuses; never promote emula
 
 Localization phone/tablet QA: DEFERRED with the rest of whole-app localization. Historical emulator evidence is separate and cannot close physical QA.
 
-Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Master Phase 3 **ACTIVE** only because remaining physical QA is pending; Phase 4.1 **COMPLETE**; Phase 4.2 **NOT STARTED**; Phase 5 **NOT STARTED**.
+Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Master Phase 3 **ACTIVE** only because remaining physical QA is pending; Phase 4.1 **COMPLETE**; Phase 4.2 **implementation COMPLETE; manual QA PENDING**; Phase 5 **NOT STARTED**.

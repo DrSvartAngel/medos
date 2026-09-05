@@ -786,7 +786,7 @@ async function main() {
     assert.match(edit, /Committee not found/);
     assert.match(create, /if \(succeeded\) router\.back\(\)/);
     assert.match(edit, /if \(succeeded\) router\.back\(\)/);
-    assert.match(detail, /if \(deleteCommittee\(committeeId\)\) router\.back\(\)/);
+    assert.match(detail, /if \(deleteCommittee\(committeeId\)\) router\.dismissTo\('\/\(tabs\)\/committees'\)/);
     assert.match(read('app/(tabs)/index.tsx'), /`\/committees\/\$\{id\}`/);
     assert.match(read('app/(tabs)/calendar.tsx'), /`\/committees\/\$\{item\.sourceId\}`/);
   });

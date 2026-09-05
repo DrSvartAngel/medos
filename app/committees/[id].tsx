@@ -1,3 +1,5 @@
+import { SubjectList } from '@/components/curriculum/SubjectList';
+import { useTranslation } from '@/i18n';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
@@ -36,6 +38,10 @@ export default function CommitteeDetailScreen() {
   const id = typeof params.id === 'string' ? params.id : '';
   const { colors, spacing, radius } = useTheme();
   const { isTablet } = useResponsive();
+  const t = useTranslation();
+  function back() {
+    if (router.canGoBack()) router.back(); else router.replace('/(tabs)/committees');
+  }
 
   const committee = useCommitteeStore((state) =>
     state.committees.find((item) => item.id === id)
@@ -61,7 +67,7 @@ export default function CommitteeDetailScreen() {
 
   if (!id || (requestMatches && committeeNotFound)) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centeredState}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centeredState}>
         <Feather name="search" size={30} color={colors.textMuted} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
           Committee not found
@@ -76,7 +82,7 @@ export default function CommitteeDetailScreen() {
 
   if (requestMatches && committeeLoadError) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centeredState}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centeredState}>
         <Feather name="alert-circle" size={30} color={colors.warning} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
           Committee needs another try
@@ -98,7 +104,7 @@ export default function CommitteeDetailScreen() {
 
   if (!requestMatches || isLoadingCommittee || !committee) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centeredState}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centeredState}>
         <ActivityIndicator size="large" color={colors.primary} />
         <AppText color={colors.textMuted} style={{ marginTop: spacing.sm }}>
           Loading committee…
@@ -120,14 +126,14 @@ export default function CommitteeDetailScreen() {
   function handleDelete() {
     Alert.alert(
       'Remove Committee?',
-      `"${committeeName}" will be permanently removed. This cannot be undone.`,
+      t.subjects.committeeDeleteWarning(committeeName),
       [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Remove',
           style: 'destructive',
           onPress: () => {
-            if (deleteCommittee(committeeId)) router.back();
+            if (deleteCommittee(committeeId)) router.dismissTo('/(tabs)/committees');
           },
         },
       ]
@@ -135,12 +141,12 @@ export default function CommitteeDetailScreen() {
   }
 
   return (
-    <ScreenWrapper>
+    <ScreenWrapper includeBottomSafeArea>
       <View style={[styles.topBar, { marginBottom: spacing.lg }]}>
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel="Go back"
-          onPress={() => router.back()}
+          onPress={back}
           style={styles.iconButton}
         >
           <Feather name="arrow-left" size={24} color={colors.textPrimary} />
@@ -249,6 +255,8 @@ export default function CommitteeDetailScreen() {
           </AppText>
         </View>
       </Card>
+
+      <SubjectList key={committee.id} committeeId={committee.id} />
 
       <Button
         label="Remove Committee"

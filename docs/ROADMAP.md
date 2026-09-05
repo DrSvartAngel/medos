@@ -243,10 +243,17 @@ Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/ta
 - [x] No new dependency; `validate:phase4` harness retained
 - [x] TypeScript, dependency tree, Phase 2, Phase 3, and Phase 4.1 static checks pass
 
-### Phase 4.2 — Subject CRUD ⬜ NOT STARTED
+### Phase 4.2 — Subject CRUD — IMPLEMENTATION COMPLETE
 
-- Subject create/edit/detail UI and store
-- Not in Phase 4.1 scope; requires explicit planning/approval before implementation
+- [x] Committee Subject list, create/detail/edit/delete, direct-route safety and hierarchy warnings
+- [x] Route-local state; no Subject store; real detail Topic count
+- [x] Schema v6; no new dependencies or cross-module links
+- [x] Static validation passed
+- [ ] User physical/manual phone and tablet QA
+
+### Phase 4.3 — Topic CRUD — NOT STARTED
+
+Requires explicit approval; no Topic UI implemented.
 
 ## Phase 5 — Memory & Learning Engine ⬜ NOT STARTED
 
@@ -256,8 +263,6 @@ Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/ta
 
 ## Next Required Action
 
-**Phase 4.2 — Subject CRUD implementation planning/approval.**
+User Phase 4.2 manual QA. Wait for explicit approval before Phase 4.3. Master Phase 4 is NOT COMPLETE; Master Phase 3 remains ACTIVE for physical QA. Whole-app localization DEFERRED; Phase 5 NOT STARTED.
 
-Do not implement Phase 4.2 until that step is explicit. Do not resume whole-app localization. Master Phase 3 remains ACTIVE only because outstanding physical phone/tablet and safe-area QA is pending and user-owned. Phase 5 has not started.
-
-Static results: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS; Phase 3/localization 85 PASS; Phase 4.1 16 PASS. Schema **v6**. No dependency or package-version change.
+Static: TypeScript and dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 21 PASS. Schema v6 and dependencies unchanged.

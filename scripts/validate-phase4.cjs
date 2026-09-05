@@ -269,7 +269,7 @@ async function main() {
       assert.equal(db.getFirstSync('SELECT count(*) n FROM ' + table).n, 0);
     assert.deepEqual(db.getAllSync('PRAGMA foreign_key_check'), []);
   }));
-  await check('No UI/store/linkage/v7/dependencies; only approved package script added', () => {
+  await check('No Topic UI/store/linkage/v7/dependencies; Subject UI is explicitly approved', () => {
     const pkg = JSON.parse(read('package.json'));
     const lock = JSON.parse(read('package-lock.json')).packages[''];
     assert.deepEqual(pkg.dependencies, lock.dependencies);
@@ -279,7 +279,7 @@ async function main() {
     assert.doesNotMatch(migrations, /currentVersion < 7/);
     const v6 = migrations.slice(migrations.indexOf('  if (currentVersion < 6)'));
     assert.doesNotMatch(v6, /ALTER TABLE|DROP TABLE|DELETE FROM|UPDATE (?!_schema_version)/);
-    for (const dir of ['app/subjects','app/topics','store/useSubjectStore.ts','store/useTopicStore.ts'])
+    for (const dir of ['app/topics','store/useSubjectStore.ts','store/useTopicStore.ts'])
       assert.equal(fs.existsSync(path.join(root, dir)), false);
     for (const file of ['store/useFocusStore.ts','store/useMemoryStore.ts','store/useCalendarStore.ts','store/useStudySupportStore.ts'])
       assert.doesNotMatch(read(file), /subjectId|topicId|subject_id|topic_id/);
@@ -288,7 +288,108 @@ async function main() {
       assert.doesNotMatch(read(file), /execSync|zustand|AsyncStorage/);
     }
   });
-  console.log('\nPhase 4.1 static/in-memory validation passed: ' + passed + ' checks.');
+
+  await check('Real Topic count is parent-scoped, unpaginated, validates IDs and propagates DB errors', () => fixture((db, r) => {
+    committee(db); r.subjects.insert(subject()); r.subjects.insert(subject('s2'));
+    assert.equal(r.topics.countBySubject('s'), 0);
+    for (let i = 0; i < 61; i++) r.topics.insert(topic('t' + i));
+    r.topics.insert(topic('other','s2'));
+    assert.equal(r.topics.listBySubject('s').length, 50);
+    assert.equal(r.topics.countBySubject('s'), 61);
+    assert.equal(r.topics.countBySubject('s2'), 1);
+    assert.equal(r.topics.countBySubject("' OR 1=1 --"), 0);
+    assert.throws(() => r.topics.countBySubject(' '), /subject_id_required/);
+    const get = db.getFirstSync;
+    db.getFirstSync = () => { throw Error('count read failed'); };
+    assert.throws(() => r.topics.countBySubject('s'), /count read failed/);
+    db.getFirstSync = get;
+  }));
+  await check('Subject route parameters and destination fallbacks reject missing/mismatched parents', () => fixture((db, r) => {
+    committee(db); committee(db, 'c2'); r.subjects.insert(subject());
+    const route = load('utils/subjectRoutes.ts', {
+      '@/db/repositories/committeeRepo': { committeeRepo: { getById: id => db.getFirstSync('SELECT id FROM committees WHERE id=?', [id]) ?? null } },
+      '@/db/repositories/subjectRepo': { subjectRepo: r.subjects },
+    });
+    for (const value of [undefined, [], ['s'], '', ' ']) assert.equal(route.subjectRouteId(value), '');
+    assert.equal(route.subjectRouteId('s'), 's');
+    assert.equal(route.subjectFallback('c','s'), '/subjects/s');
+    assert.equal(route.subjectFallback('c2','s'), '/committees/c2');
+    r.subjects.delete('s');
+    assert.equal(route.subjectFallback('c','s'), '/committees/c');
+    db.runSync('DELETE FROM committees WHERE id=?', ['c']);
+    assert.equal(route.subjectFallback('c','s'), '/(tabs)/committees');
+  }));
+  await check('Subject delete preserves external records even with Topics present', () => fixture((db, r) => {
+    seed(db); r.subjects.insert(subject()); r.topics.insert(topic());
+    const before = snapshot(db);
+    assert.equal(r.subjects.delete('s'), true);
+    assert.equal(r.topics.getById('t'), null);
+    assert.deepEqual(snapshot(db), before);
+  }));
+  // Source assertions below are static wiring checks, NOT runtime UI or device tests.
+  await check('Subject screens statically wire direct loading, shared validation, safe mutations and navigation', () => {
+    const editor = read('components/curriculum/SubjectEditor.tsx');
+    const form = read('components/curriculum/SubjectForm.tsx');
+    const detail = read('app/subjects/[id].tsx');
+    for (const file of ['app/subjects/new.tsx','app/subjects/edit/[id].tsx']) {
+      assert.match(read(file), /subjectRouteId/);
+      assert.match(read(file), /SubjectEditor/);
+    }
+    assert.match(editor, /subjectRepo.getById\(id\)/);
+    assert.match(editor, /committeeRepo.getById/);
+    for (const status of ['loading','missing','error','ready']) assert.ok(editor.includes("'" + status + "'"));
+    assert.match(editor, /subjectRepo.insert/);
+    assert.match(editor, /!subjectRepo.update/);
+    const saveBody = editor.slice(editor.indexOf('  function save('));
+    assert.ok(saveBody.indexOf('router.dismissTo(target') > saveBody.indexOf('subjectRepo.update'));
+    assert.match(form, /validateCurriculum\(\{ name, description \}\)/);
+    assert.match(form, /if \(submitting.current\) return/);
+    assert.match(form, /if \(!saved\)/);
+    assert.doesNotMatch(form, /setName\(''\)|setDescription\(''\)|unique/i);
+    assert.match(detail, /topicRepo.countBySubject\(id\)/);
+    assert.match(detail, /count !== null/);
+    assert.match(detail, /countError/);
+    assert.doesNotMatch(detail, /listBySubject|setCount\(0\)/);
+    assert.match(detail, /!subjectRepo.delete\(subject.id\)/);
+    assert.match(detail, /router.dismissTo\(parentTarget\(\)\)/);
+    assert.match(detail, /style: 'destructive'/);
+    assert.match(detail, /useFocusEffect/);
+    assert.match(editor, /subjectFallback/);
+  });
+  await check('Committee list, localized forms and safe areas remain scoped and accessible', () => {
+    const committeeSource = read('app/committees/[id].tsx');
+    const list = read('components/curriculum/SubjectList.tsx');
+    assert.match(committeeSource, /<SubjectList key=\{committee.id\} committeeId=\{committee.id\}/);
+    assert.match(committeeSource, /committeeDeleteWarning/);
+    assert.match(list, /PAGE_SIZE = 50/);
+    assert.match(list, /subjectRepo.listByCommittee/);
+    assert.match(list, /useFocusEffect/);
+    assert.match(list, /limit: 1, offset: offset \+ PAGE_SIZE/);
+    assert.match(list, /!loading && !error && items.length === 0/);
+    assert.match(list, /load\(failedOffset\)/);
+    assert.match(list, /accessibilityRole="button"/);
+    assert.match(list, /accessibilityLabel=\{t.subjects.open/);
+    assert.match(list, /minHeight: 48/);
+    assert.doesNotMatch(list, /topicCount|countBySubject|numberOfLines/);
+    for (const file of ['app/subjects/[id].tsx','components/curriculum/SubjectEditor.tsx']) {
+      assert.match(read(file), /ScreenWrapper includeBottomSafeArea/);
+      assert.match(read(file), /useTranslation/);
+      assert.doesNotMatch(read(file), /numberOfLines|zustand/);
+    }
+    assert.match(read('components/curriculum/SubjectForm.tsx'), /minHeight: 48/);
+    assert.match(read('components/curriculum/SubjectForm.tsx'), /accessibilityLabel=\{t.subjects.name\}/);
+    assert.match(read('components/layout/ScreenWrapper.tsx'), /contentMaxWidth/);
+    const en = load('i18n/en.ts').default.subjects;
+    const tr = load('i18n/tr.ts').default.subjects;
+    assert.deepEqual(Object.keys(en), Object.keys(tr));
+    assert.deepEqual(Object.keys(en.validation), Object.keys(tr.validation));
+    assert.equal(en.topicCount(1), '1 topic'); assert.equal(tr.topicCount(61), '61 konu');
+    for (const locale of [en,tr]) {
+      assert.ok(locale.removeWarning('USER NAME').includes('USER NAME'));
+      assert.ok(locale.committeeDeleteWarning('USER NAME').includes('USER NAME'));
+    }
+  });
+
+  console.log('\nPhase 4 static/in-memory validation passed: ' + passed + ' checks.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });
-
