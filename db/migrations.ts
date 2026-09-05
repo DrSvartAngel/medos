@@ -1,7 +1,7 @@
 import { getDB } from './client';
 import { formatLocalDateKey } from '@/utils/calendarDate';
 
-const CURRENT_VERSION = 6;
+const CURRENT_VERSION = 7;
 
 interface TableInfoRow {
   name: string;
@@ -314,6 +314,12 @@ export async function runMigrations(): Promise<void> {
         CREATE INDEX idx_topics_subject_order ON topics(subject_id, created_at, id);
       `);
       db.runSync('UPDATE _schema_version SET version = ?', [6]);
+    });
+  }
+  if (currentVersion < 7) {
+    db.withTransactionSync(() => {
+      db.execSync("ALTER TABLE topics ADD COLUMN learning_objectives TEXT NOT NULL DEFAULT ''");
+      db.runSync('UPDATE _schema_version SET version = ?', [7]);
     });
   }
 }

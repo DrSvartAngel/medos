@@ -67,6 +67,9 @@ const en = {
 
   // ── Dashboard ────────────────────────────────────────────────────────────────
   topics: {
+    learningObjectives: 'Learning objectives',
+    learningObjectivesOptional: 'Learning objectives (optional)',
+    learningObjectivesHelp: 'What would you like to be able to explain after studying this topic? You can write a few short lines.',
     title: 'Topics', add: 'Add topic', create: 'Create topic', edit: 'Edit topic', remove: 'Delete topic',
     name: 'Topic name', description: 'Topic description (optional)',
     empty: 'No topics yet.', more: 'Load more',
@@ -79,6 +82,8 @@ const en = {
     deleteError: 'The topic could not be deleted. It may no longer be available.',
     removeTitle: 'Delete topic?', removeWarning: (name: string) => `“${name}” will be deleted.`,
     validation: {
+      learning_objectives_invalid: 'Enter learning objectives as text.',
+      learning_objectives_too_long: 'Keep learning objectives within 2000 characters.',
       name_required: 'Enter a Topic name.', name_too_long: 'Use at most 120 characters for the name.',
       description_invalid: 'Enter a text description.', description_too_long: 'Use at most 2000 characters for the description.',
     },

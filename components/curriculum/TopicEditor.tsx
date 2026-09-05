@@ -45,7 +45,7 @@ export function TopicEditor({ id, mode }: { id: string; mode: 'create' | 'edit' 
       includeTopic ? id : undefined) as Href; }
     catch { return '/(tabs)/committees'; }
   }
-  function save(value: { name: string; description: string }): boolean {
+  function save(value: { name: string; description: string; learningObjectives: string }): boolean {
     if (loaded.status !== 'ready') return false;
     try {
       const subject = subjectRepo.getById(loaded.subject.id);
@@ -85,6 +85,7 @@ export function TopicEditor({ id, mode }: { id: string; mode: 'create' | 'edit' 
         <AppText>{t.topics.parent(loaded.subject.name)}</AppText>
         <AppText>{t.topics.committee(loaded.committee.name)}</AppText>
         <TopicForm key={`${mode}:${id}`} initialName={loaded.topic?.name} initialDescription={loaded.topic?.description}
+          initialLearningObjectives={loaded.topic?.learningObjectives}
           error={saveError} submitLabel={mode === 'create' ? t.topics.create : t.common.save} onSubmit={save} />
       </>}
     </Section></ScreenWrapper>

@@ -2,6 +2,20 @@ import type { CurriculumListOptions } from '@/models/curriculum';
 
 export const CURRICULUM_NAME_MAX = 120;
 export const CURRICULUM_DESCRIPTION_MAX = 2000;
+export const TOPIC_LEARNING_OBJECTIVES_MAX = 2000;
+
+export function validateLearningObjectives(value: unknown):
+  | { valid: true; learningObjectives: string }
+  | { valid: false; error: 'learning_objectives_invalid' | 'learning_objectives_too_long' } {
+  if (value !== undefined && typeof value !== 'string') {
+    return { valid: false, error: 'learning_objectives_invalid' };
+  }
+  const learningObjectives = typeof value === 'string' ? value.trim() : '';
+  if (learningObjectives.length > TOPIC_LEARNING_OBJECTIVES_MAX) {
+    return { valid: false, error: 'learning_objectives_too_long' };
+  }
+  return { valid: true, learningObjectives };
+}
 
 export type CurriculumValidationResult =
   | { valid: true; name: string; description: string }

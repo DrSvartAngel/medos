@@ -73,6 +73,9 @@ export default function TopicDetailScreen() {
       <Button label={t.topics.parent(data.subject.name)} variant="ghost" onPress={() => router.dismissTo(target())} />
       <Button label={t.topics.committee(data.committee.name)} variant="ghost" onPress={() => router.dismissTo(target(true))} />
       {data.topic.description ? <AppText>{data.topic.description}</AppText> : null}
+      {data.topic.learningObjectives.trim() !== '' && <Section title={t.topics.learningObjectives}>
+        <AppText>{data.topic.learningObjectives}</AppText>
+      </Section>}
       <Button label={t.topics.edit} variant="secondary" onPress={() => router.push(`/topics/edit/${encodeURIComponent(id)}` as Href)} />
       {deleteError && <FeedbackState kind="error" message={t.topics.deleteError} />}
       <Button label={t.topics.remove} variant="danger" onPress={remove} />

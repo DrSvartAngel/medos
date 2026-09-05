@@ -1,31 +1,34 @@
 import { getDB } from '../client';
 import type { Topic, CurriculumListOptions } from '@/models/curriculum';
-import { assertCurriculumIdentity, curriculumPage, validateCurriculum } from '@/utils/curriculumValidation';
+import { assertCurriculumIdentity, curriculumPage, validateCurriculum, validateLearningObjectives } from '@/utils/curriculumValidation';
 
 interface Row {
   id: string;
   subject_id: string;
   name: string;
   description: string;
+  learning_objectives: string;
   created_at: number;
   updated_at: number;
 }
 
 function fromRow(row: Row): Topic {
   return { id: row.id, subjectId: row.subject_id, name: row.name,
-    description: row.description, createdAt: row.created_at, updatedAt: row.updated_at };
+    description: row.description, learningObjectives: row.learning_objectives, createdAt: row.created_at, updatedAt: row.updated_at };
 }
 
-const SELECT = 'SELECT id, subject_id, name, description, created_at, updated_at FROM topics';
+const SELECT = 'SELECT id, subject_id, name, description, learning_objectives, created_at, updated_at FROM topics';
 
 function validate(record: Topic) {
   assertCurriculumIdentity(record.id, record.subjectId, record.createdAt, record.updatedAt);
   const result = validateCurriculum(record);
   if (!result.valid) throw new Error(result.error);
+  const objectives = validateLearningObjectives(record.learningObjectives);
+  if (!objectives.valid) throw new Error(objectives.error);
   if (!getDB().getFirstSync('SELECT id FROM subjects WHERE id = ?', [record.subjectId])) {
     throw new Error('subject_not_found');
   }
-  return result;
+  return { ...result, learningObjectives: objectives.learningObjectives };
 }
 
 export const topicRepo = {
@@ -54,8 +57,8 @@ export const topicRepo = {
   insert(record: Topic): void {
     const value = validate(record);
     getDB().runSync(
-      'INSERT INTO topics (id, subject_id, name, description, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)',
-      [record.id, record.subjectId, value.name, value.description, record.createdAt, record.updatedAt]
+      'INSERT INTO topics (id, subject_id, name, description, learning_objectives, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [record.id, record.subjectId, value.name, value.description, value.learningObjectives, record.createdAt, record.updatedAt]
     );
   },
 
@@ -63,8 +66,8 @@ export const topicRepo = {
   update(record: Topic): boolean {
     const value = validate(record);
     return getDB().runSync(
-      'UPDATE topics SET name = ?, description = ?, updated_at = ? WHERE id = ? AND subject_id = ?',
-      [value.name, value.description, record.updatedAt, record.id, record.subjectId]
+      'UPDATE topics SET name = ?, description = ?, learning_objectives = ?, updated_at = ? WHERE id = ? AND subject_id = ?',
+      [value.name, value.description, value.learningObjectives, record.updatedAt, record.id, record.subjectId]
     ).changes > 0;
   },
 

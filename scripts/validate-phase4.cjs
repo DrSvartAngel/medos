@@ -85,6 +85,92 @@ async function fixture(run) {
 }
 
 async function main() {
+  await check('v6 to v7 preserves Topics, defaults objectives and rolls back failed version advancement', async () => {
+    const db = new Adapter();
+    const v6Source = migrations.slice(0, migrations.indexOf('  if (currentVersion < 7)')) + '\n}\nexport { CURRENT_VERSION };';
+    try {
+      await migrate(db, v6Source); seed(db);
+      db.execSync("INSERT INTO subjects VALUES ('s','c','Subject','',1,1)");
+      db.execSync("INSERT INTO topics VALUES ('t','s','Topic','Do not copy description',1,2)");
+      const before = db.getFirstSync('SELECT * FROM topics');
+      const legacy = snapshot(db);
+      const indexes = db.getAllSync("SELECT name, sql FROM sqlite_master WHERE type='index' ORDER BY name");
+      for (const failAt of ['ALTER TABLE topics', 'UPDATE _schema_version']) {
+        db.fail = sql => sql.startsWith(failAt);
+        await assert.rejects(() => migrate(db), /injected/);
+        assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 6);
+        assert.deepEqual(db.getFirstSync('SELECT * FROM topics'), before);
+      }
+      db.fail = () => false;
+      await migrate(db); await migrate(db);
+      assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 7);
+      assert.deepEqual({ ...db.getFirstSync('SELECT * FROM topics') }, { ...before, learning_objectives: '' });
+      const column = db.getAllSync('PRAGMA table_info(topics)').find(c => c.name === 'learning_objectives');
+      assert.equal(column.type, 'TEXT'); assert.equal(column.notnull, 1); assert.equal(column.dflt_value, "''");
+      assert.deepEqual(snapshot(db), legacy);
+      assert.deepEqual(db.getAllSync("SELECT name, sql FROM sqlite_master WHERE type='index' ORDER BY name"), indexes);
+      assert.deepEqual(db.getAllSync('PRAGMA foreign_key_check'), []);
+    } finally { db.closeSync(); }
+  });
+  await check('Objectives normalize only outer whitespace and enforce UTF-16/type boundaries', () => {
+    const validate = validation.validateLearningObjectives;
+    for (const value of [undefined, '', ' \n\t ']) assert.deepEqual(validate(value), { valid: true, learningObjectives: '' });
+    for (const value of [null, 1, true, [], {}]) assert.equal(validate(value).error, 'learning_objectives_invalid');
+    for (const value of ['a'.repeat(2000), '🫀'.repeat(1000)]) assert.equal(validate(value).valid, true);
+    assert.equal(validate('a'.repeat(2001)).error, 'learning_objectives_too_long');
+    const text = "İlaç O'Brien 🫀\n\nAçıkla\nAçıkla";
+    assert.equal(validate(' \n' + text + '\n ').learningObjectives, text);
+  });
+  await check('Objectives insert/update/read round-trip, default, clearing and failed writes preserve records', () => fixture((db, r) => {
+    committee(db); r.subjects.insert(subject()); r.subjects.insert(subject('s2'));
+    r.topics.insert(topic()); assert.equal(r.topics.getById('t').learningObjectives, '');
+    const text = "İlaç O'Brien; DROP TABLE topics; -- 🫀\nTekrar\nTekrar";
+    r.topics.insert({ ...topic('text'), learningObjectives: '  ' + text + '\n' });
+    assert.equal(repositories(db).topics.getById('text').learningObjectives, text);
+    assert.equal(r.topics.listBySubject('s').find(t => t.id === 'text').learningObjectives, text);
+    assert.equal(r.topics.update({ ...topic(), learningObjectives: 'x'.repeat(2000), createdAt: 99, updatedAt: 3 }), true);
+    const saved = r.topics.getById('t');
+    assert.equal(saved.learningObjectives.length, 2000); assert.equal(saved.createdAt, 1); assert.equal(saved.updatedAt, 3);
+    for (const value of ['x'.repeat(2001), null, 5, {}, []]) {
+      assert.throws(() => r.topics.update({ ...saved, learningObjectives: value }), /learning_objectives/);
+      assert.throws(() => r.topics.insert({ ...topic('bad'), learningObjectives: value }), /learning_objectives/);
+    }
+    assert.equal(r.topics.update({ ...saved, subjectId: 's2', learningObjectives: text }), false);
+    assert.equal(r.topics.update({ ...saved, id: 'missing' }), false);
+    db.fail = sql => sql.startsWith('UPDATE topics');
+    assert.throws(() => r.topics.update({ ...saved, learningObjectives: '' }), /injected/);
+    db.fail = () => false; assert.deepEqual(r.topics.getById('t'), saved);
+    assert.equal(r.topics.update({ ...saved, learningObjectives: ' \n ' }), true);
+    assert.equal(repositories(db).topics.getById('t').learningObjectives, '');
+  }));
+  await check('Objectives UI is optional Topic-only descriptive text with localized Foundation wiring', () => {
+    const form = read('components/curriculum/TopicForm.tsx');
+    const editor = read('components/curriculum/TopicEditor.tsx');
+    const detail = read('app/topics/[id].tsx');
+    assert.match(form, /validateLearningObjectives\(learningObjectives\)/);
+    assert.match(form, /learningObjectives: objectives.learningObjectives/);
+    assert.match(form, /accessibilityLabel=\{t.topics.learningObjectivesOptional\}/);
+    assert.match(form, /value=\{learningObjectives\} editable=\{!saving\} multiline/);
+    assert.match(editor, /initialLearningObjectives=\{loaded.topic\?\.learningObjectives\}/);
+    assert.match(detail, /data.topic.learningObjectives.trim\(\) !== '' && <Section/);
+    for (const primitive of ['Input','FormField','Section']) assert.ok(form.includes('@/components/ui/' + primitive));
+    for (const lang of ['en','tr']) {
+      const t = load('i18n/' + lang + '.ts').default.topics;
+      for (const key of ['learningObjectives','learningObjectivesOptional','learningObjectivesHelp']) assert.ok(t[key]);
+      assert.ok(t.validation.learning_objectives_invalid); assert.ok(t.validation.learning_objectives_too_long);
+    }
+    const model = read('models/curriculum.ts');
+    assert.match(model.split('export interface Topic')[1], /learningObjectives: string/);
+    assert.doesNotMatch(model.split('export interface Topic')[0], /learningObjectives/);
+    assert.doesNotMatch(model, /weight|priority|progress|mastery|provenance|Objective\s*\{/i);
+    const v7 = migrations.slice(migrations.indexOf('  if (currentVersion < 7)'));
+    assert.equal((v7.match(/ALTER TABLE/g) || []).length, 1);
+    assert.doesNotMatch(v7, /CREATE TABLE|CREATE INDEX|JSON|REFERENCES|DELETE FROM/);
+    for (const file of ['db/repositories/subjectRepo.ts','db/repositories/committeeRepo.ts',
+      'store/useFocusStore.ts','store/useMemoryStore.ts','store/useCalendarStore.ts','store/useStudySupportStore.ts'])
+      assert.doesNotMatch(read(file), /learningObjectives|learning_objectives/);
+    assert.doesNotMatch(form + editor + detail, /Gemini|generatedBy|provenance|mastery|priority|weight/);
+  });
   await check('Actual client enables/verifies FKs; failed initialization is not cached', async () => {
     let closes = 0, opens = 0;
     const bad = { execSync() {}, getFirstSync: () => ({ foreign_keys: 0 }), closeSync: () => closes++ };
@@ -94,16 +180,16 @@ async function main() {
     assert.equal(closes, 2); assert.equal(opens, 2);
     await fixture(db => assert.equal(db.getFirstSync('PRAGMA foreign_keys').foreign_keys, 1));
   });
-  await check('Clean install v6, exact columns/FKs/indexes and safe rerun', () => fixture(async db => {
-    assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 6);
+  await check('Clean install v7, exact columns/FKs/indexes and safe rerun', () => fixture(async db => {
+    assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 7);
     for (const [table,parent,parentTable,index] of [
       ['subjects','committee_id','committees','idx_subjects_committee_order'],
       ['topics','subject_id','subjects','idx_topics_subject_order'],
     ]) {
       const columns = db.getAllSync('PRAGMA table_info(' + table + ')');
-      assert.deepEqual(columns.map(c => c.name), ['id',parent,'name','description','created_at','updated_at']);
+      assert.deepEqual(columns.map(c => c.name), ['id',parent,'name','description','created_at','updated_at', ...(table === 'topics' ? ['learning_objectives'] : [])]);
       assert.ok(columns.every(c => c.notnull === 1));
-      assert.deepEqual(columns.map(c => c.type), ['TEXT','TEXT','TEXT','TEXT','INTEGER','INTEGER']);
+      assert.deepEqual(columns.map(c => c.type), ['TEXT','TEXT','TEXT','TEXT','INTEGER','INTEGER', ...(table === 'topics' ? ['TEXT'] : [])]);
       assert.equal(columns[3].dflt_value, "''");
       const fk = db.getFirstSync('PRAGMA foreign_key_list(' + table + ')');
       assert.equal(fk.table, parentTable); assert.equal(fk.from, parent);
@@ -178,7 +264,7 @@ async function main() {
     assert.throws(() => r.subjects.insert(subject()), /committee_not_found/);
     assert.throws(() => r.topics.insert(topic()), /subject_not_found/);
     assert.throws(() => db.execSync("INSERT INTO subjects VALUES ('s','none','x','',1,1)"), /FOREIGN KEY/);
-    assert.throws(() => db.execSync("INSERT INTO topics VALUES ('t','none','x','',1,1)"), /FOREIGN KEY/);
+    assert.throws(() => db.execSync("INSERT INTO topics (id,subject_id,name,description,created_at,updated_at) VALUES ('t','none','x','',1,1)"), /FOREIGN KEY/);
   }));
   await check('Subject/Topic duplicate names, Unicode and SQL-special content round-trip safely', () => fixture((db, r) => {
     committee(db);
@@ -201,7 +287,7 @@ async function main() {
     assert.throws(() => db.execSync("INSERT INTO subjects VALUES ('s','c','   ','',1,1)"), /CHECK/);
     r.subjects.insert(subject());
     assert.throws(() => r.topics.insert({ ...topic(), description: 'x'.repeat(2001) }), /description_too_long/);
-    assert.throws(() => db.execSync("INSERT INTO topics VALUES ('t','s','','',1,1)"), /CHECK/);
+    assert.throws(() => db.execSync("INSERT INTO topics (id,subject_id,name,description,created_at,updated_at) VALUES ('t','s','','',1,1)"), /CHECK/);
   }));
   await check('Both lists are parent-scoped, bounded and deterministically ordered', () => fixture((db, r) => {
     committee(db); committee(db, 'other');
@@ -269,15 +355,15 @@ async function main() {
       assert.equal(db.getFirstSync('SELECT count(*) n FROM ' + table).n, 0);
     assert.deepEqual(db.getAllSync('PRAGMA foreign_key_check'), []);
   }));
-  await check('No curriculum store/linkage/v7/dependencies; Subject and Topic UI are approved', () => {
+  await check('No curriculum store/linkage/v8/dependencies; Subject and Topic UI are approved', () => {
     const pkg = JSON.parse(read('package.json'));
     const lock = JSON.parse(read('package-lock.json')).packages[''];
     assert.deepEqual(pkg.dependencies, lock.dependencies);
     assert.deepEqual(pkg.devDependencies, lock.devDependencies);
     assert.equal(pkg.scripts['validate:phase4'], 'node scripts/validate-phase4.cjs');
-    assert.match(migrations, /const CURRENT_VERSION = 6/);
-    assert.doesNotMatch(migrations, /currentVersion < 7/);
-    const v6 = migrations.slice(migrations.indexOf('  if (currentVersion < 6)'));
+    assert.match(migrations, /const CURRENT_VERSION = 7/);
+    assert.doesNotMatch(migrations, /currentVersion < 8/);
+    const v6 = migrations.slice(migrations.indexOf('  if (currentVersion < 6)'), migrations.indexOf('  if (currentVersion < 7)'));
     assert.doesNotMatch(v6, /ALTER TABLE|DROP TABLE|DELETE FROM|UPDATE (?!_schema_version)/);
     for (const dir of ['store/useSubjectStore.ts','store/useTopicStore.ts'])
       assert.equal(fs.existsSync(path.join(root, dir)), false);

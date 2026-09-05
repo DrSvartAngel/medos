@@ -2,25 +2,28 @@ import React, { useRef, useState } from 'react';
 import { View } from 'react-native';
 import { Input } from '@/components/ui/Input';
 import { FormField } from '@/components/ui/FormField';
+import { Section } from '@/components/ui/Section';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
-import { validateCurriculum } from '@/utils/curriculumValidation';
+import { validateCurriculum, validateLearningObjectives } from '@/utils/curriculumValidation';
 
 interface Props {
   initialName?: string;
   initialDescription?: string;
+  initialLearningObjectives?: string;
   error: string | null;
   submitLabel: string;
-  onSubmit: (value: { name: string; description: string }) => boolean;
+  onSubmit: (value: { name: string; description: string; learningObjectives: string }) => boolean;
 }
 
-export function TopicForm({ initialName = '', initialDescription = '', error, submitLabel, onSubmit }: Props) {
+export function TopicForm({ initialName = '', initialDescription = '', initialLearningObjectives = '', error, submitLabel, onSubmit }: Props) {
   const t = useTranslation();
   const { colors, spacing } = useTheme();
   const [name, setName] = useState(initialName);
   const [description, setDescription] = useState(initialDescription);
+  const [learningObjectives, setLearningObjectives] = useState(initialLearningObjectives);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const submitting = useRef(false);
@@ -28,11 +31,13 @@ export function TopicForm({ initialName = '', initialDescription = '', error, su
     if (submitting.current) return;
     const result = validateCurriculum({ name, description });
     if (!result.valid) { setValidationError(t.topics.validation[result.error]); return; }
+    const objectives = validateLearningObjectives(learningObjectives);
+    if (!objectives.valid) { setValidationError(t.topics.validation[objectives.error]); return; }
     submitting.current = true;
     setSaving(true);
     setValidationError(null);
     let saved = false;
-    try { saved = onSubmit({ name: result.name, description: result.description }); }
+    try { saved = onSubmit({ name: result.name, description: result.description, learningObjectives: objectives.learningObjectives }); }
     finally {
       // Keep the synchronous double-submit guard until the successful route exit.
       if (!saved) { submitting.current = false; setSaving(false); }
@@ -49,6 +54,14 @@ export function TopicForm({ initialName = '', initialDescription = '', error, su
       multiline textAlignVertical="top" onChangeText={value => { setDescription(value); setValidationError(null); }}
       />
     </FormField>
+    <Section>
+      <FormField label={t.topics.learningObjectivesOptional}>
+        <AppText color={colors.textSecondary}>{t.topics.learningObjectivesHelp}</AppText>
+        <Input accessibilityLabel={t.topics.learningObjectivesOptional} accessibilityHint={t.topics.learningObjectivesHelp}
+          value={learningObjectives} editable={!saving} multiline textAlignVertical="top"
+          onChangeText={value => { setLearningObjectives(value); setValidationError(null); }} />
+      </FormField>
+    </Section>
     <Button label={submitLabel} accessibilityLabel={submitLabel} onPress={save} loading={saving} />
   </View>;
 }

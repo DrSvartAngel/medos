@@ -12,6 +12,7 @@ export interface Topic {
   subjectId: string;
   name: string;
   description: string;
+  learningObjectives: string;
   createdAt: number;
   updatedAt: number;
 }

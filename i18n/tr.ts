@@ -69,6 +69,9 @@ const tr: Strings = {
 
   // ── Genel Bakış ──────────────────────────────────────────────────────────────
   topics: {
+    learningObjectives: 'Öğrenme hedefleri',
+    learningObjectivesOptional: 'Öğrenme hedefleri (isteğe bağlı)',
+    learningObjectivesHelp: 'Bu konuyu çalıştıktan sonra neyi açıklayabilmek istersin? İstersen birkaç kısa satır yaz.',
     title: 'Konular', add: 'Konu ekle', create: 'Konu oluştur', edit: 'Konuyu düzenle', remove: 'Konuyu sil',
     name: 'Konu adı', description: 'Konu açıklaması (isteğe bağlı)',
     empty: 'Henüz konu yok.', more: 'Daha fazla yükle',
@@ -81,6 +84,8 @@ const tr: Strings = {
     deleteError: 'Konu silinemedi. Artık mevcut olmayabilir.',
     removeTitle: 'Konu silinsin mi?', removeWarning: (name: string) => `“${name}” silinecek.`,
     validation: {
+      learning_objectives_invalid: 'Öğrenme hedeflerini metin olarak yaz.',
+      learning_objectives_too_long: 'Öğrenme hedefleri en fazla 2000 karakter olabilir.',
       name_required: 'Konu adını gir.', name_too_long: 'Konu adı en fazla 120 karakter olabilir.',
       description_invalid: 'Açıklamayı metin olarak gir.', description_too_long: 'Açıklama en fazla 2000 karakter olabilir.',
     },
