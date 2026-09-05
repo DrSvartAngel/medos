@@ -67,6 +67,14 @@ const en = {
 
   // ── Dashboard ────────────────────────────────────────────────────────────────
   topics: {
+    studyRecorded: 'Study activity recorded',
+    studyUnrecorded: 'No study activity recorded yet',
+    studyEvidenceHelp: 'This reflects saved Focus activity only, not learning or completion.',
+    studyEvidenceError: 'Study activity could not be checked.',
+    startFocus: 'Start Focus for this topic',
+    continueFocus: 'Continue Focus',
+    focusStartError: 'Focus could not start. The topic may no longer be available. Try again.',
+    focusContext: (name: string) => `Topic: ${name}`,
     learningObjectives: 'Learning objectives',
     learningObjectivesOptional: 'Learning objectives (optional)',
     learningObjectivesHelp: 'What would you like to be able to explain after studying this topic? You can write a few short lines.',

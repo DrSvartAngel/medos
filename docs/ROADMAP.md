@@ -1,5 +1,22 @@
 # MedOS — Development Roadmap
 
+## Phase 4.6 — Topic study evidence — IMPLEMENTATION COMPLETE
+
+- Branch phase-4-6-progress-intelligence from clean main b016d2c. Do not merge automatically.
+- Optional Focus → Topic only. Topic detail explicitly starts a standard Focus session using Profile duration and verified Topic → Subject → Committee context. Active sessions can only be continued, never replaced. Existing starts remain unlinked.
+- Evidence means at least one linked concluded Focus row with positive integer actual duration and valid ending timestamp: completed/not-cancelled, or cancelled/not-completed with >=30 seconds (existing meaningful-cancel persistence policy). Discarded short cancellations and zero/invalid durations do not count.
+- Exact EN/TR state: “Study activity recorded” / “Çalışma kaydı var”; otherwise “No study activity recorded yet” / “Henüz çalışma kaydı yok”. Lookup error is separate, retryable and never represented as no activity. Evidence refreshes on Topic screen focus.
+- This is recorded activity only, not learned/unlearned, mastery, completion, weakness or a percentage. Learning objectives are never queried for evidence. No Subject aggregate.
+- Schema v8: additive nullable focus_sessions.topic_id FK → topics(id), ON DELETE SET NULL. Legacy rows remain null; no retroactive links, new table/index or dependency. Topic/ancestor deletion preserves Focus history. Save revalidates optional context; deleted context saves unlinked, DB errors preserve the active session for retry.
+- Minimal runtime Focus Topic ID/name context clears on teardown and ordinary starts. Pause/resume/break retain it; no Topic store, global curriculum cache or new persistence system.
+- Changed: migrations, focusRepo, useFocusStore, Focus screen, Topic detail, EN/TR, Phase 2/3/4 validators, four canonical docs. Memory/Calendar/Dashboard unchanged.
+- Static: TypeScript and dependency tree successful; Phase 2 21 PASS, Phase 3 85 PASS, Phase 4 39 PASS (145 total). Updated old SQL-placeholder/current-version assertions; relevant reruns PASS. Source/in-memory checks are not device QA.
+- Phase 4.5 implementation COMPLETE and merged at b016d2c; physical QA DEFERRED, NOT PASS. Phase 4.6 phone/tablet physical QA PENDING, user-owned. Older explicit QA statuses unchanged.
+- Master Phase 4 ACTIVE. Memory linkage/weak-topic analysis deferred. Weight/priority, Phase 4.7 and Phase 5 NOT STARTED. PDF/Gemini roadmap-only; no visual redesign or broad localization.
+- Next: user checks linked start/Committee context, normal unlinked start, finish/evidence/restart, zero and short/meaningful cancel, active protection, Topic deletion during/after Focus, error retry, phone/tablet layout. Await approval after handoff.
+
+## Previous checkpoint (historical)
+
 ## Phase 4.5 — Topic learning objectives — IMPLEMENTATION COMPLETE
 
 - Branch: phase-4-5-topic-learning-objectives, based on clean main a113842; do not merge to main automatically.
@@ -10,7 +27,7 @@
 - Modified: db/migrations.ts, models/curriculum.ts, utils/curriculumValidation.ts, db/repositories/topicRepo.ts, TopicForm.tsx, TopicEditor.tsx, app/topics/[id].tsx, i18n/en.ts, i18n/tr.ts, Phase 2/3/4 validators and four canonical docs. No new files or dependencies.
 - Static: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 35 PASS (141 total). In-memory DB tests and source assertions are not device/UI tests.
 - Phase 4.1 COMPLETE. Phase 4.2/4.3/4.4 and UI Foundation 1 COMPLETE with user-confirmed phone/tablet physical QA PASS. Phase 4.4 merged to main at a113842.
-- Phase 4.5 phone/tablet physical QA PENDING and user-owned. No emulator/ADB/device automation performed. Earlier explicit Phase 3 QA gaps unchanged.
+- Phase 4.5 phone/tablet physical QA DEFERRED, user-owned; not PASS. No emulator/ADB/device automation performed. Earlier explicit Phase 3 QA gaps unchanged.
 - Master Phase 4 ACTIVE. Weight/priority deferred. Phase 4.6/4.7 and Phase 5 NOT STARTED. No new store, progress/mastery, cross-module linkage or visual redesign.
 - Whole-app localization DEFERRED; PDF/Gemini remains roadmap-only.
 - Next: user checks Topic empty/populated objectives, restart persistence, edit/clear, multiline/TR/near-max text, conditional detail display and phone keyboard/tablet safe-area layout. Await approval before further work.
@@ -353,12 +370,13 @@ Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/ta
 
 ### Phase 4.5 — Topic learning objectives — IMPLEMENTATION COMPLETE
 
-- Optional Topic-only descriptive learning objectives implemented; schema v7. Static checks PASS; phone/tablet QA PENDING.
+- Optional Topic-only descriptive learning objectives implemented; schema v7. Static checks PASS; Phase 4.5 phone/tablet QA DEFERRED.
 - Weight and priority remain deferred; no progress, completion or AI implementation.
 
-### Phase 4.6 — Curriculum Progress Intelligence — NOT STARTED
+### Phase 4.6 — Topic study evidence — IMPLEMENTATION COMPLETE
 
-- Future truthful Topic/Subject progress model and weak-topic views. No mastery/status implementation approved here.
+- Optional Focus → Topic linkage and truthful recorded-study state implemented; schema v8. Physical QA PENDING.
+- Memory linkage, weak-topic analysis and any broader progress model remain deferred; no mastery or percentages.
 
 ### Phase 4.7 — Exam Planning — NOT STARTED
 
@@ -374,6 +392,6 @@ These groupings preserve the original advanced Phase 4 goals, not implementation
 
 ## Next Required Action
 
-User physical QA of Phase 4.5 Topic learning objectives. Wait for separate approval before further implementation. Master Phase 4 ACTIVE; Master Phase 3 retains remaining explicit QA gaps. Whole-app localization DEFERRED; Phase 5 NOT STARTED.
+User physical QA of Phase 4.6 linked Focus and Topic evidence; Phase 4.5 physical QA DEFERRED. Wait for separate approval before further implementation. Master Phase 4 ACTIVE; Master Phase 3 retains remaining explicit QA gaps. Whole-app localization DEFERRED; Phase 5 NOT STARTED.
 
-Static: TypeScript and dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 35 PASS. Schema v7; dependencies unchanged.
+Static: TypeScript and dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 39 PASS. Schema v8; dependencies unchanged.

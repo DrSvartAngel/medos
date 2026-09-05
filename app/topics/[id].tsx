@@ -4,6 +4,8 @@ import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-ro
 import { committeeRepo } from '@/db/repositories/committeeRepo';
 import { subjectRepo } from '@/db/repositories/subjectRepo';
 import { topicRepo } from '@/db/repositories/topicRepo';
+import { focusRepo } from '@/db/repositories/focusRepo';
+import { useFocusStore } from '@/store/useFocusStore';
 import type { Topic, Subject } from '@/models/curriculum';
 import type { Committee } from '@/store/useCommitteeStore';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
@@ -22,11 +24,27 @@ export default function TopicDetailScreen() {
   const t = useTranslation();
   const [data, setData] = useState<Data>({ status: 'loading' });
   const [deleteError, setDeleteError] = useState(false);
+  const [studyEvidence, setStudyEvidence] = useState<boolean | null>(null);
+  const [startError, setStartError] = useState(false);
+  const timerStatus = useFocusStore(state => state.timerStatus);
+  function loadEvidence() {
+    try { setStudyEvidence(focusRepo.hasTopicStudyActivity(id)); }
+    catch { setStudyEvidence(null); }
+  }
+  function startFocus() {
+    setStartError(false);
+    if (useFocusStore.getState().timerStatus !== 'idle') { router.push('/(tabs)/focus'); return; }
+    try {
+      if (useFocusStore.getState().startTopicSession(id)) router.push('/(tabs)/focus');
+      else if (useFocusStore.getState().timerStatus !== 'idle') router.push('/(tabs)/focus');
+      else setStartError(true);
+    } catch { setStartError(true); }
+  }
   const deleting = useRef(false);
   const context = useRef({ id, committeeId: '', subjectId: '' });
   const load = useCallback(() => {
     if (context.current.id !== id) context.current = { id, committeeId: '', subjectId: '' };
-    setData({ status: 'loading' }); setDeleteError(false);
+    setData({ status: 'loading' }); setDeleteError(false); setStudyEvidence(null); setStartError(false);
     if (!id) { setData({ status: 'missing' }); return; }
     try {
       const topic = topicRepo.getById(id);
@@ -34,6 +52,7 @@ export default function TopicDetailScreen() {
       if (subject) context.current = { id, committeeId: subject.committeeId, subjectId: subject.id };
       const committee = subject ? committeeRepo.getById(subject.committeeId) : null;
       setData(topic && subject && committee ? { status: 'ready', topic, subject, committee } : { status: 'missing' });
+      if (topic && subject && committee) loadEvidence();
     } catch { setData({ status: 'error' }); }
   }, [id]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
@@ -73,6 +92,14 @@ export default function TopicDetailScreen() {
       <Button label={t.topics.parent(data.subject.name)} variant="ghost" onPress={() => router.dismissTo(target())} />
       <Button label={t.topics.committee(data.committee.name)} variant="ghost" onPress={() => router.dismissTo(target(true))} />
       {data.topic.description ? <AppText>{data.topic.description}</AppText> : null}
+      <Section>
+        {studyEvidence === null ? <FeedbackState kind="error" message={t.topics.studyEvidenceError}
+          action={{ label: t.common.retry, onPress: loadEvidence }} />
+          : <AppText>{studyEvidence ? t.topics.studyRecorded : t.topics.studyUnrecorded}</AppText>}
+        <AppText>{t.topics.studyEvidenceHelp}</AppText>
+        <Button label={timerStatus === 'idle' ? t.topics.startFocus : t.topics.continueFocus} onPress={startFocus} />
+        {startError && <FeedbackState kind="error" message={t.topics.focusStartError} />}
+      </Section>
       {data.topic.learningObjectives.trim() !== '' && <Section title={t.topics.learningObjectives}>
         <AppText>{data.topic.learningObjectives}</AppText>
       </Section>}

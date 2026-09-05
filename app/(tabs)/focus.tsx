@@ -52,6 +52,7 @@ export default function FocusScreen() {
     (state) => state.entryMilestoneAnnounced
   );
   const selectedCommitteeId = useFocusStore((state) => state.selectedCommitteeId);
+  const selectedTopicName = useFocusStore((state) => state.selectedTopicName);
   const gentleBreakStartedAt = useFocusStore(
     (state) => state.gentleBreakStartedAt
   );
@@ -218,6 +219,7 @@ export default function FocusScreen() {
             sessionMode={sessionMode}
             lowStimulation={lowStimulationMode}
           />
+          {selectedTopicName !== null && <AppText>{t.topics.focusContext(selectedTopicName)}</AppText>}
 
           {error !== null && <FocusError message={error} />}
 

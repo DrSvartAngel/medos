@@ -40,6 +40,7 @@ const validation = load('utils/curriculumValidation.ts');
 const migrations = read('db/migrations.ts');
 const v5Source = migrations.slice(0, migrations.indexOf('  if (currentVersion < 6)')) +
   '\n}\nexport { CURRENT_VERSION };';
+const v7Source = migrations.slice(0, migrations.indexOf('  if (currentVersion < 8)')) + '\n}\nexport { CURRENT_VERSION };';
 function migrate(db, source = migrations) {
   return load('db/migrations.ts', {
     './client': { getDB: () => db }, '@/utils/calendarDate': date,
@@ -85,6 +86,89 @@ async function fixture(run) {
 }
 
 async function main() {
+  await check('v8 optional Topic FK preserves legacy rows, rolls back failure and unlinks on deletion', async () => {
+    const db = new Adapter();
+    try {
+      await migrate(db, v7Source); seed(db);
+      const before = db.getFirstSync('SELECT * FROM focus_sessions');
+      for (const prefix of ['ALTER TABLE focus_sessions', 'UPDATE _schema_version']) {
+        db.fail = sql => sql.startsWith(prefix);
+        await assert.rejects(() => migrate(db), /injected/);
+        assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 7);
+        assert.deepEqual(db.getFirstSync('SELECT * FROM focus_sessions'), before);
+      }
+      db.fail = () => false; await migrate(db); await migrate(db);
+      assert.deepEqual({ ...db.getFirstSync('SELECT * FROM focus_sessions') }, { ...before, topic_id: null });
+      const fk = db.getFirstSync('PRAGMA foreign_key_list(focus_sessions)');
+      assert.equal(fk.table, 'topics'); assert.equal(fk.on_delete, 'SET NULL');
+      assert.throws(() => db.runSync('UPDATE focus_sessions SET topic_id=?', ['missing']), /FOREIGN KEY/);
+      const r = repositories(db); r.subjects.insert(subject()); r.topics.insert(topic());
+      db.runSync('UPDATE focus_sessions SET topic_id=?', ['t']);
+      r.subjects.delete('s');
+      assert.deepEqual({ ...db.getFirstSync('SELECT * FROM focus_sessions') }, { ...before, topic_id: null });
+      assert.deepEqual(db.getAllSync('PRAGMA foreign_key_check'), []);
+    } finally { db.closeSync(); }
+  });
+  await check('Study evidence uses valid concluded positive Focus duration, never objectives or legacy attribution', () => fixture((db, r) => {
+    committee(db); r.subjects.insert(subject()); r.topics.insert({ ...topic(), learningObjectives: 'Not evidence' });
+    const repo = load('db/repositories/focusRepo.ts', { '../client': { getDB: () => db } }).focusRepo;
+    const session = { id: 'f', plannedSec: 1500, actualSec: 1, completed: true, cancelled: false,
+      committeeId: 'c', topicId: 't', startedAt: 1, endedAt: 1001 };
+    assert.equal(repo.hasTopicStudyActivity('t'), false);
+    repo.insert({ ...session, topicId: undefined }); assert.equal(repo.hasTopicStudyActivity('t'), false);
+    db.execSync('DELETE FROM focus_sessions');
+    for (const change of [{actualSec: 0}, {actualSec: -1}, {actualSec: 1.5}, {endedAt: null},
+      {completed: false}, {completed: false, cancelled: true, actualSec: 29}]) {
+      repo.insert({ ...session, ...change }); assert.equal(repo.hasTopicStudyActivity('t'), false);
+      db.execSync('DELETE FROM focus_sessions');
+    }
+    for (const change of [{}, {completed: false, cancelled: true, actualSec: 30}]) {
+      repo.insert({ ...session, ...change }); assert.equal(repo.hasTopicStudyActivity('t'), true);
+      db.execSync('DELETE FROM focus_sessions');
+    }
+    r.topics.delete('t'); repo.insert(session);
+    assert.equal(repo.getRecent()[0].topicId, null);
+    assert.equal(repo.getRecent()[0].committeeId, 'c');
+  }));
+  await check('Topic-started Focus preserves active protection, pause/break/context, persistence and reset', () => fixture((db, r) => {
+    committee(db); r.subjects.insert(subject()); r.topics.insert(topic());
+    const repo = load('db/repositories/focusRepo.ts', { '../client': { getDB: () => db } }).focusRepo;
+    let state;
+    const store = load('store/useFocusStore.ts', {
+      zustand: { create: () => init => { const get = () => state; const set = p => { state = { ...state, ...(typeof p === 'function' ? p(state) : p) }; }; state = init(set,get); return {getState:get,setState:set}; } },
+      '@/db/repositories/focusRepo': {focusRepo:repo},
+      '@/db/repositories/committeeRepo': {committeeRepo:{getById:id=>db.getFirstSync('SELECT id FROM committees WHERE id=?',[id])}},
+      '@/store/useAppStore': {useAppStore:{getState:()=>({defaultFocusSec:1500})}},
+      '@/utils/preferences': load('utils/preferences.ts'),
+      '@/utils/studySupportRules': {isStandardAdaptiveDurationSec:s=>[900,1500,2700].includes(s)},
+    }).useFocusStore;
+    assert.equal(state.startTopicSession('missing'), false);
+    assert.equal(state.startTopicSession('t'), true);
+    assert.equal(state.selectedCommitteeId, 'c'); assert.equal(state.selectedTopicId,'t');
+    const start = state.startedAt;
+    assert.equal(state.startTopicSession('t'), false); assert.equal(state.startedAt,start);
+    state.pauseTimer(); state.resumeTimer(); state.startGentleBreak(); state.resumeTimer();
+    assert.equal(state.selectedTopicId,'t'); assert.equal(state.startedAt,start);
+    store.setState({accumulatedSec:31}); state.finishSession();
+    assert.equal(repo.hasTopicStudyActivity('t'),true); assert.equal(state.selectedTopicId,null);
+    state.startTimer(); assert.equal(state.selectedTopicId,null); state.cancelSession();
+    assert.equal(state.selectedTopicId,null);
+    state.startTopicSession('t'); r.topics.delete('t'); store.setState({accumulatedSec:5}); state.finishSession();
+    assert.equal(state.timerStatus,'idle'); assert.equal(repo.getRecent()[0].topicId,null);
+  }));
+  await check('Topic evidence UI keeps errors distinct and links only on explicit start; no Memory integration', () => {
+    const source = read('app/topics/[id].tsx');
+    assert.match(source, /studyEvidence === null/); assert.match(source,/hasTopicStudyActivity\(id\)/);
+    assert.match(source,/onPress=\{startFocus\}/); assert.match(source,/startTopicSession\(id\)/);
+    assert.match(source,/useFocusEffect/);
+    for (const lang of ['en','tr']) {
+      const t = load('i18n/'+lang+'.ts').default.topics;
+      assert.ok(t.studyRecorded); assert.ok(t.studyUnrecorded); assert.ok(t.studyEvidenceError);
+    }
+    for (const file of ['db/repositories/memoryRepo.ts','store/useMemoryStore.ts','db/repositories/calendarRepo.ts'])
+      assert.doesNotMatch(read(file), /topicId|topic_id/);
+    assert.doesNotMatch(read('db/repositories/focusRepo.ts'), /learningObjectives|learning_objectives|mastery|percentage|Gemini/);
+  });
   await check('v6 to v7 preserves Topics, defaults objectives and rolls back failed version advancement', async () => {
     const db = new Adapter();
     const v6Source = migrations.slice(0, migrations.indexOf('  if (currentVersion < 7)')) + '\n}\nexport { CURRENT_VERSION };';
@@ -97,12 +181,12 @@ async function main() {
       const indexes = db.getAllSync("SELECT name, sql FROM sqlite_master WHERE type='index' ORDER BY name");
       for (const failAt of ['ALTER TABLE topics', 'UPDATE _schema_version']) {
         db.fail = sql => sql.startsWith(failAt);
-        await assert.rejects(() => migrate(db), /injected/);
+        await assert.rejects(() => migrate(db, v7Source), /injected/);
         assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 6);
         assert.deepEqual(db.getFirstSync('SELECT * FROM topics'), before);
       }
       db.fail = () => false;
-      await migrate(db); await migrate(db);
+      await migrate(db, v7Source); await migrate(db, v7Source);
       assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 7);
       assert.deepEqual({ ...db.getFirstSync('SELECT * FROM topics') }, { ...before, learning_objectives: '' });
       const column = db.getAllSync('PRAGMA table_info(topics)').find(c => c.name === 'learning_objectives');
@@ -163,7 +247,7 @@ async function main() {
     assert.match(model.split('export interface Topic')[1], /learningObjectives: string/);
     assert.doesNotMatch(model.split('export interface Topic')[0], /learningObjectives/);
     assert.doesNotMatch(model, /weight|priority|progress|mastery|provenance|Objective\s*\{/i);
-    const v7 = migrations.slice(migrations.indexOf('  if (currentVersion < 7)'));
+    const v7 = migrations.slice(migrations.indexOf('  if (currentVersion < 7)'), migrations.indexOf('  if (currentVersion < 8)'));
     assert.equal((v7.match(/ALTER TABLE/g) || []).length, 1);
     assert.doesNotMatch(v7, /CREATE TABLE|CREATE INDEX|JSON|REFERENCES|DELETE FROM/);
     for (const file of ['db/repositories/subjectRepo.ts','db/repositories/committeeRepo.ts',
@@ -180,8 +264,8 @@ async function main() {
     assert.equal(closes, 2); assert.equal(opens, 2);
     await fixture(db => assert.equal(db.getFirstSync('PRAGMA foreign_keys').foreign_keys, 1));
   });
-  await check('Clean install v7, exact columns/FKs/indexes and safe rerun', () => fixture(async db => {
-    assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 7);
+  await check('Clean install v8, exact columns/FKs/indexes and safe rerun', () => fixture(async db => {
+    assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 8);
     for (const [table,parent,parentTable,index] of [
       ['subjects','committee_id','committees','idx_subjects_committee_order'],
       ['topics','subject_id','subjects','idx_topics_subject_order'],
@@ -207,7 +291,7 @@ async function main() {
       assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 5);
       const before = snapshot(db);
       const shapes = legacyTables.map(t => db.getAllSync('PRAGMA table_info(' + t + ')'));
-      await migrate(db);
+      await migrate(db, v7Source);
       assert.deepEqual(snapshot(db), before);
       assert.deepEqual(legacyTables.map(t => db.getAllSync('PRAGMA table_info(' + t + ')')), shapes);
       assert.equal(db.getFirstSync('SELECT count(*) n FROM subjects').n, 0);
@@ -355,19 +439,19 @@ async function main() {
       assert.equal(db.getFirstSync('SELECT count(*) n FROM ' + table).n, 0);
     assert.deepEqual(db.getAllSync('PRAGMA foreign_key_check'), []);
   }));
-  await check('No curriculum store/linkage/v8/dependencies; Subject and Topic UI are approved', () => {
+  await check('No curriculum curriculum store/unapproved linkage/v9/dependencies; Subject and Topic UI are approved', () => {
     const pkg = JSON.parse(read('package.json'));
     const lock = JSON.parse(read('package-lock.json')).packages[''];
     assert.deepEqual(pkg.dependencies, lock.dependencies);
     assert.deepEqual(pkg.devDependencies, lock.devDependencies);
     assert.equal(pkg.scripts['validate:phase4'], 'node scripts/validate-phase4.cjs');
-    assert.match(migrations, /const CURRENT_VERSION = 7/);
-    assert.doesNotMatch(migrations, /currentVersion < 8/);
+    assert.match(migrations, /const CURRENT_VERSION = 8/);
+    assert.doesNotMatch(migrations, /currentVersion < 9/);
     const v6 = migrations.slice(migrations.indexOf('  if (currentVersion < 6)'), migrations.indexOf('  if (currentVersion < 7)'));
     assert.doesNotMatch(v6, /ALTER TABLE|DROP TABLE|DELETE FROM|UPDATE (?!_schema_version)/);
     for (const dir of ['store/useSubjectStore.ts','store/useTopicStore.ts'])
       assert.equal(fs.existsSync(path.join(root, dir)), false);
-    for (const file of ['store/useFocusStore.ts','store/useMemoryStore.ts','store/useCalendarStore.ts','store/useStudySupportStore.ts'])
+    for (const file of ['store/useMemoryStore.ts','store/useCalendarStore.ts','store/useStudySupportStore.ts'])
       assert.doesNotMatch(read(file), /subjectId|topicId|subject_id|topic_id/);
     for (const file of ['db/repositories/subjectRepo.ts','db/repositories/topicRepo.ts']) {
       assert.match(read(file), /ORDER BY created_at ASC, id ASC LIMIT \? OFFSET \?/);

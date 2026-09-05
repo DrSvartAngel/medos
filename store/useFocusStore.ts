@@ -26,6 +26,7 @@ export interface StartAdaptiveSessionOptions {
 
 export interface FocusSession {
   id: string;
+  topicId?: string | null;
   /** Chosen session length in seconds. */
   plannedSec: number;
   /** Real elapsed focus time in seconds. */
@@ -62,6 +63,8 @@ interface FocusState extends ElapsedState {
   /** Runtime-only start of an explicit Gentle Return break. */
   gentleBreakStartedAt: number | null;
   selectedCommitteeId: string | null;
+  selectedTopicId: string | null;
+  selectedTopicName: string | null;
 
   recentSessions: FocusSession[];
   isLoadingHistory: boolean;
@@ -70,6 +73,7 @@ interface FocusState extends ElapsedState {
   setPlannedSec: (sec: number) => void;
   setSelectedCommittee: (id: string | null) => void;
   startTimer: () => void;
+  startTopicSession: (topicId: string) => boolean;
   startEntrySession: (options?: StartEntrySessionOptions) => boolean;
   startAdaptiveSession: (options: StartAdaptiveSessionOptions) => boolean;
   pauseTimer: () => void;
@@ -100,6 +104,8 @@ function createEmptyTimer() {
     gentleBreakStartedAt: null,
     accumulatedSec: 0,
     selectedCommitteeId: null,
+    selectedTopicId: null,
+    selectedTopicName: null,
   };
 }
 
@@ -146,6 +152,7 @@ function buildSession(state: FocusState, endedAt: number, cancelled: boolean): F
     completed: !cancelled,
     cancelled,
     committeeId: state.selectedCommitteeId,
+    topicId: state.selectedTopicId,
     startedAt: state.startedAt,
     endedAt,
   };
@@ -187,7 +194,24 @@ export const useFocusStore = create<FocusState>()((set, get) => ({
       entryMilestoneDismissed: false,
       entryMilestoneAnnounced: false,
       error: null,
+      selectedTopicId: null,
+      selectedTopicName: null,
     });
+  },
+
+  startTopicSession: (topicId) => {
+    if (get().timerStatus !== 'idle') return false;
+    const context = focusRepo.getTopicContext(topicId);
+    if (!context || get().timerStatus !== 'idle') return false;
+    const now = Date.now();
+    set({
+      timerStatus: 'running', plannedSec: normalizeFocusDurationSec(useAppStore.getState().defaultFocusSec),
+      startedAt: now, runningSince: now, pausedAt: null, gentleBreakStartedAt: null,
+      accumulatedSec: 0, sessionMode: 'standard', entryMilestoneDismissed: false,
+      entryMilestoneAnnounced: false, selectedCommitteeId: context.committeeId,
+      selectedTopicId: context.id, selectedTopicName: context.name, error: null,
+    });
+    return true;
   },
 
   startEntrySession: (options = {}) => {
@@ -206,6 +230,8 @@ export const useFocusStore = create<FocusState>()((set, get) => ({
       gentleBreakStartedAt: null,
       accumulatedSec: 0,
       selectedCommitteeId: resolveSessionCommitteeId(options.committeeId),
+      selectedTopicId: null,
+      selectedTopicName: null,
       error: null,
     });
     return true;
@@ -232,6 +258,8 @@ export const useFocusStore = create<FocusState>()((set, get) => ({
       gentleBreakStartedAt: null,
       accumulatedSec: 0,
       selectedCommitteeId: resolveSessionCommitteeId(committeeId),
+      selectedTopicId: null,
+      selectedTopicName: null,
       error: null,
     });
     return true;

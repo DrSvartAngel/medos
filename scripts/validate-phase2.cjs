@@ -665,11 +665,11 @@ async function main() {
     assert.equal(dashboardRules.buildQuickStart(null, null, null).kind, 'generic_focus');
   });
 
-  await checkAsync('Clean v0 migration reaches schema v7 and preserves compatibility columns', async () => {
+  await checkAsync('Clean v0 migration reaches schema v8 and preserves compatibility columns', async () => {
     const adapter = new ExpoSQLiteAdapter();
     try {
       await migrationModule(adapter, calendarDate).runMigrations();
-      assert.equal(adapter.getFirstSync('SELECT version FROM _schema_version').version, 7);
+      assert.equal(adapter.getFirstSync('SELECT version FROM _schema_version').version, 8);
       const flashcardColumns = columnNames(adapter, 'flashcards');
       for (const name of ['interval', 'ease', 'next_review', 'updated_at']) {
         assert.equal(flashcardColumns.has(name), true);
@@ -681,7 +681,7 @@ async function main() {
         assert.equal(columnNames(adapter, 'focus_sessions').has(name), true);
       }
       await migrationModule(adapter, calendarDate).runMigrations();
-      assert.equal(adapter.getFirstSync('SELECT version FROM _schema_version').version, 7);
+      assert.equal(adapter.getFirstSync('SELECT version FROM _schema_version').version, 8);
     } finally {
       adapter.close();
     }
@@ -696,7 +696,7 @@ async function main() {
         'ALTER TABLE focus_sessions ADD COLUMN actual_duration_sec INTEGER NOT NULL DEFAULT 0;'
       );
       await migrationModule(adapter, calendarDate).runMigrations();
-      assert.equal(adapter.getFirstSync('SELECT version FROM _schema_version').version, 7);
+      assert.equal(adapter.getFirstSync('SELECT version FROM _schema_version').version, 8);
       assert.equal(columnNames(adapter, 'committees').has('exam_date'), true);
       assert.equal(columnNames(adapter, 'focus_sessions').has('cancelled'), true);
     } finally {
@@ -749,7 +749,7 @@ async function main() {
         ['e1', 'Study', '', eventTimestamp, eventTimestamp + 60_000, 0, '#fff', null, 10]
       );
       await migrationModule(adapter, calendarDate).runMigrations();
-      assert.equal(adapter.getFirstSync('SELECT version FROM _schema_version').version, 7);
+      assert.equal(adapter.getFirstSync('SELECT version FROM _schema_version').version, 8);
       assert.equal(
         adapter.getFirstSync('SELECT event_date FROM calendar_events WHERE id = ?', ['e1'])
           .event_date,
@@ -833,7 +833,7 @@ async function main() {
     const memoryRepo = read('db/repositories/memoryRepo.ts');
     const calendarRepo = read('db/repositories/calendarRepo.ts');
     assert.match(committeeRepo, /WHERE id = \?/);
-    assert.match(focusRepo, /VALUES \(\?, \?, \?, \?, \?, \?, \?, \?\)/);
+    assert.match(focusRepo, /VALUES \(\?, \?, \?, \?, \?, \?, \?, \?, \?\)/);
     assert.match(memoryRepo, /DELETE FROM decks WHERE id = \?/);
     assert.match(calendarRepo, /DELETE FROM calendar_events WHERE id = \?/);
   });

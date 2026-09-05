@@ -701,8 +701,8 @@ check('Phase 3.2 remains runtime-only with no schema, dependency, or version cha
   const appStore = read('store/useAppStore.ts');
   const supportStore = read('store/useStudySupportStore.ts');
   const packageJson = JSON.parse(read('package.json'));
-  assert.match(migrations, /const CURRENT_VERSION = 7/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 8\)/m);
+  assert.match(migrations, /const CURRENT_VERSION = 8/);
+  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 9\)/m);
   assert.doesNotMatch(migrations, /session_mode|entry_mode|check_in|study_check/);
   assert.doesNotMatch(focusRepo, /sessionMode|session_mode|entryMilestone|checkIn/);
   assert.doesNotMatch(appStore, /sessionMode|entryMilestone|CheckInEnergy|checkIn/);
@@ -1036,8 +1036,8 @@ check('Lighter Plan is route-local, migration-free, dependency-free, and non-cli
   assert.doesNotMatch(supportStore, /recoveryOpen|RecoveryAction|selectedRecoveryAction|microSteps/);
   assert.doesNotMatch(route, /AsyncStorage|persist\(|telemetry|analytics/);
   assert.equal(fs.existsSync(path.join(root, 'db/repositories/recoveryRepo.ts')), false);
-  assert.match(migrations, /const CURRENT_VERSION = 7/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 8\)/m);
+  assert.match(migrations, /const CURRENT_VERSION = 8/);
+  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 9\)/m);
   assert.equal(Object.keys(packageJson.dependencies).length, 13);
   assertCopy(route, "Lighter plan");
   assertCopy(route, "Choose one small useful thing.");
@@ -1279,8 +1279,8 @@ check('Gentle Return remains scrollable, runtime-only, migration-free, and depen
   assert.doesNotMatch(component, /numberOfLines/);
   assert.doesNotMatch(focusStore, /persist\(|AsyncStorage/);
   assert.doesNotMatch(focusRepo, /gentleBreak|distraction|break_/i);
-  assert.match(migrations, /const CURRENT_VERSION = 7/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 8\)/m);
+  assert.match(migrations, /const CURRENT_VERSION = 8/);
+  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 9\)/m);
   assert.equal(Object.keys(packageJson.dependencies).length, 13);
 });
 
@@ -1487,8 +1487,8 @@ check('Phase 3.5 adds no notification, background, analytics, theme, schema, or 
   assert.doesNotMatch(read('components/ui/Button.tsx'), /lowStimulation/);
   assert.equal(packageJson.dependencies['expo-notifications'], undefined);
   assert.equal(Object.keys(packageJson.dependencies).length, 13);
-  assert.match(migrations, /const CURRENT_VERSION = 7/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 8\)/m);
+  assert.match(migrations, /const CURRENT_VERSION = 8/);
+  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 9\)/m);
 });
 
 check('Phase 3.5 Profile controls remain responsive, explicit, and large-text safe', () => {
@@ -1698,8 +1698,8 @@ check('Phase 3.6 adds no feature state, notification, analytics, schema, depende
     /expo-notifications|Notifications\.|TaskManager\.|BackgroundTask\.|analytics|telemetry|automatic distraction detection/i
   );
   assert.doesNotMatch(stores, /phase36|phase3Closure|accessibilityHistory/i);
-  assert.match(migrations, /const CURRENT_VERSION = 7/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 8\)/m);
+  assert.match(migrations, /const CURRENT_VERSION = 8/);
+  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 9\)/m);
   assert.equal(Object.keys(packageJson.dependencies).length, 13);
   assert.equal(packageJson.dependencies['expo-notifications'], undefined);
   assert.equal(packageJson.dependencies['expo-task-manager'], undefined);

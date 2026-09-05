@@ -69,6 +69,14 @@ const tr: Strings = {
 
   // ── Genel Bakış ──────────────────────────────────────────────────────────────
   topics: {
+    studyRecorded: 'Çalışma kaydı var',
+    studyUnrecorded: 'Henüz çalışma kaydı yok',
+    studyEvidenceHelp: 'Yalnızca kaydedilmiş odaklanma etkinliğini gösterir; öğrenme veya tamamlanma durumunu göstermez.',
+    studyEvidenceError: 'Çalışma kayıtları kontrol edilemedi.',
+    startFocus: 'Bu konu için odaklanmaya başla',
+    continueFocus: 'Odaklanmaya devam et',
+    focusStartError: 'Odaklanma başlatılamadı. Konu artık kullanılamıyor olabilir. Yeniden dene.',
+    focusContext: (name: string) => `Konu: ${name}`,
     learningObjectives: 'Öğrenme hedefleri',
     learningObjectivesOptional: 'Öğrenme hedefleri (isteğe bağlı)',
     learningObjectivesHelp: 'Bu konuyu çalıştıktan sonra neyi açıklayabilmek istersin? İstersen birkaç kısa satır yaz.',
