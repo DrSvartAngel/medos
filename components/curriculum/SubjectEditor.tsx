@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
-import { KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { BackHandler, KeyboardAvoidingView, Platform } from 'react-native';
 import { Section } from '@/components/ui/Section';
 import { FeedbackState } from '@/components/ui/FeedbackState';
-import { router, type Href } from 'expo-router';
+import { router, type Href, useFocusEffect } from 'expo-router';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -23,7 +23,10 @@ export function SubjectEditor({ id, mode }: { id: string; mode: 'create' | 'edit
   const [loaded, setLoaded] = useState<Loaded>({ status: 'loading' });
   const [attempt, setAttempt] = useState(0);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const context = useRef({ key: `${mode}:${id}`, committeeId: '' });
   useEffect(() => {
+    const key = `${mode}:${id}`;
+    if (context.current.key !== key) context.current = { key, committeeId: '' };
     setLoaded({ status: 'loading' });
     setSaveError(null);
     if (!id) { setLoaded({ status: 'missing' }); return; }
@@ -31,19 +34,22 @@ export function SubjectEditor({ id, mode }: { id: string; mode: 'create' | 'edit
       const subject = mode === 'edit' ? subjectRepo.getById(id) : null;
       if (mode === 'edit' && !subject) { setLoaded({ status: 'missing' }); return; }
       const committee = committeeRepo.getById(subject?.committeeId ?? id);
+      if (committee) context.current.committeeId = committee.id;
       setLoaded(committee ? { status: 'ready', committee, subject } : { status: 'missing' });
     } catch { setLoaded({ status: 'error' }); }
   }, [id, mode, attempt]);
 
   function back() {
     try {
-      const target = subjectFallback(loaded.status === 'ready' ? loaded.committee.id : mode === 'create' ? id : '',
+      const target = subjectFallback(context.current.committeeId || (mode === 'create' ? id : ''),
         mode === 'edit' ? id : undefined) as Href;
-      if (mode === 'edit' && target !== `/subjects/${encodeURIComponent(id)}`) router.dismissTo(target);
-      else if (target !== '/(tabs)/committees' && router.canGoBack()) router.back();
-      else router.replace(target);
+      router.dismissTo(target);
     } catch { router.replace('/(tabs)/committees'); }
   }
+  useFocusEffect(useCallback(() => {
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
+    return () => listener.remove();
+  }, [id, mode]));
   function save(value: { name: string; description: string }): boolean {
     if (loaded.status !== 'ready') return false;
     try {

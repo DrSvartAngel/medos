@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+import { Alert, BackHandler } from 'react-native';
 import { TopicList } from '@/components/curriculum/TopicList';
 import { Section } from '@/components/ui/Section';
 import { FeedbackState } from '@/components/ui/FeedbackState';
@@ -26,16 +26,19 @@ export default function SubjectDetailScreen() {
   const [countError, setCountError] = useState(false);
   const [deleteError, setDeleteError] = useState(false);
   const deleting = useRef(false);
+  const context = useRef({ id, committeeId: '' });
   const loadCount = useCallback(() => {
     setCount(null); setCountError(false);
     try { setCount(topicRepo.countBySubject(id)); } catch { setCountError(true); }
   }, [id]);
   const load = useCallback(() => {
+    if (context.current.id !== id) context.current = { id, committeeId: '' };
     setData({ status: 'loading' }); setDeleteError(false);
     if (!id) { setData({ status: 'missing' }); return; }
     try {
       const subject = subjectRepo.getById(id);
       const committee = subject ? committeeRepo.getById(subject.committeeId) : null;
+      if (committee) context.current.committeeId = committee.id;
       if (!subject || !committee) { setData({ status: 'missing' }); return; }
       setData({ status: 'ready', subject, committee });
       loadCount();
@@ -43,12 +46,16 @@ export default function SubjectDetailScreen() {
   }, [id, loadCount]);
   useFocusEffect(useCallback(() => { load(); }, [load]));
   function parentTarget(): Href {
-    try { return subjectFallback(data.status === 'ready' ? data.committee.id : '') as Href; }
+    try { return subjectFallback(context.current.committeeId) as Href; }
     catch { return '/(tabs)/committees'; }
   }
   function back() {
-    if (router.canGoBack()) router.back(); else router.replace(parentTarget());
+    router.dismissTo(parentTarget());
   }
+  useFocusEffect(useCallback(() => {
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
+    return () => listener.remove();
+  }, [id]));
   function remove() {
     if (data.status !== 'ready' || deleting.current) return;
     const subject = data.subject;

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
@@ -8,8 +9,9 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { subjectFallback, subjectRouteId } from '@/utils/subjectRoutes';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -18,7 +20,16 @@ import { useResponsive } from '@/hooks/useResponsive';
 import { useCommitteeStore, type Committee } from '@/store/useCommitteeStore';
 import { formatLocalDateKey, localDateTimeToTimestamp } from '@/utils/calendarDate';
 
+import { useTranslation } from '@/i18n';
+
+function committeeExit(id: string): void {
+  let target: Href = '/(tabs)/committees';
+  try { target = subjectFallback(id) as Href; } catch { /* safe tab fallback */ }
+  router.dismissTo(target);
+}
+
 function EditCommitteeForm({ committee }: { committee: Committee }) {
+  const t = useTranslation();
   const { colors, spacing, radius, typography } = useTheme();
   const { isTablet } = useResponsive();
   const updateCommittee = useCommitteeStore((state) => state.updateCommittee);
@@ -70,7 +81,7 @@ function EditCommitteeForm({ committee }: { committee: Committee }) {
       examDate: dates.exam,
     });
     setSaving(false);
-    if (succeeded) router.back();
+    if (succeeded) committeeExit(committee.id);
   }
 
   const inputStyle = {
@@ -91,17 +102,17 @@ function EditCommitteeForm({ committee }: { committee: Committee }) {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScreenWrapper>
+      <ScreenWrapper includeBottomSafeArea>
         <View style={styles.headerRow}>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            accessibilityLabel={t.common.back}
+            onPress={() => committeeExit(committee.id)}
             style={[styles.backButton, { marginRight: spacing.sm }]}
           >
             <Feather name="arrow-left" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          <AppText variant={isTablet ? 'h1' : 'h2'}>Edit Committee</AppText>
+          <AppText style={{ flex: 1 }} variant={isTablet ? 'h1' : 'h2'}>Edit Committee</AppText>
         </View>
 
         <AppText color={colors.textSecondary} style={{ marginBottom: spacing.xl }}>
@@ -239,8 +250,9 @@ function EditCommitteeForm({ committee }: { committee: Committee }) {
 }
 
 export default function EditCommitteeScreen() {
+  const t = useTranslation();
   const params = useLocalSearchParams<{ id?: string | string[] }>();
-  const id = typeof params.id === 'string' ? params.id : '';
+  const id = subjectRouteId(params.id);
   const { colors, spacing } = useTheme();
 
   const committee = useCommitteeStore((state) =>
@@ -257,11 +269,15 @@ export default function EditCommitteeScreen() {
     setError(null);
     if (id) loadCommittee(id);
   }, [id, loadCommittee, setError]);
+  useFocusEffect(useCallback(() => {
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => { committeeExit(id); return true; });
+    return () => listener.remove();
+  }, [id]));
   const requestMatches = committeeRequestId === id;
 
   if (!id || (requestMatches && committeeNotFound)) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centeredState}>
+      <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <Feather name="search" size={30} color={colors.textMuted} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
           Committee not found
@@ -269,14 +285,14 @@ export default function EditCommitteeScreen() {
         <AppText color={colors.textMuted} style={styles.centeredText}>
           It may have been removed from this device.
         </AppText>
-        <Button label="Back to Committees" onPress={() => router.replace('/(tabs)/committees')} />
+        <Button label={t.common.back} onPress={() => router.dismissTo('/(tabs)/committees')} />
       </ScreenWrapper>
     );
   }
 
   if (requestMatches && committeeLoadError) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centeredState}>
+      <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <Feather name="alert-circle" size={30} color={colors.warning} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
           Committee needs another try
@@ -285,13 +301,14 @@ export default function EditCommitteeScreen() {
           The committee could not be loaded from local storage.
         </AppText>
         <Button label="Retry committee" onPress={() => loadCommittee(id)} />
+        <Button label={t.common.back} variant="ghost" onPress={() => committeeExit(id)} />
       </ScreenWrapper>
     );
   }
 
   if (!requestMatches || isLoadingCommittee || !committee) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centeredState}>
+      <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <ActivityIndicator size="large" color={colors.primary} />
         <AppText color={colors.textMuted} style={{ marginTop: spacing.sm }}>
           Loading committee…

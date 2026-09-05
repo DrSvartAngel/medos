@@ -501,6 +501,57 @@ async function main() {
     for (const locale of [en,tr]) { assert.ok(locale.open('X').includes('X')); assert.ok(locale.parent('X').includes('X')); }
   });
 
+  await check('Closure route params reject malformed values without imposing UUIDs; deleted parents fall back safely', () => fixture((db, r) => {
+    committee(db); r.subjects.insert(subject());
+    const route = load('utils/subjectRoutes.ts', {
+      '@/db/repositories/committeeRepo': { committeeRepo: { getById: id => db.getFirstSync('SELECT id FROM committees WHERE id=?', [id]) ?? null } },
+      '@/db/repositories/subjectRepo': { subjectRepo: r.subjects },
+    });
+    for (const value of [null,1,{},[],['s'],'',' ','a\u0000b','a\nb']) assert.equal(route.subjectRouteId(value), '');
+    assert.equal(route.subjectRouteId("O'Brien İ / x"), "O'Brien İ / x");
+    assert.equal(route.subjectFallback('c','s'), '/subjects/s');
+    r.subjects.delete('s'); assert.equal(route.subjectFallback('c','s'), '/committees/c');
+    db.runSync('DELETE FROM committees WHERE id=?',['c']);
+    assert.equal(route.subjectFallback('c','s'), '/(tabs)/committees');
+  }));
+  await check('Committee closure wires verified exits, focus refresh and scrollable stack safe area', () => {
+    const edit = read('app/committees/edit/[id].tsx'), detail = read('app/committees/[id].tsx');
+    assert.match(edit, /subjectFallback\(id\)/);
+    assert.match(edit, /if \(succeeded\) committeeExit\(committee.id\)/);
+    assert.match(edit, /variant="ghost" onPress=\{\(\) => committeeExit\(id\)\}/);
+    assert.match(edit, /useEffect\(\(\) =>/); // do not focus-reload active form drafts
+    assert.match(detail, /useFocusEffect\(useCallback\(\(\) => \{\s*setError\(null\);\s*if \(id\) loadCommittee\(id\)/);
+    for (const source of [edit,detail]) {
+      assert.doesNotMatch(source, /router.back\(|canGoBack|scrollable=\{false\}|setInterval/);
+      assert.match(source, /subjectRouteId\(params.id\)/);
+      assert.match(source, /listener.remove\(\)/);
+      for (const wrapper of source.matchAll(/<ScreenWrapper\b[^>]*>/g)) assert.match(wrapper[0], /includeBottomSafeArea/);
+      assert.match(source, /minHeight: 44/);
+      assert.match(source, /accessibilityLabel=\{t.common.back\}/);
+    }
+  });
+  await check('Subject closure retains verified parent context across retries and cleans hardware back listeners', () => {
+    for (const file of ['app/subjects/[id].tsx','components/curriculum/SubjectEditor.tsx']) {
+      const source = read(file);
+      assert.match(source, /context.current.committeeId/);
+      assert.match(source, /subjectFallback/);
+      assert.match(source, /hardwareBackPress/); assert.match(source, /listener.remove\(\)/);
+      assert.doesNotMatch(source, /router.back\(|canGoBack/);
+    }
+    assert.match(read('components/curriculum/SubjectEditor.tsx'), /if \(context.current.key !== key\)/);
+  });
+  await check('Committee hierarchy delete confirmation is consistently EN/TR with unchanged leaf semantics', () => {
+    const source = read('app/committees/[id].tsx');
+    for (const key of ['committeeDeleteTitle','committeeDeleteWarning','committeeDeleteAction']) assert.ok(source.includes('t.subjects.'+key));
+    assert.match(source, /text: t.common.cancel/);
+    assert.match(source, /if \(deleteCommittee\(committeeId\)\) router.dismissTo/);
+    for (const lang of ['en','tr']) {
+      const locale = load('i18n/'+lang+'.ts').default;
+      assert.ok(locale.subjects.committeeDeleteTitle); assert.ok(locale.subjects.committeeDeleteAction);
+      assert.ok(locale.subjects.committeeDeleteWarning('X').includes('X'));
+    }
+  });
+
   console.log('\nPhase 4 static/in-memory validation passed: ' + passed + ' checks.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

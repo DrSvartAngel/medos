@@ -85,6 +85,7 @@ const en = {
   },
 
   subjects: {
+    committeeDeleteTitle: 'Remove Committee?', committeeDeleteAction: 'Remove',
     title: 'Subjects', add: 'Add Subject', create: 'Create Subject', edit: 'Edit Subject',
     name: 'Subject name (required)', description: 'Description (optional)',
     empty: 'No subjects added yet.', more: 'Load more',

@@ -1,8 +1,8 @@
 import { committeeRepo } from '@/db/repositories/committeeRepo';
 import { subjectRepo } from '@/db/repositories/subjectRepo';
 
-export function subjectRouteId(value: string | string[] | undefined): string {
-  return typeof value === 'string' && value.trim() ? value : '';
+export function subjectRouteId(value: unknown): string {
+  return typeof value === 'string' && value.trim() && !/[\u0000-\u001f\u007f]/.test(value) ? value : '';
 }
 
 /** Read-only destination resolution. Never return a deleted Subject or parent. */

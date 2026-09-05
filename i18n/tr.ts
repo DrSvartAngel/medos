@@ -87,6 +87,7 @@ const tr: Strings = {
   },
 
   subjects: {
+    committeeDeleteTitle: 'Komite silinsin mi?', committeeDeleteAction: 'Sil',
     title: 'Dersler', add: 'Ders ekle', create: 'Ders oluştur', edit: 'Dersi düzenle',
     name: 'Ders adı (zorunlu)', description: 'Açıklama (isteğe bağlı)',
     empty: 'Henüz ders eklenmedi.', more: 'Daha fazla göster',

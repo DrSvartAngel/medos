@@ -1,10 +1,11 @@
 import { SubjectList } from '@/components/curriculum/SubjectList';
 import { useTranslation } from '@/i18n';
-import React, { useEffect } from 'react';
-import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import React, { useCallback } from 'react';
+import { ActivityIndicator, Alert, BackHandler, StyleSheet, TouchableOpacity, View } from 'react-native';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { subjectRouteId } from '@/utils/subjectRoutes';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
@@ -35,12 +36,12 @@ function formatCommitteeDate(timestamp: number): string {
 
 export default function CommitteeDetailScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
-  const id = typeof params.id === 'string' ? params.id : '';
+  const id = subjectRouteId(params.id);
   const { colors, spacing, radius } = useTheme();
   const { isTablet } = useResponsive();
   const t = useTranslation();
   function back() {
-    if (router.canGoBack()) router.back(); else router.replace('/(tabs)/committees');
+    router.dismissTo('/(tabs)/committees');
   }
 
   const committee = useCommitteeStore((state) =>
@@ -55,10 +56,12 @@ export default function CommitteeDetailScreen() {
   const deleteCommittee = useCommitteeStore((state) => state.deleteCommittee);
   const setError = useCommitteeStore((state) => state.setError);
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     setError(null);
     if (id) loadCommittee(id);
-  }, [id, loadCommittee, setError]);
+    const listener = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
+    return () => listener.remove();
+  }, [id, loadCommittee, setError]));
 
   const retry = () => {
     if (id) loadCommittee(id);
@@ -67,7 +70,7 @@ export default function CommitteeDetailScreen() {
 
   if (!id || (requestMatches && committeeNotFound)) {
     return (
-      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centeredState}>
+      <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <Feather name="search" size={30} color={colors.textMuted} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
           Committee not found
@@ -82,7 +85,7 @@ export default function CommitteeDetailScreen() {
 
   if (requestMatches && committeeLoadError) {
     return (
-      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centeredState}>
+      <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <Feather name="alert-circle" size={30} color={colors.warning} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
           Committee needs another try
@@ -104,7 +107,7 @@ export default function CommitteeDetailScreen() {
 
   if (!requestMatches || isLoadingCommittee || !committee) {
     return (
-      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centeredState}>
+      <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <ActivityIndicator size="large" color={colors.primary} />
         <AppText color={colors.textMuted} style={{ marginTop: spacing.sm }}>
           Loading committee…
@@ -125,12 +128,12 @@ export default function CommitteeDetailScreen() {
 
   function handleDelete() {
     Alert.alert(
-      'Remove Committee?',
+      t.subjects.committeeDeleteTitle,
       t.subjects.committeeDeleteWarning(committeeName),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t.common.cancel, style: 'cancel' },
         {
-          text: 'Remove',
+          text: t.subjects.committeeDeleteAction,
           style: 'destructive',
           onPress: () => {
             if (deleteCommittee(committeeId)) router.dismissTo('/(tabs)/committees');
@@ -145,7 +148,7 @@ export default function CommitteeDetailScreen() {
       <View style={[styles.topBar, { marginBottom: spacing.lg }]}>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t.common.back}
           onPress={back}
           style={styles.iconButton}
         >
@@ -155,7 +158,7 @@ export default function CommitteeDetailScreen() {
         <TouchableOpacity
           accessibilityRole="button"
           accessibilityLabel={`Edit ${committee.name}`}
-          onPress={() => router.push(`/committees/edit/${committee.id}` as Href)}
+          onPress={() => router.push(`/committees/edit/${encodeURIComponent(committee.id)}` as Href)}
           style={[
             styles.editButton,
             {

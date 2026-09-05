@@ -785,7 +785,8 @@ async function main() {
     assert.match(edit, /loadCommittee\(id\)/);
     assert.match(edit, /Committee not found/);
     assert.match(create, /if \(succeeded\) router\.back\(\)/);
-    assert.match(edit, /if \(succeeded\) router\.back\(\)/);
+    assert.match(edit, /if \(succeeded\) committeeExit\(committee.id\)/);
+    assert.match(edit, /subjectFallback\(id\)/);
     assert.match(detail, /if \(deleteCommittee\(committeeId\)\) router\.dismissTo\('\/\(tabs\)\/committees'\)/);
     assert.match(read('app/(tabs)/index.tsx'), /`\/committees\/\$\{id\}`/);
     assert.match(read('app/(tabs)/calendar.tsx'), /`\/committees\/\$\{item\.sourceId\}`/);
@@ -797,7 +798,7 @@ async function main() {
     assert.match(button, /minHeight: Interaction.minTarget/);
     assert.match(read('theme/interaction.ts'), /minTarget: 44/);
     assert.match(read('app/(tabs)/profile.tsx'), /accessibilityRole="radio"/);
-    assert.match(read('app/committees/[id].tsx'), /accessibilityLabel="Go back"/);
+    assert.match(read('app/committees/[id].tsx'), /accessibilityLabel=\{t.common.back\}/);
     assert.match(read('app/committees/new.tsx'), /minHeight: 48/);
   });
 

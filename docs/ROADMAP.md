@@ -1,8 +1,27 @@
 # MedOS — Development Roadmap
 
+## Phase 4.4 — Curriculum integration / closure — IMPLEMENTATION COMPLETE
+
+- Branch: phase-4-4-curriculum-closure, based on clean main 7819215; no merge to main.
+- Committee edit save/back resolves a verified Committee detail or Committees tab; error/missing states have safe exits. Android back listeners are focus-scoped and removed on blur.
+- Subject detail/editor now use verified hierarchical dismissal, retaining known Committee context across missing-record/retry states and resetting context on route identity change.
+- Committee detail revalidates on focus without polling. Committee edit retains mount-based loading so focus does not reset unsaved form input. Existing Subject/Topic pagination and real Topic COUNT remain unchanged.
+- Committee edit/detail stack states use existing bottom-safe-area opt-in and scrolling; touched back labels are localized, minimum targets retained, edit heading can wrap.
+- Committee delete title/body/cancel/action consistently use EN/TR. Actual hierarchy-only deletion and external records unchanged.
+- Parameter checks reject non-string, blank and control-character inputs without UUID restrictions.
+- Modified: Committee detail/edit, Subject detail/editor, subjectRoutes, EN/TR catalogs, Phase 2/4 validators and four canonical docs. No new files, repositories, stores, schema or package changes.
+- Static: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 31 PASS (137 total). Source assertions are not runtime UI tests.
+- Phase 4.1 COMPLETE; Phase 4.2/4.3 and UI Foundation 1 COMPLETE with user-confirmed phone/tablet physical QA PASS.
+- Phase 4.4 phone/tablet physical QA PENDING, user-owned. No emulator/ADB/device automation. Existing unspecified Phase 3 gaps remain unchanged.
+- Schema v6; Master Phase 4 ACTIVE. Future 4.5 Metadata, 4.6 Progress Intelligence and 4.7 Exam Planning NOT STARTED and require separate approval. Phase 5 NOT STARTED.
+- Whole-app localization DEFERRED; PDF/Gemini roadmap-only; no visual redesign or cross-module linkage.
+- Next: user checks only changed Committee return/refresh, direct edit/save/back/error/missing, Subject back/parent fallback, delete dialog language, large text and phone/tablet safe area.
+
+## Previous checkpoint (historical)
+
 ## Phase 4.3 — Topic CRUD — IMPLEMENTATION COMPLETE
 
-- Branch phase-4-3-topic-crud, based on clean main 89fd5ef. No merge to main.
+- Phase 4.3 merged to main at 7819215; implementation branch was phase-4-3-topic-crud.
 - Topic create/detail/edit/delete use existing SQLite repositories and route-local state. Topic remains Subject-owned; parent Subject/Committee checked directly and again before saves.
 - Subject detail retains its real COUNT and separate count-error handling; TopicList adds 50-row pages with one-row lookahead, first-page focus refresh and retryable failed offset without discarding earlier pages.
 - UI Foundation Input/FormField/Section/FeedbackState reused. Name/description use shared trimmed 120/2000 UTF-16 limits; duplicate names allowed. Failed writes preserve drafts; double-submit guarded; navigation follows acknowledged writes.
@@ -12,7 +31,7 @@
 - Modified: Subject detail; EN/TR catalogs (Topic strings only); Phase 4 validator; four canonical docs. No repository/store/schema/package change.
 - Static: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 27 PASS (133 total). TypeScript/Phase 4 final rerun passed after the retry-context fix. Existing groups preserved; new UI checks are source wiring, not runtime/device tests.
 - Phase 4.1/4.2 COMPLETE. Phase 4.2 phone/tablet PASS and UI Foundation 1 phone/tablet PASS are user-confirmed. Accumulated tablet regression PASS remains recorded separately from unspecified older Phase 3 gaps.
-- Phase 4.3 physical phone/tablet QA PENDING, user-owned; no emulator/ADB/device automation. Schema v6; no dependencies, cross-module Topic linkage or global cache.
+- Phase 4.3 physical phone/tablet QA PASS, user-confirmed; no emulator/ADB/device automation by this agent. Schema v6; no dependencies, cross-module Topic linkage or global cache.
 - Phase 4.4 NOT STARTED; Master Phase 4 NOT COMPLETE. Master Phase 3 remains ACTIVE for remaining explicit QA gaps. Whole-app localization DEFERRED; PDF/Gemini roadmap-only; no visual redesign.
 - Next action: user manual Topic create/restart/detail/edit/delete, duplicate/blank/long-name validation, Topic count refresh, direct/back routes, long text, phone safe area, tablet width and 50+ pagination. Await approval before further scope.
 
@@ -278,11 +297,10 @@ Phase 3.3 tablet QA and Phase 3.4 phone/tablet QA remain pending.
 
 Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/tablet QA, and the consolidated safe-area regression remain pending. Master Phase 3 is not complete.
 
-## Phase 4 — Medical School / Committee Engine 🟦 ACTIVE (4.1 complete)
+## Phase 4 — Medical School / Committee Engine 🟦 ACTIVE
 
 - Committee → Subject → Topic hierarchy
-- Learning objectives, weights, priorities, and real progress
-- Weak-topic views, exam sprint planning, and daily distribution
+- Advanced goals below remain FUTURE work, explicitly excluded from 4.4
 - Subject/Topic implementation begins here, not in Phase 3
 
 ### Phase 4.1 — Curriculum data foundation ✅ IMPLEMENTATION COMPLETE
@@ -293,7 +311,7 @@ Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/ta
 - [x] No destructive repair; conflict aborts without data loss
 - [x] Repositories validate parents and affected rows; bounded parent-scoped lists
 - [x] Focus/Memory/Calendar rows are not cascaded
-- [x] No Subject/Topic Zustand store, UI, or cross-module `subject_id`/`topic_id` linkage
+- [x] No Subject/Topic Zustand store or cross-module linkage; UI was intentionally absent at the 4.1 checkpoint and added in 4.2/4.3
 - [x] No new dependency; `validate:phase4` harness retained
 - [x] TypeScript, dependency tree, Phase 2, Phase 3, and Phase 4.1 static checks pass
 
@@ -303,11 +321,32 @@ Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/ta
 - [x] Route-local state; no Subject store; real detail Topic count
 - [x] Schema v6; no new dependencies or cross-module links
 - [x] Static validation passed
-- [ ] User physical/manual phone and tablet QA
+- [x] User-confirmed Phase 4.2 phone and tablet physical QA PASS
 
-### Phase 4.3 — Topic CRUD — NOT STARTED
+### Phase 4.3 — Topic CRUD — COMPLETE
 
-Requires explicit approval; no Topic UI implemented.
+- Topic list/create/detail/edit/delete, safe parent navigation, EN/TR, 50-row paging and real separate COUNT implemented.
+- User-confirmed phone/tablet physical QA PASS.
+
+### Phase 4.4 — Curriculum integration / closure — IMPLEMENTATION COMPLETE
+
+- Narrow navigation, parent refresh, safe-area, accessible exits and delete-language closure only.
+- Static checks PASS; changed-flow phone/tablet physical QA PENDING.
+- Does NOT close Master Phase 4 or approve further product work.
+
+### Phase 4.5 — Curriculum Metadata — NOT STARTED
+
+- Future learning objectives, weights and priorities. Requires separate design/implementation approval.
+
+### Phase 4.6 — Curriculum Progress Intelligence — NOT STARTED
+
+- Future truthful Topic/Subject progress model and weak-topic views. No mastery/status implementation approved here.
+
+### Phase 4.7 — Exam Planning — NOT STARTED
+
+- Future exam sprint planning and daily distribution. Requires separate approval.
+
+These groupings preserve the original advanced Phase 4 goals, not implementation commitments or new data-model decisions. Master Phase 4 remains ACTIVE.
 
 ## Phase 5 — Memory & Learning Engine ⬜ NOT STARTED
 
@@ -317,6 +356,6 @@ Requires explicit approval; no Topic UI implemented.
 
 ## Next Required Action
 
-User Phase 4.2 manual QA. Wait for explicit approval before Phase 4.3. Master Phase 4 is NOT COMPLETE; Master Phase 3 remains ACTIVE for physical QA. Whole-app localization DEFERRED; Phase 5 NOT STARTED.
+User physical QA of changed Phase 4.4 curriculum flows. Wait for separate approval before Phase 4.5. Master Phase 4 ACTIVE; Master Phase 3 retains remaining explicit QA gaps. Whole-app localization DEFERRED; Phase 5 NOT STARTED.
 
-Static: TypeScript and dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 21 PASS. Schema v6 and dependencies unchanged.
+Static: TypeScript and dependency tree EXIT 0; Phase 2 21 PASS; Phase 3 85 PASS; Phase 4 31 PASS. Schema v6 and dependencies unchanged.
