@@ -68,6 +68,24 @@ const tr: Strings = {
   },
 
   // ── Genel Bakış ──────────────────────────────────────────────────────────────
+  topics: {
+    title: 'Konular', add: 'Konu ekle', create: 'Konu oluştur', edit: 'Konuyu düzenle', remove: 'Konuyu sil',
+    name: 'Konu adı', description: 'Konu açıklaması (isteğe bağlı)',
+    empty: 'Henüz konu yok.', more: 'Daha fazla yükle',
+    parent: (name: string) => `Ders: ${name}`,
+    committee: (name: string) => `Komite: ${name}`,
+    open: (name: string) => `${name} konusunu aç`,
+    missing: 'Konu bulunamadı.', parentMissing: 'Ders veya bağlı olduğu komite artık mevcut değil.',
+    loadError: 'Konu yüklenemedi.', listError: 'Konular yüklenemedi.',
+    saveError: 'Konu kaydedilemedi. Yazdıkların korunuyor.',
+    deleteError: 'Konu silinemedi. Artık mevcut olmayabilir.',
+    removeTitle: 'Konu silinsin mi?', removeWarning: (name: string) => `“${name}” silinecek.`,
+    validation: {
+      name_required: 'Konu adını gir.', name_too_long: 'Konu adı en fazla 120 karakter olabilir.',
+      description_invalid: 'Açıklamayı metin olarak gir.', description_too_long: 'Açıklama en fazla 2000 karakter olabilir.',
+    },
+  },
+
   subjects: {
     title: 'Dersler', add: 'Ders ekle', create: 'Ders oluştur', edit: 'Dersi düzenle',
     name: 'Ders adı (zorunlu)', description: 'Açıklama (isteğe bağlı)',

@@ -1,5 +1,6 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Alert } from 'react-native';
+import { TopicList } from '@/components/curriculum/TopicList';
 import { Section } from '@/components/ui/Section';
 import { FeedbackState } from '@/components/ui/FeedbackState';
 import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -82,6 +83,7 @@ export default function SubjectDetailScreen() {
         <Button label={t.subjects.edit} variant="secondary" onPress={() => router.push(`/subjects/edit/${encodeURIComponent(id)}` as Href)} />
         {deleteError && <FeedbackState kind="error" message={t.subjects.deleteError} />}
         <Button label={t.subjects.remove} variant="danger" onPress={remove} />
+        <TopicList key={data.subject.id} subjectId={data.subject.id} />
       </>}
     </Section>
   </ScreenWrapper>;

@@ -66,6 +66,24 @@ const en = {
   },
 
   // ── Dashboard ────────────────────────────────────────────────────────────────
+  topics: {
+    title: 'Topics', add: 'Add topic', create: 'Create topic', edit: 'Edit topic', remove: 'Delete topic',
+    name: 'Topic name', description: 'Topic description (optional)',
+    empty: 'No topics yet.', more: 'Load more',
+    parent: (name: string) => `Subject: ${name}`,
+    committee: (name: string) => `Committee: ${name}`,
+    open: (name: string) => `Open topic ${name}`,
+    missing: 'Topic not found.', parentMissing: 'The Subject or its Committee is no longer available.',
+    loadError: 'The topic could not be loaded.', listError: 'Topics could not be loaded.',
+    saveError: 'The topic could not be saved. Your text is still here.',
+    deleteError: 'The topic could not be deleted. It may no longer be available.',
+    removeTitle: 'Delete topic?', removeWarning: (name: string) => `“${name}” will be deleted.`,
+    validation: {
+      name_required: 'Enter a Topic name.', name_too_long: 'Use at most 120 characters for the name.',
+      description_invalid: 'Enter a text description.', description_too_long: 'Use at most 2000 characters for the description.',
+    },
+  },
+
   subjects: {
     title: 'Subjects', add: 'Add Subject', create: 'Create Subject', edit: 'Edit Subject',
     name: 'Subject name (required)', description: 'Description (optional)',
