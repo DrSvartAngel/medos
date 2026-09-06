@@ -1,6 +1,19 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 6.2 Momentum Engine
+## Current — Phase 6.3 Adaptive Motivation
+
+- Implementation COMPLETE; Phase 6 ACTIVE. Phase 6.1–6.3 phone/tablet physical QA remains PENDING. Prior user-confirmed Phase 5 closure unchanged.
+- Intentionally reuses the existing Phase 3 getAdaptiveRecommendation matrix; no duplicate recommendation engine. Exact energy categories: low / steady / good; attention: scattered / okay / focused.
+- Preserved minutes (attention order scattered, okay, focused): low = 2 / 15 / 15; steady = 15 / 25 / 25; good = 15 / 25 / 45. All four 15-minute outcomes remain unchanged.
+- EN/TR explanation explicitly ties the suggestion only to selected energy/attention and offers another duration or Lighter Plan. Existing reasons, input summary, 2/15/25/45 choices, explicit start, Committee checks, expiration and active-session protection unchanged.
+- Low-Stimulation uses a regular recommendation card and neutral badge only. Same content, controls, selection semantics and screen-reader labels. No automatic start, Momentum completion or MiniVictory trigger.
+- No new schema, dependency, store, tracking, analytics, notification or persistence. Schema v10. Focus/Recovery/SRS/Momentum/MiniVictory and existing preferences unchanged. No Phase 6.4 or PDF/Gemini work.
+- Modified recommendation card, Check-In visual prop wiring, EN/TR, Phase 3/6 validators and four project-memory docs; no new files.
+- Validation: TypeScript EXIT 0, dependency tree EXIT 0; Phase 2 21, Phase 3 85, Phase 4 43, Phase 5 29, Phase 6 22 PASS — 200 total. Phase 3 guard narrowly permits this approved visual prop; regression groups retained. Source contracts are not physical QA.
+- User QA: EN/TR reasons and alternatives; all nine combinations; Low-Stimulation on/off; explicit start and Lighter Plan; phone/tablet long text and safe area. No device automation performed.
+- Branch phase-6-3-adaptive-motivation; local commit only. Next: user physical QA and review. Do not push, merge main or start Phase 6.4 without explicit approval.
+
+## Historical — Phase 6.2 Momentum Engine
 
 - Implementation COMPLETE; Phase 6 ACTIVE. Phase 6.1 and 6.2 physical phone/tablet QA remain PENDING. Master Phase 5 stays CLOSED with user-confirmed QA PASS.
 - Today's 3 are optional action targets: (1) finish a positive-duration, non-cancelled Focus session; (2) persist at least one Memory rating; (3) finish such a Focus session linked to an existing Topic. Opening a screen/Topic or starting a timer does not qualify.

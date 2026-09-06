@@ -1360,7 +1360,10 @@ check('Low-Stimulation presentation is confined to the active Focus workspace', 
     '{showVictory && <MiniVictory kind="focus" lowStimulation={lowStimulationMode} />}', ''
   ), /lowStimulation/);
   assert.doesNotMatch(dashboard, /lowStimulationMode|gentleNudgesEnabled/);
-  assert.doesNotMatch(checkIn, /lowStimulationMode|gentleNudgesEnabled/);
+  // Phase 6.3 allows only the existing recommendation card's quiet visual prop.
+  assert.doesNotMatch(checkIn
+    .replace('const lowStimulationMode = useAppStore((state) => state.lowStimulationMode);', '')
+    .replace('lowStimulation={lowStimulationMode}', ''), /lowStimulationMode|gentleNudgesEnabled/);
   assert.doesNotMatch(recovery, /lowStimulationMode|gentleNudgesEnabled/);
   assert.doesNotMatch(read('store/useFocusStore.ts'), /lowStimulation|gentleNudges/);
   assert.doesNotMatch(read('store/useStudySupportStore.ts'), /lowStimulation|gentleNudges/);

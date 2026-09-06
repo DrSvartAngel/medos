@@ -19,6 +19,7 @@ import { committeeRepo } from '@/db/repositories/committeeRepo';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTheme } from '@/hooks/useTheme';
 import { useFocusStore } from '@/store/useFocusStore';
+import { useAppStore } from '@/store/useAppStore';
 import { useStudySupportStore } from '@/store/useStudySupportStore';
 import {
   getCheckInExpiresAt,
@@ -41,6 +42,7 @@ export default function StudyCheckInScreen() {
   const { colors, spacing, radius } = useTheme();
   const { isTablet } = useResponsive();
   const t = useTranslation();
+  const lowStimulationMode = useAppStore((state) => state.lowStimulationMode);
   const params = useLocalSearchParams<{ committeeId?: string | string[] }>();
   const committeeHint = firstParam(params.committeeId);
   const [step, setStep] = useState<CheckInStep>('energy');
@@ -397,6 +399,7 @@ export default function StudyCheckInScreen() {
         selectedDurationSec !== null ? (
           <View style={{ marginTop: spacing.xl }}>
             <AdaptiveRecommendationCard
+              lowStimulation={lowStimulationMode}
               energy={energy}
               attention={attention}
               recommendation={recommendation}

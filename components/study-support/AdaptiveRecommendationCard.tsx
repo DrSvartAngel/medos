@@ -17,6 +17,7 @@ import {
 import { useTranslation, translateStudySupportMessage } from '@/i18n';
 
 interface AdaptiveRecommendationCardProps {
+  lowStimulation?: boolean;
   energy: CheckInEnergy;
   attention: CheckInAttention;
   recommendation: AdaptiveRecommendation;
@@ -34,6 +35,7 @@ interface AdaptiveRecommendationCardProps {
 }
 
 export function AdaptiveRecommendationCard({
+  lowStimulation = false,
   energy,
   attention,
   recommendation,
@@ -54,8 +56,8 @@ export function AdaptiveRecommendationCard({
   const t = useTranslation();
 
   return (
-    <Card elevated style={{ padding: isTablet ? spacing.lg : spacing.md }}>
-      <Badge label={t.adaptiveRec.recommended} variant="primary" />
+    <Card elevated={!lowStimulation} style={{ padding: isTablet ? spacing.lg : spacing.md }}>
+      <Badge label={t.adaptiveRec.recommended} variant={lowStimulation ? 'default' : 'primary'} />
       <AppText variant={isTablet ? 'h1' : 'h2'} style={{ marginTop: spacing.md }}>
         {t.adaptiveRec.durationMin(recommendation.durationSec / 60)}
       </AppText>
@@ -64,6 +66,9 @@ export function AdaptiveRecommendationCard({
       </AppText>
       <AppText variant="bodySmall" color={colors.textMuted} style={{ marginTop: spacing.sm }}>
         {t.checkIn.summary(t.checkIn.energy[energy], t.checkIn.attention[attention])}
+      </AppText>
+      <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.sm }}>
+        {t.adaptiveRec.optionalExplanation}
       </AppText>
 
       {committeeName ? (

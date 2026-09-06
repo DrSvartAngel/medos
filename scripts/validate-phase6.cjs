@@ -191,4 +191,49 @@ check('Momentum: quiet variant preserves bilingual targets, accessible actions a
   assert.equal(en.completed(3), "Today's study-action targets met: 3/3");
   assert.doesNotMatch(Object.values(en).join(' '), /streak|XP|coins|levels|failed yesterday|\d%/);
 });
+check('Adaptive Motivation reuses all nine Phase 3 outcomes, including four 15-minute outcomes', () => {
+  const rules = load('utils/studySupportRules.ts', { './calendarDate': load('utils/calendarDate.ts') });
+  const energies = ['low', 'steady', 'good'], attention = ['scattered', 'okay', 'focused'];
+  const expected = [[120, 900, 900], [900, 1500, 1500], [900, 1500, 2700]];
+  for (let e = 0; e < 3; e++) for (let a = 0; a < 3; a++) {
+    assert.equal(rules.getAdaptiveRecommendation(energies[e], attention[a]).durationSec, expected[e][a]);
+    assert.deepEqual(rules.getAdaptiveRecommendation(energies[e], attention[a]), rules.getAdaptiveRecommendation(energies[e], attention[a]));
+  }
+  assert.deepEqual(rules.ADAPTIVE_DURATION_OPTIONS, [120, 900, 1500, 2700]);
+  for (const invalid of [null, undefined, 'medium', [], 0]) {
+    assert.equal(rules.getAdaptiveRecommendation(invalid, 'okay'), null);
+    assert.equal(rules.getAdaptiveRecommendation('steady', invalid), null);
+  }
+});
+check('Adaptive Motivation changes no matrix, state, timer, Recovery, Momentum, reward or persistence behavior', () => {
+  const baseline = file => execFileSync('git', ['show', '10a9291:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
+  for (const file of ['utils/studySupportRules.ts', 'store/useStudySupportStore.ts', 'store/useFocusStore.ts',
+    'store/useAppStore.ts', 'app/study-support/recovery.tsx', 'components/dashboard/MomentumCard.tsx',
+    'db/repositories/dashboardRepo.ts', 'components/ui/MiniVictory.tsx', 'app/(tabs)/focus.tsx',
+    'app/decks/[id]/review.tsx', 'db/migrations.ts', 'package.json', 'package-lock.json']) {
+    assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file), file);
+  }
+  const route = read('app/study-support/check-in.tsx').replace(/\r\n/g, '\n')
+    .replace("import { useAppStore } from '@/store/useAppStore';\n", '')
+    .replace('  const lowStimulationMode = useAppStore((state) => state.lowStimulationMode);\n', '')
+    .replace('              lowStimulation={lowStimulationMode}\n', '');
+  assert.equal(route, baseline('app/study-support/check-in.tsx'));
+});
+check('Adaptive Motivation quiet variant retains explicit start, all choices and Lighter Plan source contracts', () => {
+  const card = read('components/study-support/AdaptiveRecommendationCard.tsx');
+  for (const fragment of ['lowStimulation = false', 'elevated={!lowStimulation}',
+    "variant={lowStimulation ? 'default' : 'primary'}", 'ADAPTIVE_DURATION_OPTIONS.map',
+    'onPress={() => onSelectDuration(durationSec)}', 'onPress={onStart}', 'onPress={onOpenRecovery}',
+    'onPress={onChangeAnswers}', 'accessibilityRole="radio"', 'accessibilityState={{ checked: isSelected }}']) {
+    assert.ok(card.includes(fragment), fragment);
+  }
+  assert.doesNotMatch(card, /useEffect|startTimer\(|startEntrySession\(|startAdaptiveSession\(|AsyncStorage|persist\(|Notification|analytics/i);
+});
+check('Adaptive Motivation explains explicit input and optional alternatives in EN/TR without changing reasons', () => {
+  const en = load('i18n/en.ts').default, tr = load('i18n/tr.ts').default;
+  assert.ok(en.adaptiveRec.optionalExplanation.includes('only the energy and attention you selected'));
+  assert.ok(tr.adaptiveRec.optionalExplanation.includes('yalnızca seçtiğin enerji ve dikkat'));
+  assert.ok(read('components/study-support/AdaptiveRecommendationCard.tsx').includes('t.adaptiveRec.optionalExplanation'));
+  assert.ok(read('components/study-support/AdaptiveRecommendationCard.tsx').includes('translateStudySupportMessage(recommendation.reason, t)'));
+});
 console.log(`Phase 6 validation: ${passed} PASS`);

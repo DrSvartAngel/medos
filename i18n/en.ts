@@ -601,6 +601,7 @@ quickStart: 'Quick Start',
 
   // ── Adaptive recommendation card ─────────────────────────────────────────────
   adaptiveRec: {
+    optionalExplanation: 'This suggestion uses only the energy and attention you selected. Choose another duration or a lighter plan if you prefer.',
     chooseLighterPlan: 'Choose a lighter plan',
     openFocusSetup: 'Open Focus setup',
     changeAnswers: 'Change answers',

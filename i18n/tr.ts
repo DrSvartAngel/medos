@@ -607,6 +607,7 @@ quickStart: 'Hızlı başlangıç',
 
   // ── Uyarlanabilir öneri kartı ─────────────────────────────────────────────────
   adaptiveRec: {
+    optionalExplanation: 'Bu öneri yalnızca seçtiğin enerji ve dikkat yanıtlarına dayanır. İstersen başka bir süre ya da daha hafif bir plan seçebilirsin.',
     chooseLighterPlan: 'Daha hafif bir plan seç',
     openFocusSetup: 'Odaklanma ayarlarını aç',
     changeAnswers: 'Yanıtları değiştir',
