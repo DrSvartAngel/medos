@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { useTranslation } from '@/i18n';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { AppText } from '@/components/ui/Typography';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -6,7 +7,6 @@ import { useTheme } from '@/hooks/useTheme';
 import type { CalendarGridDay } from '@/utils/calendarDate';
 import type { CalendarItem, CalendarItemType } from '@/store/useCalendarStore';
 
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 interface CalendarMonthGridProps {
   days: CalendarGridDay[];
@@ -23,6 +23,7 @@ export function CalendarMonthGrid({
   today,
   onSelectDate,
 }: CalendarMonthGridProps) {
+  const t = useTranslation();
   const { colors, spacing, radius } = useTheme();
   const { isTablet } = useResponsive();
   const itemsByDate = useMemo(() => {
@@ -46,7 +47,7 @@ export function CalendarMonthGrid({
   return (
     <View style={{ marginTop: spacing.md }}>
       <View style={styles.weekRow}>
-        {WEEKDAYS.map((weekday) => (
+        {t.sweep.weekdays.map((weekday) => (
           <AppText key={weekday} variant="caption" color={colors.textMuted} style={styles.weekday}>
             {weekday}
           </AppText>
@@ -61,7 +62,7 @@ export function CalendarMonthGrid({
           const isToday = day.key === today;
           const hasExam = dayItems.some((item) => item.type === 'committee_exam');
           const accessibilitySources = Array.from(
-            new Set(dayItems.map((item) => item.type.replace('_', ' ')))
+            new Set(dayItems.map((item) => t.sweep.timelineTypes[item.type]))
           ).join(', ');
 
           return (
@@ -69,11 +70,7 @@ export function CalendarMonthGrid({
               key={day.key}
               accessibilityRole="button"
               accessibilityState={{ selected }}
-              accessibilityLabel={`${day.key}${
-                dayItems.length > 0
-                  ? `, ${dayItems.length} items: ${accessibilitySources}`
-                  : ', no items'
-              }`}
+              accessibilityLabel={t.sweep.dayLabel(day.key, dayItems.length, accessibilitySources)}
               onPress={() => onSelectDate(day.key)}
               style={({ pressed }) => [
                 styles.day,

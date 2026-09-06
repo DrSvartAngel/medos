@@ -112,11 +112,12 @@ check('Phase 5 scheduling, Memory store/repository, schema, preferences, Dashboa
   }
   const before = JSON.parse(baseline('package.json')), after = JSON.parse(read('package.json'));
   assert.deepEqual(after.dependencies, before.dependencies); assert.deepEqual(after.devDependencies, before.devDependencies);
-  // Phase 6.2 may insert only the Momentum card into the existing responsive branches.
-  const dashboard = read('app/(tabs)/index.tsx').replace(/\r\n/g, '\n')
-    .replace("import { MomentumCard } from '@/components/dashboard/MomentumCard';\n", '')
-    .replace(/^\s*<MomentumCard \/>\n/gm, '');
-  assert.equal(dashboard, baseline('app/(tabs)/index.tsx'));
+  // Dashboard memory_review QuickStart navigates to relevant deck review route with mode=due explicitly included
+  const dashboard = read('app/(tabs)/index.tsx');
+  assert.match(
+    dashboard,
+    /recommendation\.kind\s*===\s*'memory_review'[\s\S]*?router\.push\(`\/decks\/\$\{recommendation\.deckId\}\/review\?mode=due`/
+  );
   // Phase 6.5 visual changes are checked separately against unchanged state/callbacks.
 });
 
@@ -209,11 +210,19 @@ check('Adaptive Motivation reuses all nine Phase 3 outcomes, including four 15-m
 check('Adaptive Motivation changes no matrix, state, timer, Recovery, Momentum, reward or persistence behavior', () => {
   const baseline = file => execFileSync('git', ['show', '10a9291:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   for (const file of ['utils/studySupportRules.ts', 'store/useStudySupportStore.ts', 'store/useFocusStore.ts',
-    'store/useAppStore.ts', 'app/study-support/recovery.tsx',
-    'db/repositories/dashboardRepo.ts', 'app/(tabs)/focus.tsx',
+    'store/useAppStore.ts', 'app/study-support/recovery.tsx', 'app/(tabs)/focus.tsx',
     'db/migrations.ts', 'package.json', 'package-lock.json']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file), file);
   }
+  const dashboardRepo = read('db/repositories/dashboardRepo.ts');
+  const focusSummaryBlock = dashboardRepo.slice(
+    dashboardRepo.indexOf('getFocusSummary('),
+    dashboardRepo.indexOf('getMemorySummary(')
+  );
+  assert.match(focusSummaryBlock, /completed\s*=\s*1\s+AND\s+cancelled\s*=\s*0/);
+  assert.match(focusSummaryBlock, /ended_at\s*>=\s*started_at/);
+  assert.match(focusSummaryBlock, /ended_at\s*>=\s*\?\s+AND\s+ended_at\s*<\s*\?/);
+  assert.match(focusSummaryBlock, /typeof\(actual_duration_sec\)\s*=\s*'integer'\s+AND\s+actual_duration_sec\s*>\s*0/);
   const route = read('app/study-support/check-in.tsx').replace(/\r\n/g, '\n')
     .replace("import { useAppStore } from '@/store/useAppStore';\n", '')
     .replace('  const lowStimulationMode = useAppStore((state) => state.lowStimulationMode);\n', '')

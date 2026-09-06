@@ -1,3 +1,4 @@
+import { translateError } from '@/i18n/errors';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useFocusEffect } from 'expo-router';
 import { MiniVictory } from '@/components/ui/MiniVictory';
@@ -379,7 +380,7 @@ function FocusError({ message, onRetry }: { message: string; onRetry?: () => voi
         color={colors.error}
         style={{ flex: 1, marginLeft: spacing.sm }}
       >
-        {message}
+        {translateError(message, t)}
       </AppText>
       {onRetry ? (
         <Button

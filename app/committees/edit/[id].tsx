@@ -1,3 +1,4 @@
+import { translateError } from '@/i18n/errors';
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
@@ -50,17 +51,17 @@ function EditCommitteeForm({ committee }: { committee: Committee }) {
     let valid = true;
 
     if (!name.trim()) {
-      setNameError('Committee name is required.');
+      setNameError(t.sweep.committeeRequired);
       valid = false;
     } else {
       setNameError('');
     }
 
     if (start === null || exam === null) {
-      setDateError('Please enter valid dates in YYYY-MM-DD format.');
+      setDateError(t.sweep.validDates);
       valid = false;
     } else if (exam < start) {
-      setDateError('Exam date cannot be before the start date.');
+      setDateError(t.sweep.examBefore);
       valid = false;
     } else {
       setDateError('');
@@ -112,12 +113,11 @@ function EditCommitteeForm({ committee }: { committee: Committee }) {
           >
             <Feather name="arrow-left" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          <AppText style={{ flex: 1 }} variant={isTablet ? 'h1' : 'h2'}>Edit Committee</AppText>
+          <AppText style={{ flex: 1 }} variant={isTablet ? 'h1' : 'h2'}>{t.sweep.editCommittee}</AppText>
         </View>
 
         <AppText color={colors.textSecondary} style={{ marginBottom: spacing.xl }}>
-          Update the details for this committee.
-        </AppText>
+          {t.sweep.committeeEditHint}</AppText>
 
         {mutationError ? (
           <View
@@ -134,47 +134,44 @@ function EditCommitteeForm({ committee }: { committee: Committee }) {
           >
             <Feather name="alert-circle" size={18} color={colors.error} />
             <AppText color={colors.error} style={{ flex: 1, marginLeft: spacing.sm }}>
-              Changes were not saved. Check your local data and try again.
-            </AppText>
+              {t.sweep.committeeSaveFailed}</AppText>
           </View>
         ) : null}
 
         <View style={{ marginBottom: spacing.md }}>
           <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-            Committee Name *
-          </AppText>
+            {t.sweep.committeeNameRequired}</AppText>
           <TextInput
-            accessibilityLabel="Committee name"
+            accessibilityLabel={t.sweep.committeeName}
             value={name}
             onChangeText={(value) => {
               setName(value);
               if (nameError) setNameError('');
               if (mutationError) setError(null);
             }}
-            placeholder="e.g. Cardiology Block 3"
+            placeholder={t.sweep.committeeExample}
             placeholderTextColor={colors.textMuted}
             returnKeyType="next"
             style={inputStyle}
           />
           {nameError ? (
             <AppText variant="caption" color={colors.error} style={styles.errorText}>
-              {nameError}
+              {translateError(nameError, t)}
             </AppText>
           ) : null}
         </View>
 
         <View style={{ marginBottom: spacing.md }}>
           <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-            Description
-          </AppText>
+            {t.sweep.description}</AppText>
           <TextInput
-            accessibilityLabel="Committee description"
+            accessibilityLabel={t.sweep.committeeDescription}
             value={description}
             onChangeText={(value) => {
               setDescription(value);
               if (mutationError) setError(null);
             }}
-            placeholder="Optional — e.g. Focus areas, notes…"
+            placeholder={t.sweep.optionalNotes}
             placeholderTextColor={colors.textMuted}
             multiline
             textAlignVertical="top"
@@ -185,17 +182,16 @@ function EditCommitteeForm({ committee }: { committee: Committee }) {
         <View style={[styles.datesRow, { gap: spacing.sm, marginBottom: spacing.md }]}>
           <View style={styles.dateField}>
             <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-              Start Date *
-            </AppText>
+              {t.sweep.startDate}</AppText>
             <TextInput
-              accessibilityLabel="Committee start date in year month day format"
+              accessibilityLabel={t.sweep.startDateLabel}
               value={startDate}
               onChangeText={(value) => {
                 setStartDate(value);
                 if (dateError) setDateError('');
                 if (mutationError) setError(null);
               }}
-              placeholder="YYYY-MM-DD"
+              placeholder={t.sweep.datePlaceholder}
               placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               maxLength={10}
@@ -204,17 +200,16 @@ function EditCommitteeForm({ committee }: { committee: Committee }) {
           </View>
           <View style={styles.dateField}>
             <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-              Exam Date *
-            </AppText>
+              {t.sweep.examDate}</AppText>
             <TextInput
-              accessibilityLabel="Committee exam date in year month day format"
+              accessibilityLabel={t.sweep.examDateLabel}
               value={examDate}
               onChangeText={(value) => {
                 setExamDate(value);
                 if (dateError) setDateError('');
                 if (mutationError) setError(null);
               }}
-              placeholder="YYYY-MM-DD"
+              placeholder={t.sweep.datePlaceholder}
               placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               maxLength={10}
@@ -229,16 +224,15 @@ function EditCommitteeForm({ committee }: { committee: Committee }) {
             color={colors.error}
             style={[styles.errorText, { marginBottom: spacing.md }]}
           >
-            {dateError}
+            {translateError(dateError, t)}
           </AppText>
         ) : null}
 
         <AppText variant="caption" color={colors.textMuted} style={{ marginBottom: spacing.xl }}>
-          Enter dates as YYYY-MM-DD (e.g. 2026-11-15)
-        </AppText>
+          {t.sweep.dateHelp}</AppText>
 
         <Button
-          label="Save Changes"
+          label={t.sweep.save}
           onPress={handleSave}
           loading={saving}
           size={isTablet ? 'lg' : 'md'}
@@ -280,11 +274,9 @@ export default function EditCommitteeScreen() {
       <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <Feather name="search" size={30} color={colors.textMuted} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
-          Committee not found
-        </AppText>
+          {t.sweep.committeeMissing}</AppText>
         <AppText color={colors.textMuted} style={styles.centeredText}>
-          It may have been removed from this device.
-        </AppText>
+          {t.sweep.removed}</AppText>
         <Button label={t.common.back} onPress={() => router.dismissTo('/(tabs)/committees')} />
       </ScreenWrapper>
     );
@@ -295,12 +287,10 @@ export default function EditCommitteeScreen() {
       <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <Feather name="alert-circle" size={30} color={colors.warning} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
-          Committee needs another try
-        </AppText>
+          {t.sweep.committeeRetryTitle}</AppText>
         <AppText color={colors.textMuted} style={styles.centeredText}>
-          The committee could not be loaded from local storage.
-        </AppText>
-        <Button label="Retry committee" onPress={() => loadCommittee(id)} />
+          {t.sweep.committeeLoadFailed}</AppText>
+        <Button label={t.sweep.retryCommittee} onPress={() => loadCommittee(id)} />
         <Button label={t.common.back} variant="ghost" onPress={() => committeeExit(id)} />
       </ScreenWrapper>
     );
@@ -311,8 +301,7 @@ export default function EditCommitteeScreen() {
       <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <ActivityIndicator size="large" color={colors.primary} />
         <AppText color={colors.textMuted} style={{ marginTop: spacing.sm }}>
-          Loading committee…
-        </AppText>
+          {t.sweep.loadingCommittee}</AppText>
       </ScreenWrapper>
     );
   }

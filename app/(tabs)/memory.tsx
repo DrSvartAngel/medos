@@ -1,3 +1,4 @@
+import { translateError } from '@/i18n/errors';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, type Href } from 'expo-router';
@@ -54,7 +55,7 @@ export default function MemoryScreen() {
 
   function committeeName(committeeId: string | null): string | undefined {
     if (committeeId === null) return undefined;
-    return committees.find((committee) => committee.id === committeeId)?.name ?? 'Committee removed';
+    return committees.find((committee) => committee.id === committeeId)?.name ?? t.sweep.committeeRemoved;
   }
 
   if (!isDBReady) {
@@ -121,7 +122,7 @@ export default function MemoryScreen() {
         <View style={[styles.error, { borderColor: colors.error, marginTop: spacing.md, padding: spacing.md }]}> 
           <Feather name="alert-circle" size={18} color={colors.error} />
           <AppText variant="bodySmall" color={colors.error} style={styles.errorText}>
-            {error}
+            {translateError(error, t)}
           </AppText>
           <Button
             label={t.common.retry}

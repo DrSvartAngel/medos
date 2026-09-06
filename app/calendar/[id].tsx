@@ -1,3 +1,5 @@
+import { translateError } from '@/i18n/errors';
+import { useTranslation } from '@/i18n';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, type Href, useLocalSearchParams } from 'expo-router';
@@ -15,6 +17,7 @@ import { useCommitteeStore } from '@/store/useCommitteeStore';
 import { formatAgendaDate } from '@/utils/calendarDate';
 
 export default function CalendarEventDetailScreen() {
+  const t = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing, radius } = useTheme();
   const { isTablet } = useResponsive();
@@ -42,12 +45,12 @@ export default function CalendarEventDetailScreen() {
   function handleDelete() {
     if (!event) return;
     Alert.alert(
-      'Remove this study event?',
-      `“${event.title}” will be removed from Calendar. Committee, Focus, and Memory data will not be affected.`,
+      t.sweep.removeEventTitle,
+      t.sweep.deleteEventBody(event.title),
       [
-        { text: 'Keep Event', style: 'cancel' },
+        { text: t.sweep.keepEvent, style: 'cancel' },
         {
-          text: 'Remove Event',
+          text: t.sweep.removeEvent,
           style: 'destructive',
           onPress: () => {
             if (deleteEvent(event.id)) router.replace('/(tabs)/calendar' as Href);
@@ -77,12 +80,12 @@ export default function CalendarEventDetailScreen() {
     return (
       <ScreenWrapper scrollable={false} includeBottomSafeArea contentStyle={styles.centered}>
         <Feather name="alert-circle" size={36} color={colors.textMuted} />
-        <AppText variant="h3" style={{ marginTop: spacing.md }}>Study event not found</AppText>
+        <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.sweep.eventMissing}</AppText>
         <AppText variant="bodySmall" color={error ? colors.error : colors.textSecondary} style={styles.notFoundText}>
-          {error ?? 'It may have been removed from this device.'}
+          {error ?? t.sweep.removed}
         </AppText>
         <Button
-          label="Back to Calendar"
+          label={t.sweep.backCalendar}
           variant="secondary"
           onPress={handleBack}
           style={{ marginTop: spacing.lg }}
@@ -92,7 +95,7 @@ export default function CalendarEventDetailScreen() {
   }
 
   const timeLabel = event.startTime === null
-    ? 'All day'
+    ? t.sweep.allDay
     : event.endTime === null
       ? event.startTime
       : `${event.startTime}–${event.endTime}`;
@@ -102,7 +105,7 @@ export default function CalendarEventDetailScreen() {
       <View style={styles.topBar}>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Go back"
+          accessibilityLabel={t.sweep.back}
           onPress={handleBack}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={styles.backButton}
@@ -117,24 +120,24 @@ export default function CalendarEventDetailScreen() {
         </TouchableOpacity>
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel="Edit study event"
+          accessibilityLabel={t.sweep.editEvent}
           onPress={() => router.push(`/calendar/${event.id}/edit` as Href)}
           style={[styles.editButton, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: radius.md }]}
         >
           <Feather name="edit-2" size={16} color={colors.primary} />
-          <AppText variant="label" color={colors.primary} style={{ marginLeft: 6 }}>Edit</AppText>
+          <AppText variant="label" color={colors.primary} style={{ marginLeft: 6 }}>{t.sweep.edit}</AppText>
         </TouchableOpacity>
       </View>
 
       <Card elevated style={[styles.hero, { marginTop: spacing.lg }]}>
-        <Badge label="Study Event" variant="primary" />
+        <Badge label={t.sweep.studyEvent} variant="primary" />
         <AppText variant={isTablet ? 'h1' : 'h2'} style={{ marginTop: spacing.md }}>
           {event.title}
         </AppText>
         <View style={[styles.detailRow, { marginTop: spacing.lg }]}>
           <Feather name="calendar" size={17} color={colors.textMuted} />
           <AppText variant="body" color={colors.textSecondary} style={styles.detailText}>
-            {formatAgendaDate(event.date)}
+            {formatAgendaDate(event.date, t.dashboard.locale)}
           </AppText>
         </View>
         <View style={[styles.detailRow, { marginTop: spacing.sm }]}>
@@ -151,13 +154,13 @@ export default function CalendarEventDetailScreen() {
               color={committee ? colors.textSecondary : colors.warning}
               style={styles.detailText}
             >
-              {committee?.name ?? 'Committee removed'}
+              {committee?.name ?? t.sweep.committeeRemoved}
             </AppText>
           </View>
         )}
         {event.description.length > 0 && (
           <View style={[styles.description, { borderTopColor: colors.border, marginTop: spacing.lg, paddingTop: spacing.lg }]}>
-            <AppText variant="label" color={colors.textMuted}>NOTE</AppText>
+            <AppText variant="label" color={colors.textMuted}>{t.sweep.note}</AppText>
             <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.sm }}>
               {event.description}
             </AppText>
@@ -167,12 +170,12 @@ export default function CalendarEventDetailScreen() {
 
       {error !== null && (
         <AppText variant="bodySmall" color={colors.error} style={{ marginTop: spacing.md }}>
-          {error}
+          {translateError(error, t)}
         </AppText>
       )}
 
       <Button
-        label="Remove Study Event"
+        label={t.sweep.removeStudyEvent}
         variant="danger"
         onPress={handleDelete}
         style={{ alignSelf: isTablet ? 'flex-start' : 'stretch', marginTop: spacing.xl }}

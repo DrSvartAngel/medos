@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import React from 'react';
 import { StyleSheet } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -8,6 +9,7 @@ import { useResponsive } from '@/hooks/useResponsive';
 import { useTheme } from '@/hooks/useTheme';
 
 export function DeckEmptyState({ onAdd }: { onAdd: () => void }) {
+  const t = useTranslation();
   const { colors, spacing } = useTheme();
   const { isTablet } = useResponsive();
 
@@ -18,17 +20,15 @@ export function DeckEmptyState({ onAdd }: { onAdd: () => void }) {
     >
       <Feather name="layers" size={isTablet ? 60 : 48} color={colors.accent} />
       <AppText variant="h3" style={{ marginTop: spacing.md, textAlign: 'center' }}>
-        Build your first recall deck
-      </AppText>
+        {t.sweep.firstDeck}</AppText>
       <AppText
         variant="body"
         color={colors.textSecondary}
         style={styles.description}
       >
-        Start small: one topic, a few clear questions, and one review at a time.
-      </AppText>
+        {t.sweep.firstDeckHelp}</AppText>
       <Button
-        label="Create Deck"
+        label={t.sweep.createDeck}
         onPress={onAdd}
         size={isTablet ? 'lg' : 'md'}
         style={{ marginTop: spacing.lg }}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/i18n';
 import { StyleSheet, TouchableOpacity, View, type ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/Typography';
@@ -13,6 +14,7 @@ interface DeckCardProps {
 }
 
 export function DeckCard({ deck, committeeName, onPress, style }: DeckCardProps) {
+  const t = useTranslation();
   const { colors, spacing, radius } = useTheme();
 
   return (
@@ -53,7 +55,7 @@ export function DeckCard({ deck, committeeName, onPress, style }: DeckCardProps)
         <View style={styles.metaItem}>
           <Feather name="copy" size={14} color={colors.accent} />
           <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginLeft: 6 }}>
-            {deck.cardCount} {deck.cardCount === 1 ? 'card' : 'cards'}
+            {t.recovery.cards(deck.cardCount)}
           </AppText>
         </View>
         {committeeName !== undefined && (

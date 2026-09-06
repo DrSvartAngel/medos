@@ -55,6 +55,7 @@ export function buildCalendarItems(input: BuildTimelineInput): CalendarItem[] {
     return {
       id: `manual:${event.id}`,
       type: 'manual',
+      display: { name: committeeName, description: event.description },
       date: event.date,
       title: event.title,
       subtitle: subtitle || undefined,
@@ -72,6 +73,7 @@ export function buildCalendarItems(input: BuildTimelineInput): CalendarItem[] {
       items.push({
         id: `committee_start:${committee.id}`,
         type: 'committee_start',
+        display: { name: committee.name },
         date: startDate,
         title: `${committee.name} starts`,
         subtitle: 'Committee start',
@@ -87,6 +89,7 @@ export function buildCalendarItems(input: BuildTimelineInput): CalendarItem[] {
       items.push({
         id: `committee_exam:${committee.id}`,
         type: 'committee_exam',
+        display: { name: committee.name },
         date: examDate,
         title: `${committee.name} Exam`,
         subtitle: 'Exam date',
@@ -106,6 +109,7 @@ export function buildCalendarItems(input: BuildTimelineInput): CalendarItem[] {
     items.push({
       id: `focus:${session.id}`,
       type: 'focus',
+      display: { name: session.committeeName, actualSec: session.actualSec },
       date,
       title: session.committeeName ? `${session.committeeName} Focus` : 'Focus session',
       subtitle: [committeeLabel, formatFocusDuration(session.actualSec)]
@@ -147,6 +151,7 @@ export function buildCalendarItems(input: BuildTimelineInput): CalendarItem[] {
     items.push({
       id: `memory:${group.deckId}:${group.date}`,
       type: 'memory',
+      display: { name: group.deckName, reviews: group.count },
       date: group.date,
       title: `${group.deckName} review`,
       subtitle: `${group.count} card ${group.count === 1 ? 'review' : 'reviews'}`,

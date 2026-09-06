@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, type Href, useLocalSearchParams } from 'expo-router';
@@ -13,6 +14,7 @@ import { useCalendarStore, type CalendarEventInput } from '@/store/useCalendarSt
 import { useCommitteeStore } from '@/store/useCommitteeStore';
 
 export default function EditCalendarEventScreen() {
+  const t = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing } = useTheme();
   const { isTablet } = useResponsive();
@@ -51,9 +53,9 @@ export default function EditCalendarEventScreen() {
     return (
       <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
         <Feather name="alert-circle" size={36} color={colors.textMuted} />
-        <AppText variant="h3" style={{ marginTop: spacing.md }}>Study event not found</AppText>
+        <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.sweep.eventMissing}</AppText>
         <Button
-          label="Back to Calendar"
+          label={t.sweep.backCalendar}
           variant="secondary"
           onPress={() => router.replace('/(tabs)/calendar' as Href)}
           style={{ marginTop: spacing.lg }}
@@ -67,18 +69,17 @@ export default function EditCalendarEventScreen() {
       <ScreenWrapper>
         <View style={styles.headerRow}>
           <TouchableOpacity
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            accessibilityLabel={t.sweep.back}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace(`/calendar/${id}` as Href))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={{ marginRight: spacing.md }}
           >
             <Feather name="arrow-left" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <AppText variant={isTablet ? 'h1' : 'h2'}>Edit Study Event</AppText>
+            <AppText variant={isTablet ? 'h1' : 'h2'}>{t.sweep.editEventTitle}</AppText>
             <AppText variant="body" color={colors.textSecondary} style={{ marginTop: 2 }}>
-              Keep the plan simple and useful.
-            </AppText>
+              {t.sweep.eventEditHint}</AppText>
           </View>
         </View>
 
@@ -92,10 +93,10 @@ export default function EditCalendarEventScreen() {
             initialEndTime={event.endTime}
             initialCommitteeId={event.committeeId}
             committees={committees}
-            submitLabel="Save Changes"
+            submitLabel={t.sweep.save}
             error={error}
             onSubmit={handleUpdate}
-            onCancel={() => router.back()}
+            onCancel={() => (router.canGoBack() ? router.back() : router.replace(`/calendar/${id}` as Href))}
           />
         </View>
       </ScreenWrapper>

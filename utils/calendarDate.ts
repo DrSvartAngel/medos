@@ -217,20 +217,20 @@ export function getVisibleGridRange(monthKey: LocalDateKey): CalendarGridRange {
   return { days, startDate: first.key, endDateExclusive, startMs, endMs };
 }
 
-export function formatMonthLabel(monthKey: LocalDateKey): string {
+export function formatMonthLabel(monthKey: LocalDateKey, locale = 'en-US'): string {
   const parts = parseLocalDateKey(monthKey);
   if (!parts) throw new Error('Invalid visible month');
   return new Date(parts.year, parts.month - 1, 1, 12, 0, 0, 0).toLocaleDateString(
-    'en-US',
+    locale,
     { month: 'long', year: 'numeric' }
   );
 }
 
-export function formatAgendaDate(dateKey: LocalDateKey): string {
+export function formatAgendaDate(dateKey: LocalDateKey, locale = 'en-US'): string {
   const parts = parseLocalDateKey(dateKey);
   if (!parts) throw new Error('Invalid selected date');
   return new Date(parts.year, parts.month - 1, parts.day, 12, 0, 0, 0).toLocaleDateString(
-    'en-US',
+    locale,
     { weekday: 'long', month: 'long', day: 'numeric' }
   );
 }

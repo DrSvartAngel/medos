@@ -23,7 +23,7 @@ export function FlashcardListItem({ card, index, onEdit, onDelete }: FlashcardLi
       <View style={styles.row}>
         <Pressable accessibilityRole="button" onPress={onEdit} style={styles.content}>
           <AppText variant="caption" color={colors.accent}>
-            CARD {index + 1}
+            {t.sweep.card}{index + 1}
           </AppText>
           <AppText variant="body" numberOfLines={2} style={{ marginTop: spacing.xs }}>
             {card.front}
@@ -40,14 +40,14 @@ export function FlashcardListItem({ card, index, onEdit, onDelete }: FlashcardLi
 
         <View style={[styles.actions, { marginLeft: spacing.md, gap: spacing.xs }]}> 
           <TouchableOpacity
-            accessibilityLabel="Edit card"
+            accessibilityLabel={t.sweep.editCardLabel}
             onPress={onEdit}
             style={[styles.iconButton, { backgroundColor: colors.surfaceElevated, borderRadius: radius.sm }]}
           >
             <Feather name="edit-2" size={17} color={colors.textSecondary} />
           </TouchableOpacity>
           <TouchableOpacity
-            accessibilityLabel="Delete card"
+            accessibilityLabel={t.sweep.deleteCardLabel}
             onPress={onDelete}
             style={[styles.iconButton, { backgroundColor: colors.surfaceElevated, borderRadius: radius.sm }]}
           >

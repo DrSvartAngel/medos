@@ -9,7 +9,7 @@ export default function NotFoundScreen() {
   const t = useTranslation();
   return (
     <>
-      <Stack.Screen options={{ title: 'Not Found' }} />
+      <Stack.Screen options={{ title: t.sweep.notFound }} />
       <ScreenWrapper>
         <View style={styles.container}>
           <AppText variant="h1" style={{ textAlign: 'center' }}>404</AppText>

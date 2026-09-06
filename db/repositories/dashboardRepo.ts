@@ -123,7 +123,8 @@ export const dashboardRepo = {
               COALESCE(SUM(actual_duration_sec), 0) AS total_seconds
        FROM focus_sessions
        WHERE completed = 1 AND cancelled = 0
-         AND started_at >= ? AND started_at < ?`,
+         AND typeof(actual_duration_sec) = 'integer' AND actual_duration_sec > 0
+         AND ended_at >= started_at AND ended_at >= ? AND ended_at < ?`,
       [dayStartMs, dayEndMs]
     );
 

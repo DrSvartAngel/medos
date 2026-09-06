@@ -1,3 +1,4 @@
+import { translateError } from '@/i18n/errors';
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -104,7 +105,7 @@ export default function ProfileScreen() {
           color={colors.textMuted}
           style={{ marginTop: spacing.xs, marginBottom: spacing.md, textAlign: 'center' }}
         >
-          {preferencesError}
+          {translateError(preferencesError, t)}
         </AppText>
         <Button
           label={t.common.prefsRetry}

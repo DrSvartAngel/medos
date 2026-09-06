@@ -768,7 +768,8 @@ async function main() {
     assert.match(read('components/layout/DatabaseGate.tsx'), /label=\{t\.common\.dbRetry\}/);
     assert.match(read('components/layout/DatabaseGate.tsx'), /onPress=\{onRetry\}/);
     assert.match(read('app/(tabs)/committees.tsx'), /label=\{t\.common\.retry\}/);
-    assert.match(read('app/committees/[id].tsx'), /Retry committee/);
+    assert.match(read('app/committees/[id].tsx'), /label=\{t.sweep.retryCommittee\}/);
+    assert.equal(loadTypeScript('i18n/en.ts').default.sweep.retryCommittee, 'Retry committee');
     assert.match(read('app/(tabs)/focus.tsx'), /label=\{t\.common\.retry\}/);
     assert.match(read('app/(tabs)/focus.tsx'), /onPress=\{onRetry\}/);
     assert.match(read('app/(tabs)/memory.tsx'), /label=\{t\.common\.retry\}/);
@@ -780,10 +781,10 @@ async function main() {
     const edit = read('app/committees/edit/[id].tsx');
     const create = read('app/committees/new.tsx');
     assert.match(detail, /loadCommittee\(id\)/);
-    assert.match(detail, /Committee not found/);
+    assert.match(detail, /t.sweep.committeeMissing/);
     assert.match(detail, /committeeLoadError/);
     assert.match(edit, /loadCommittee\(id\)/);
-    assert.match(edit, /Committee not found/);
+    assert.match(edit, /t.sweep.committeeMissing/);
     assert.match(create, /if \(succeeded\) router\.back\(\)/);
     assert.match(edit, /if \(succeeded\) committeeExit\(committee.id\)/);
     assert.match(edit, /subjectFallback\(id\)/);

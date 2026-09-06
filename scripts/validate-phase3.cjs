@@ -73,6 +73,7 @@ const preferences = loadTypeScript('utils/preferences.ts');
 const en = loadTypeScript('i18n/en.ts').default;
 const tr = loadTypeScript('i18n/tr.ts').default;
 const supportTranslation = loadTypeScript('i18n/studySupport.ts');
+const errorTranslation = loadTypeScript('i18n/errors.ts', { './en': { default: en, __esModule: true }, './tr': { default: tr, __esModule: true } });
 
 // Copy assertions follow actual t.key references, not every string in the catalog.
 // This keeps legacy copy guarantees while still catching a miswired button.
@@ -1583,7 +1584,7 @@ check('Phase 3.6 Calendar back behavior is accessible and direct-route safe', ()
   assert.match(detail, /router\.canGoBack\(\)/);
   assert.match(detail, /router\.back\(\)/);
   assert.match(detail, /router\.replace\('\/\(tabs\)\/calendar' as Href\)/);
-  assert.match(detail, /accessibilityRole="button"[\s\S]*accessibilityLabel="Go back"/);
+  assert.match(detail, /accessibilityRole="button"[\s\S]*accessibilityLabel=\{t.sweep.back\}/);
   assert.match(detail, /minHeight: 44/);
   assert.match(detail, /minWidth: 44/);
 });
@@ -1764,9 +1765,11 @@ function renderLocalized(file, exportName, locale, props) {
     '@/hooks/useTheme': { useTheme: () => ({ colors: {}, spacing: {}, radius: {} }) },
     '@/hooks/useResponsive': { useResponsive: () => ({ isTablet: false }) },
     '@/utils/dashboardRules': dashboardRules,
+    '@/utils/calendarDate': calendarDate,
     '@/utils/gentleReturnRules': gentleReturnRules,
     '@/utils/studySupportRules': studySupportRules,
     '@/i18n': { useTranslation: () => locale, ...supportTranslation },
+    '@/i18n/errors': errorTranslation,
   })[exportName];
   const nodes = [];
   function visit(node) {
@@ -2039,6 +2042,119 @@ check('Dashboard date/duration/copy coverage preserves responsive layout and fro
   assert.match(rules, /shiftLocalDateKey\(date, -6\)/);
   assert.match(rules, /items.slice\(0, 3\)/);
   assert.match(read('db/repositories/dashboardRepo.ts'), /getWeakDeck/);
+});
+
+check('Full localization catalogs have recursive EN/TR key, type and interpolation-parameter parity', () => {
+  function compare(a, b, key) {
+    assert.equal(typeof a, typeof b, key);
+    if (typeof a === 'function') {
+      const params = fn => {
+        const source = ts.createSourceFile('copy.ts', `const f = ${fn.toString()}`, ts.ScriptTarget.Latest, true);
+        return source.statements[0].declarationList.declarations[0].initializer.parameters.map(p => p.name.getText(source));
+      };
+      assert.deepEqual(params(a), params(b), key);
+    } else if (a && typeof a === 'object') {
+      assert.deepEqual(Object.keys(a).sort(), Object.keys(b).sort(), key);
+      for (const part of Object.keys(a)) compare(a[part], b[part], `${key}.${part}`);
+    } else assert.ok(typeof b !== 'string' || b.trim().length > 0, key);
+  }
+  compare(en, tr, 'locale');
+});
+
+check('All screen/component static translation references exist; literal UI copy uses catalogs', () => {
+  for (const folder of ['app', 'components']) {
+    for (const file of fs.readdirSync(path.join(root, folder), { recursive: true }).filter(f => /\.tsx?$/.test(f))) {
+      const filename = `${folder}/${file}`, source = read(filename);
+      const tree = ts.createSourceFile(filename, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+      function visit(node) {
+        if (ts.isPropertyAccessExpression(node)) {
+          const parts = []; let current = node;
+          while (ts.isPropertyAccessExpression(current)) { parts.unshift(current.name.text); current = current.expression; }
+          if (ts.isIdentifier(current) && current.text === 't') {
+            for (const locale of [en, tr]) {
+              let value = locale;
+              for (const part of parts) { assert.ok(value != null && part in Object(value), `${filename}: t.${parts.join('.')}`); value = value[part]; }
+            }
+          }
+        }
+        if (ts.isJsxText(node)) assert.doesNotMatch(node.text.trim(), /[A-Za-z]/, `${filename}: literal JSX text`);
+        if (ts.isJsxAttribute(node) && ['label', 'title', 'placeholder', 'accessibilityLabel', 'accessibilityHint'].includes(node.name.text)
+          && node.initializer && ts.isStringLiteral(node.initializer)) assert.doesNotMatch(node.initializer.text, /[A-Za-z]/, `${filename}: ${node.name.text}`);
+        ts.forEachChild(node, visit);
+      }
+      visit(tree);
+    }
+  }
+});
+
+check('Calendar generated copy localizes at render time while raw user names and descriptions stay intact', () => {
+  const timeline = loadTypeScript('utils/calendarTimeline.ts', { './calendarDate': calendarDate });
+  const name = 'Committee removed / Kalp — O\'Brien';
+  const at = new Date(2026, 8, 6, 12).getTime();
+  const items = timeline.buildCalendarItems({
+    startDate: '2026-09-01', endDateExclusive: '2026-10-01',
+    manualEvents: [{ event: { id: 'e', title: name, description: name, committeeId: null, date: '2026-09-06', startTime: null }, committeeName: null }],
+    committeeDates: [{ id: 'c', name, startDate: at, examDate: at }],
+    focusSessions: [{ id: 'f', startedAt: at, actualSec: 3660, committeeId: 'c', committeeName: name }],
+    memoryReviews: [{ deckId: 'd', deckName: name, reviewedAt: at }],
+  });
+  assert.equal(items.length, 5);
+  for (const locale of [en, tr]) {
+    for (const item of items) {
+      const nodes = renderLocalized('components/calendar/TimelineItemRow.tsx', 'TimelineItemRow', locale, { item });
+      assert.ok(nodes.some(n => n.props.label === locale.sweep.timelineTypes[item.type]));
+      const expected = item.type === 'manual' ? name : item.type === 'committee_start' ? locale.dashboard.startTitle(name)
+        : item.type === 'committee_exam' ? locale.dashboard.examTitle(name) : item.type === 'focus' ? locale.sweep.focusTitle(name) : locale.sweep.memoryTitle(name);
+      assert.ok(nodes.some(n => n.props.children.includes(expected)), item.type);
+    }
+  }
+  assert.equal(calendarDate.formatMonthLabel('2026-09-01', 'tr-TR'), 'Eylül 2026');
+  assert.match(calendarDate.formatAgendaDate('2026-09-06', 'tr-TR'), /Eylül/);
+  assert.equal(en.sweep.items(1), '1 item'); assert.equal(en.sweep.items(2), '2 items');
+  assert.equal(tr.sweep.items(2), '2 öğe');
+  assert.equal(en.sweep.focused(3660), '1h 1m focused'); assert.equal(tr.sweep.focused(3660), '1 sa 1 dk odaklanma');
+});
+
+check('System error localization follows active language without mutating diagnostics or user data', () => {
+  for (const key of Object.keys(en.systemErrors)) {
+    assert.equal(errorTranslation.translateError(key, tr), tr.systemErrors[key]);
+    assert.ok(Object.values(en.systemErrors).includes(errorTranslation.translateError(tr.systemErrors[key], en)));
+  }
+  assert.equal(errorTranslation.translateError('driver diagnostic', tr), tr.sweep.operationError);
+  assert.equal(errorTranslation.translateError(en.sweep.frontRequired, tr), tr.sweep.frontRequired);
+  assert.equal(errorTranslation.translateError(tr.sweep.frontRequired, en), en.sweep.frontRequired);
+  const name = 'Türkçe / English O\'Brien';
+  for (const locale of [en, tr]) {
+    assert.ok(locale.sweep.deleteDeckBody(name).includes(name));
+    assert.ok(locale.sweep.deleteEventBody(name).includes(name));
+    assert.ok(locale.sweep.openCommittee(name, 'STATUS', 'DAYS').includes(name));
+  }
+});
+
+check('Localization preserves persisted stores, schema, SRS, evidence, recommendations and Exam Plan rules', () => {
+  const { execFileSync } = require('node:child_process');
+  for (const file of ['db/migrations.ts', 'package.json', 'package-lock.json', 'store/useAppStore.ts',
+    'store/useFocusStore.ts', 'store/useMemoryStore.ts', 'store/useStudySupportStore.ts',
+    'utils/memoryScheduling.ts', 'utils/examPlanRules.ts', 'utils/studySupportRules.ts', 'utils/recoveryRules.ts',
+    'utils/topicEvidenceRules.ts', 'utils/subjectEvidenceRules.ts', 'utils/committeeEvidenceRules.ts',
+    'db/repositories/memoryRepo.ts']) {
+    const before = execFileSync('git', ['show', `a119bc1:${file}`], { cwd: root, encoding: 'utf8' });
+    assert.equal(read(file).replace(/\r\n/g, '\n'), before.replace(/\r\n/g, '\n'), file);
+  }
+  // Semantic validation for dashboardRepo getFocusSummary invariant
+  const dashboardRepo = read('db/repositories/dashboardRepo.ts');
+  const focusSummaryBlock = dashboardRepo.slice(
+    dashboardRepo.indexOf('getFocusSummary('),
+    dashboardRepo.indexOf('getMemorySummary(')
+  );
+  assert.match(focusSummaryBlock, /completed\s*=\s*1\s+AND\s+cancelled\s*=\s*0/);
+  assert.match(focusSummaryBlock, /ended_at\s*>=\s*started_at/);
+  assert.match(focusSummaryBlock, /ended_at\s*>=\s*\?\s+AND\s+ended_at\s*<\s*\?/);
+  assert.match(focusSummaryBlock, /typeof\(actual_duration_sec\)\s*=\s*'integer'\s+AND\s+actual_duration_sec\s*>\s*0/);
+  // Calendar's only store-source addition is erased presentation metadata typing.
+  const compile = source => ts.transpileModule(source, { compilerOptions: { removeComments: true, target: ts.ScriptTarget.ES2022 } }).outputText;
+  const previous = execFileSync('git', ['show', 'a119bc1:store/useCalendarStore.ts'], { cwd: root, encoding: 'utf8' });
+  assert.equal(compile(read('store/useCalendarStore.ts')), compile(previous));
 });
 
 process.stdout.write(`\nPhase 3 + localization static/in-memory validation passed: ${passed} checks.\n`);

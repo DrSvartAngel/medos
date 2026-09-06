@@ -40,6 +40,8 @@ export type CalendarItemType =
   | 'memory';
 
 export interface CalendarItem {
+  // Raw presentation inputs only; not persisted. Keep user content separate from generated copy.
+  display?: { name?: string | null; description?: string; actualSec?: number; reviews?: number };
   id: string;
   type: CalendarItemType;
   date: LocalDateKey;

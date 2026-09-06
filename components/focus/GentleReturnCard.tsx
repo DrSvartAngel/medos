@@ -1,3 +1,4 @@
+import { translateError } from '@/i18n/errors';
 import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, AppState, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -242,6 +243,7 @@ export function GentleReturnCard({
 }
 
 function GentleReturnError({ message }: { message: string }) {
+  const t = useTranslation();
   const { colors, spacing } = useTheme();
 
   return (
@@ -258,7 +260,7 @@ function GentleReturnError({ message }: { message: string }) {
         color={colors.textSecondary}
         style={{ flex: 1, marginLeft: spacing.sm }}
       >
-        {message}
+        {translateError(message, t)}
       </AppText>
     </View>
   );

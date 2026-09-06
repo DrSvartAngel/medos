@@ -1,6 +1,20 @@
 # MedOS — compact handoff
 
-## Current — Phase 6.6 Technical Closure
+## Current — Full EN/TR Localization Sweep
+
+- Full user-facing EN/TR sweep COMPLETE; existing i18n/useAppStore language architecture retained. This explicitly supersedes the earlier localization deferral. Physical localization and combined Phase 6 QA remain PENDING, user-owned; no emulator/ADB/device automation.
+- Audited all app/component surfaces: tabs, Dashboard, curriculum/evidence/Exam Plan, Focus/support/breaks, Memory/SRS, Calendar, Profile and motivation. Filled Committee/Deck/Card/Event CRUD, confirmation, empty/error/fallback, count, badge, placeholder and accessibility gaps; already-localized surfaces kept intact.
+- Existing terminology retained: Komite → Ders → Konu; Odaklanma, Bellek, Tekrar, Hafif plan, Düşük uyaran modu and Bugünün 3 Hedefi. Removed the isolated Memory/Bellek synonym mismatch and clarified Review again as a repeat-review action.
+- Calendar generated titles/subtitles now use raw non-persisted presentation inputs at render time; user names/descriptions are never parsed or translated. Month/day/date and recent-review formatting follow the selected app locale. No new queries, stored records, date arithmetic, ordering or scheduling behavior.
+- System errors translate at render time; unknown driver diagnostics show a truthful localized failure instead of raw technical text. Existing errors/drafts remain in their owning state. Language settings, hydration guard and persisted study data are unchanged.
+- Intentionally untranslated: user-created content, MedOS name, native language names English/Türkçe, internal enums/routes/SQL/logs and historical developer docs. No literal English JSX text or textual UI attributes remain in the audited app/components; static coverage is not physical layout evidence.
+- Schema v10; no migration, package/version/dependency, persistence or store changes. CalendarItem only gains erased presentation typing; existing Calendar runtime store code is identical after transpilation. Focus/SRS, evidence, Check-In matrix, Recovery, Momentum and Exam Plan rules remain frozen.
+- Validation: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 (21 PASS), Phase 3/localization (90 PASS), Phase 4 (43 PASS), Phase 5 (29 PASS). Phase 6 exhibits legacy baseline failures where pre-localization git baselines (commits 10a9291, 037072f) assert byte-for-byte exact matches of intentionally localized files (app/(tabs)/focus.tsx, app/decks/[id]/review.tsx, i18n/en.ts, i18n/tr.ts). Preserved regression groups; added catalog key/type/parameter parity, static reference/UI-copy checks, bilingual generated Calendar copy, error translation and frozen-domain checks.
+- Changes: 43 files — UI routes/components, existing EN/TR catalogs, new i18n/errors.ts, Calendar presentation metadata/date formatting, Phase 2/3/6 validators and these four memory docs. No product redesign.
+- Branch localization-en-tr-sweep; local commit only, no push or main merge. Master Phase 6 ACTIVE; Phase 7 NOT STARTED; PDF/Gemini roadmap-only. Prior QA statuses unchanged.
+- Next: user checks EN/TR switching + restart, CRUD/validation/delete/error states, Calendar dates/generated labels, user-content preservation and long-copy/large-font layouts on phone/tablet; then completes the existing combined Phase 6 checklist. Do not close Master Phase 6 without explicit phone AND tablet PASS.
+
+## Historical — Phase 6.6 Technical Closure
 
 - Phase 6.1–6.6 implementation/technical closure COMPLETE. Master Phase 6 remains ACTIVE until user phone AND tablet QA passes. Combined physical QA PENDING; no device/emulator/ADB automation. Phase 7 NOT STARTED.
 - Final reward semantics: one inline acknowledgement after positive-duration persisted non-cancelled Focus finish, including entry Finish here, or successful final Memory rating with positive session count. No reward for cancel, screen/Recovery opening, selection, milestone alone, foreground or navigation return. Route-local blur/reset guards prevent replay; no reward history.

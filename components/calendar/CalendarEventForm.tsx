@@ -1,3 +1,5 @@
+import { translateError } from '@/i18n/errors';
+import { useTranslation } from '@/i18n';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -42,6 +44,7 @@ export function CalendarEventForm({
   onSubmit,
   onCancel,
 }: CalendarEventFormProps) {
+  const t = useTranslation();
   const { colors, spacing, radius, typography } = useTheme();
   const { isTablet } = useResponsive();
   const [title, setTitle] = useState(initialTitle);
@@ -64,36 +67,36 @@ export function CalendarEventForm({
     const trimmedStart = startTime.trim();
     const trimmedEnd = endTime.trim();
 
-    const nextTitleError = trimmedTitle.length === 0 ? 'Event title is required.' : '';
+    const nextTitleError = trimmedTitle.length === 0 ? t.sweep.eventRequired : '';
     const nextDateError = !isValidLocalDateKey(trimmedDate)
-      ? 'Enter a valid date as YYYY-MM-DD.'
+      ? t.sweep.dateValid
       : '';
     let nextTimeError = '';
 
     if (trimmedStart.length > 0 && !parseLocalTime(trimmedStart)) {
-      nextTimeError = 'Enter start time as HH:mm.';
+      nextTimeError = t.sweep.startTimeValid;
     } else if (trimmedEnd.length > 0 && !parseLocalTime(trimmedEnd)) {
-      nextTimeError = 'Enter end time as HH:mm.';
+      nextTimeError = t.sweep.endTimeValid;
     } else if (trimmedEnd.length > 0 && trimmedStart.length === 0) {
-      nextTimeError = 'Add a start time before an end time.';
+      nextTimeError = t.sweep.startFirst;
     } else if (
       trimmedStart.length > 0 &&
       trimmedEnd.length > 0 &&
       (localTimeToMinutes(trimmedEnd) ?? 0) <= (localTimeToMinutes(trimmedStart) ?? 0)
     ) {
-      nextTimeError = 'End time must be later than start time.';
+      nextTimeError = t.sweep.endAfter;
     } else if (
       trimmedStart.length > 0 &&
       isValidLocalDateKey(trimmedDate) &&
       localDateTimeToTimestamp(trimmedDate, trimmedStart) === null
     ) {
-      nextTimeError = 'That local date and time is not available.';
+      nextTimeError = t.sweep.localTimeInvalid;
     } else if (
       trimmedEnd.length > 0 &&
       isValidLocalDateKey(trimmedDate) &&
       localDateTimeToTimestamp(trimmedDate, trimmedEnd) === null
     ) {
-      nextTimeError = 'That local end time is not available.';
+      nextTimeError = t.sweep.localEndInvalid;
     }
 
     setTitleError(nextTitleError);
@@ -131,17 +134,18 @@ export function CalendarEventForm({
         <View style={[styles.error, { borderColor: colors.error, padding: spacing.md }]}> 
           <Feather name="alert-circle" size={18} color={colors.error} />
           <AppText variant="bodySmall" color={colors.error} style={styles.errorText}>
-            {error}
+            {translateError(error, t)}
           </AppText>
         </View>
       )}
 
       <View>
-        <AppText variant="label" color={colors.textSecondary} style={styles.label}>Title *</AppText>
+        <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.titleRequired}</AppText>
         <TextInput
           value={title}
+          accessibilityLabel={t.sweep.titleRequired}
           onChangeText={(value) => { setTitle(value); if (titleError) setTitleError(''); }}
-          placeholder="e.g. Review pharmacology"
+          placeholder={t.sweep.eventExample}
           placeholderTextColor={colors.textMuted}
           autoFocus={initialTitle.length === 0}
           maxLength={140}
@@ -151,11 +155,12 @@ export function CalendarEventForm({
       </View>
 
       <View>
-        <AppText variant="label" color={colors.textSecondary} style={styles.label}>Date *</AppText>
+        <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.dateRequired}</AppText>
         <TextInput
           value={date}
+          accessibilityLabel={t.sweep.dateRequired}
           onChangeText={(value) => { setDate(value); if (dateError) setDateError(''); }}
-          placeholder="YYYY-MM-DD"
+          placeholder={t.sweep.datePlaceholder}
           placeholderTextColor={colors.textMuted}
           keyboardType="numeric"
           maxLength={10}
@@ -166,15 +171,16 @@ export function CalendarEventForm({
 
       <View style={[styles.timeRow, { gap: spacing.sm }]}> 
         <View style={styles.timeField}>
-          <AppText variant="label" color={colors.textSecondary} style={styles.label}>Start time · optional</AppText>
+          <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.optionalStart}</AppText>
           <TextInput
             value={startTime}
+            accessibilityLabel={t.sweep.optionalStart}
             onChangeText={(value) => {
               setStartTime(value);
               if (value.trim().length === 0) setEndTime('');
               if (timeError) setTimeError('');
             }}
-            placeholder="HH:mm"
+            placeholder={t.sweep.timePlaceholder}
             placeholderTextColor={colors.textMuted}
             keyboardType="numbers-and-punctuation"
             maxLength={5}
@@ -183,11 +189,12 @@ export function CalendarEventForm({
         </View>
         {startTime.trim().length > 0 && (
           <View style={styles.timeField}>
-            <AppText variant="label" color={colors.textSecondary} style={styles.label}>End time · optional</AppText>
+            <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.optionalEnd}</AppText>
             <TextInput
               value={endTime}
+              accessibilityLabel={t.sweep.optionalEnd}
               onChangeText={(value) => { setEndTime(value); if (timeError) setTimeError(''); }}
-              placeholder="HH:mm"
+              placeholder={t.sweep.timePlaceholder}
               placeholderTextColor={colors.textMuted}
               keyboardType="numbers-and-punctuation"
               maxLength={5}
@@ -199,11 +206,12 @@ export function CalendarEventForm({
       {timeError.length > 0 && <FieldError message={timeError} />}
 
       <View>
-        <AppText variant="label" color={colors.textSecondary} style={styles.label}>Description · optional</AppText>
+        <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.optionalDescription}</AppText>
         <TextInput
           value={description}
+          accessibilityLabel={t.sweep.optionalDescription}
           onChangeText={setDescription}
-          placeholder="A short intention or target"
+          placeholder={t.sweep.intentionPlaceholder}
           placeholderTextColor={colors.textMuted}
           multiline
           numberOfLines={3}
@@ -214,13 +222,13 @@ export function CalendarEventForm({
       </View>
 
       <Card>
-        <AppText variant="label">Committee · optional</AppText>
+        <AppText variant="label">{t.sweep.optionalCommittee}</AppText>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={[styles.options, { gap: spacing.sm, paddingTop: spacing.md }]}
         >
-          <CommitteeOption label="No committee" selected={committeeId === null} onPress={() => setCommitteeId(null)} />
+          <CommitteeOption label={t.sweep.noCommittee} selected={committeeId === null} onPress={() => setCommitteeId(null)} />
           {committees.map((committee) => (
             <CommitteeOption
               key={committee.id}
@@ -233,13 +241,12 @@ export function CalendarEventForm({
         </ScrollView>
         {missingCommittee && (
           <AppText variant="caption" color={colors.warning} style={{ marginTop: spacing.sm }}>
-            The linked committee was removed. Choose another or select No committee.
-          </AppText>
+            {t.sweep.missingCommitteeHelp}</AppText>
         )}
       </Card>
 
       <View style={[styles.actions, isTablet && styles.actionsTablet, { gap: spacing.sm }]}> 
-        <Button label="Cancel" variant="secondary" onPress={onCancel} disabled={saving} style={styles.action} />
+        <Button label={t.sweep.cancel} variant="secondary" onPress={onCancel} disabled={saving} style={styles.action} />
         <Button label={submitLabel} onPress={handleSubmit} loading={saving} style={styles.action} />
       </View>
     </View>
@@ -248,7 +255,7 @@ export function CalendarEventForm({
   function FieldError({ message }: { message: string }) {
     return (
       <AppText variant="caption" color={colors.error} style={styles.fieldError}>
-        {message}
+        {translateError(message, t)}
       </AppText>
     );
   }

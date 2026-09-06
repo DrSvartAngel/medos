@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -17,32 +18,31 @@ interface DayAgendaProps {
 }
 
 export function DayAgenda({ date, items, onAdd, onOpenItem }: DayAgendaProps) {
+  const t = useTranslation();
   const { colors, spacing } = useTheme();
 
   return (
     <View>
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
-          <AppText variant="h3">{formatAgendaDate(date)}</AppText>
+          <AppText variant="h3">{formatAgendaDate(date, t.dashboard.locale)}</AppText>
           <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: 2 }}>
             {items.length === 0
-              ? 'A clear day.'
-              : `${items.length} ${items.length === 1 ? 'item' : 'items'}`}
+              ? t.sweep.clearDay
+              : t.sweep.items(items.length)}
           </AppText>
         </View>
-        <Button label="Add Study Event" onPress={onAdd} size="sm" />
+        <Button label={t.sweep.addEvent} onPress={onAdd} size="sm" />
       </View>
 
       {items.length === 0 ? (
         <Card elevated style={[styles.empty, { marginTop: spacing.md, paddingVertical: spacing.xl }]}> 
           <Feather name="sun" size={34} color={colors.accent} />
           <AppText variant="h3" style={{ marginTop: spacing.md, textAlign: 'center' }}>
-            Nothing scheduled for this day
-          </AppText>
+            {t.sweep.nothingScheduled}</AppText>
           <AppText variant="bodySmall" color={colors.textSecondary} style={styles.emptyText}>
-            Leave it open, or add one study intention when you are ready.
-          </AppText>
-          <Button label="Add Study Event" variant="secondary" onPress={onAdd} style={{ marginTop: spacing.md }} />
+            {t.sweep.emptyAgendaHelp}</AppText>
+          <Button label={t.sweep.addEvent} variant="secondary" onPress={onAdd} style={{ marginTop: spacing.md }} />
         </Card>
       ) : (
         <View style={{ gap: spacing.sm, marginTop: spacing.md }}>

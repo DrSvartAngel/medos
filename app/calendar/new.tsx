@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, type Href, useLocalSearchParams } from 'expo-router';
@@ -13,6 +14,7 @@ import { useCommitteeStore } from '@/store/useCommitteeStore';
 import { isValidLocalDateKey, todayLocalDateKey } from '@/utils/calendarDate';
 
 export default function NewCalendarEventScreen() {
+  const t = useTranslation();
   const { date } = useLocalSearchParams<{ date?: string }>();
   const { colors, spacing } = useTheme();
   const { isTablet } = useResponsive();
@@ -54,18 +56,17 @@ export default function NewCalendarEventScreen() {
       <ScreenWrapper>
         <View style={styles.headerRow}>
           <TouchableOpacity
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            accessibilityLabel={t.sweep.back}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/calendar' as Href))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={{ marginRight: spacing.md }}
           >
             <Feather name="arrow-left" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <AppText variant={isTablet ? 'h1' : 'h2'}>Add Study Event</AppText>
+            <AppText variant={isTablet ? 'h1' : 'h2'}>{t.sweep.addEvent}</AppText>
             <AppText variant="body" color={colors.textSecondary} style={{ marginTop: 2 }}>
-              One clear intention is enough.
-            </AppText>
+              {t.sweep.eventHint}</AppText>
           </View>
         </View>
 
@@ -73,10 +74,10 @@ export default function NewCalendarEventScreen() {
           <CalendarEventForm
             initialDate={initialDate}
             committees={committees}
-            submitLabel="Create Event"
+            submitLabel={t.sweep.createEvent}
             error={error}
             onSubmit={handleCreate}
-            onCancel={() => router.back()}
+            onCancel={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/calendar' as Href))}
           />
         </View>
       </ScreenWrapper>

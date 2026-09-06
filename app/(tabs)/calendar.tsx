@@ -1,3 +1,4 @@
+import { translateError } from '@/i18n/errors';
 import React, { useCallback, useMemo } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { router, type Href, useFocusEffect } from 'expo-router';
@@ -73,7 +74,7 @@ export default function CalendarScreen() {
     <Card elevated padded={false} style={styles.monthPanel}>
       <View style={{ paddingHorizontal: spacing.md, paddingTop: spacing.md }}>
         <CalendarMonthHeader
-          label={formatMonthLabel(visibleMonth)}
+          label={formatMonthLabel(visibleMonth, t.dashboard.locale)}
           onPrevious={goToPreviousMonth}
           onNext={goToNextMonth}
           onToday={goToToday}
@@ -115,7 +116,7 @@ export default function CalendarScreen() {
         <View style={[styles.error, { borderColor: colors.error, marginTop: spacing.md, padding: spacing.md }]}>
           <Feather name="alert-circle" size={18} color={colors.error} />
           <AppText variant="bodySmall" color={colors.error} style={styles.errorText}>
-            {error}
+            {translateError(error, t)}
           </AppText>
           <Button label={t.common.retry} variant="ghost" size="sm" onPress={loadVisibleRange} />
         </View>

@@ -1,3 +1,4 @@
+import { translateError } from '@/i18n/errors';
 import React, { useState } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -40,8 +41,8 @@ export function FlashcardForm({
 
   function handleSubmit() {
     if (saving) return;
-    const nextFrontError = front.trim().length === 0 ? 'The front cannot be empty.' : '';
-    const nextBackError = back.trim().length === 0 ? 'The back cannot be empty.' : '';
+    const nextFrontError = front.trim().length === 0 ? t.sweep.frontRequired : '';
+    const nextBackError = back.trim().length === 0 ? t.sweep.backRequired : '';
     setFrontError(nextFrontError);
     setBackError(nextBackError);
     if (nextFrontError || nextBackError) return;
@@ -70,22 +71,22 @@ export function FlashcardForm({
         <View style={[styles.error, { borderColor: colors.error, padding: spacing.md }]}> 
           <Feather name="alert-circle" size={18} color={colors.error} />
           <AppText variant="bodySmall" color={colors.error} style={styles.errorText}>
-            {error === 'memory_topic_unavailable' ? t.memoryTopic.missing : error}
+            {error === 'memory_topic_unavailable' ? t.memoryTopic.missing : translateError(error, t)}
           </AppText>
         </View>
       )}
 
       <View>
         <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-          Front · prompt *
-        </AppText>
+          {t.sweep.front}</AppText>
         <TextInput
           value={front}
+          accessibilityLabel={t.sweep.front}
           onChangeText={(value) => {
             setFront(value);
             if (frontError) setFrontError('');
           }}
-          placeholder="e.g. What determines preload?"
+          placeholder={t.sweep.frontExample}
           placeholderTextColor={colors.textMuted}
           multiline
           textAlignVertical="top"
@@ -95,22 +96,22 @@ export function FlashcardForm({
         />
         {frontError.length > 0 && (
           <AppText variant="caption" color={colors.error} style={styles.fieldError}>
-            {frontError}
+            {translateError(frontError, t)}
           </AppText>
         )}
       </View>
 
       <View>
         <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-          Back · answer *
-        </AppText>
+          {t.sweep.backAnswer}</AppText>
         <TextInput
           value={back}
+          accessibilityLabel={t.sweep.backAnswer}
           onChangeText={(value) => {
             setBack(value);
             if (backError) setBackError('');
           }}
-          placeholder="Write the answer in your own words."
+          placeholder={t.sweep.answerPlaceholder}
           placeholderTextColor={colors.textMuted}
           multiline
           textAlignVertical="top"
@@ -119,7 +120,7 @@ export function FlashcardForm({
         />
         {backError.length > 0 && (
           <AppText variant="caption" color={colors.error} style={styles.fieldError}>
-            {backError}
+            {translateError(backError, t)}
           </AppText>
         )}
       </View>
@@ -127,7 +128,7 @@ export function FlashcardForm({
       <TopicLinkPicker value={topicId} onChange={setTopicId} disabled={saving} />
       <View style={[styles.actions, isTablet && styles.actionsTablet, { gap: spacing.sm }]}>
         <Button
-          label="Cancel"
+          label={t.sweep.cancel}
           variant="secondary"
           onPress={onCancel}
           disabled={saving}

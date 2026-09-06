@@ -17,22 +17,21 @@ import { useResponsive } from '@/hooks/useResponsive';
 import { useCommitteeStore, type CommitteeStatus } from '@/store/useCommitteeStore';
 import { formatAgendaDate, formatLocalDateKey } from '@/utils/calendarDate';
 import {
-  getCommitteeCountdownLabel,
   getCommitteeDateStatus,
   getCommitteeDaysToExam,
 } from '@/utils/committeeDate';
 
 const STATUS_BADGE: Record<
   CommitteeStatus,
-  { variant: 'info' | 'success' | 'default'; label: string }
+  { variant: 'info' | 'success' | 'default' }
 > = {
-  upcoming: { variant: 'info', label: 'Upcoming' },
-  active: { variant: 'success', label: 'Active' },
-  completed: { variant: 'default', label: 'Completed' },
+  upcoming: { variant: 'info', },
+  active: { variant: 'success', },
+  completed: { variant: 'default', },
 };
 
-function formatCommitteeDate(timestamp: number): string {
-  return formatAgendaDate(formatLocalDateKey(timestamp));
+function formatCommitteeDate(timestamp: number, locale: string): string {
+  return formatAgendaDate(formatLocalDateKey(timestamp), locale);
 }
 
 export default function CommitteeDetailScreen() {
@@ -74,12 +73,10 @@ export default function CommitteeDetailScreen() {
       <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <Feather name="search" size={30} color={colors.textMuted} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
-          Committee not found
-        </AppText>
+          {t.sweep.committeeMissing}</AppText>
         <AppText color={colors.textMuted} style={styles.centeredText}>
-          It may have been removed from this device.
-        </AppText>
-        <Button label="Back to Committees" onPress={() => router.replace('/(tabs)/committees')} />
+          {t.sweep.removed}</AppText>
+        <Button label={t.sweep.backCommittees} onPress={() => router.replace('/(tabs)/committees')} />
       </ScreenWrapper>
     );
   }
@@ -89,15 +86,13 @@ export default function CommitteeDetailScreen() {
       <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <Feather name="alert-circle" size={30} color={colors.warning} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>
-          Committee needs another try
-        </AppText>
+          {t.sweep.committeeRetryTitle}</AppText>
         <AppText color={colors.textMuted} style={styles.centeredText}>
-          The committee could not be loaded from local storage.
-        </AppText>
+          {t.sweep.committeeLoadFailed}</AppText>
         <View style={[styles.stateActions, { gap: spacing.sm }]}>
-          <Button label="Retry committee" onPress={retry} />
+          <Button label={t.sweep.retryCommittee} onPress={retry} />
           <Button
-            label="Back"
+            label={t.common.back}
             variant="secondary"
             onPress={() => router.replace('/(tabs)/committees')}
           />
@@ -111,18 +106,13 @@ export default function CommitteeDetailScreen() {
       <ScreenWrapper includeBottomSafeArea contentStyle={styles.centeredState}>
         <ActivityIndicator size="large" color={colors.primary} />
         <AppText color={colors.textMuted} style={{ marginTop: spacing.sm }}>
-          Loading committee…
-        </AppText>
+          {t.sweep.loadingCommittee}</AppText>
       </ScreenWrapper>
     );
   }
 
   const daysToExam = getCommitteeDaysToExam(committee.examDate);
   const currentStatus = getCommitteeDateStatus(committee.startDate, committee.examDate);
-  const countdownLabel = getCommitteeCountdownLabel(
-    committee.startDate,
-    committee.examDate
-  );
   const badge = STATUS_BADGE[currentStatus];
   const committeeId = committee.id;
   const committeeName = committee.name;
@@ -158,7 +148,7 @@ export default function CommitteeDetailScreen() {
 
         <TouchableOpacity
           accessibilityRole="button"
-          accessibilityLabel={`Edit ${committee.name}`}
+          accessibilityLabel={t.sweep.editNamed(committee.name)}
           onPress={() => router.push(`/committees/edit/${encodeURIComponent(committee.id)}` as Href)}
           style={[
             styles.editButton,
@@ -171,8 +161,7 @@ export default function CommitteeDetailScreen() {
         >
           <Feather name="edit-2" size={16} color={colors.primary} />
           <AppText variant="label" color={colors.primary} style={{ marginLeft: 6 }}>
-            Edit
-          </AppText>
+            {t.sweep.edit}</AppText>
         </TouchableOpacity>
       </View>
 
@@ -191,8 +180,7 @@ export default function CommitteeDetailScreen() {
         >
           <Feather name="alert-circle" size={18} color={colors.error} />
           <AppText color={colors.error} style={{ flex: 1, marginLeft: spacing.sm }}>
-            The committee was not removed. Please try again.
-          </AppText>
+            {t.sweep.committeeRemoveFailed}</AppText>
         </View>
       ) : null}
 
@@ -207,7 +195,7 @@ export default function CommitteeDetailScreen() {
           >
             {committee.name}
           </AppText>
-          <Badge label={badge.label} variant={badge.variant} dot />
+          <Badge label={t.sweep.statuses[currentStatus]} variant={badge.variant} dot />
         </View>
 
         {committee.description ? (
@@ -220,13 +208,13 @@ export default function CommitteeDetailScreen() {
           <View style={styles.dateRow}>
             <Feather name="play" size={14} color={colors.textMuted} />
             <AppText color={colors.textSecondary} style={{ marginLeft: spacing.xs, flex: 1 }}>
-              Starts {formatCommitteeDate(committee.startDate)}
+              {t.sweep.starts}{' '}{formatCommitteeDate(committee.startDate, t.dashboard.locale)}
             </AppText>
           </View>
           <View style={[styles.dateRow, { marginTop: spacing.xs }]}>
             <Feather name="flag" size={14} color={colors.textMuted} />
             <AppText color={colors.textSecondary} style={{ marginLeft: spacing.xs, flex: 1 }}>
-              Exam {formatCommitteeDate(committee.examDate)}
+              {t.sweep.exam}{' '}{formatCommitteeDate(committee.examDate, t.dashboard.locale)}
             </AppText>
           </View>
         </View>
@@ -255,7 +243,7 @@ export default function CommitteeDetailScreen() {
             }
             style={{ textAlign: 'center' }}
           >
-            {countdownLabel}
+            {t.sweep.countdown(daysToExam)}
           </AppText>
         </View>
       </Card>
@@ -266,8 +254,8 @@ export default function CommitteeDetailScreen() {
         onPress={() => router.push(`/committees/exam-plan/${encodeURIComponent(committee.id)}` as Href)} />
 
       <Button
-        label="Remove Committee"
-        accessibilityLabel={`Remove ${committee.name}`}
+        label={t.sweep.removeCommittee}
+        accessibilityLabel={t.sweep.removeNamed(committee.name)}
         variant="danger"
         onPress={handleDelete}
         style={{ marginTop: spacing.md, marginBottom: spacing.lg }}

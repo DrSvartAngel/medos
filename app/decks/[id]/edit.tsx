@@ -1,6 +1,7 @@
+import { useTranslation } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { DeckForm } from '@/components/memory/DeckForm';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
@@ -13,6 +14,7 @@ import { useCommitteeStore } from '@/store/useCommitteeStore';
 import { useMemoryStore, type UpdateDeckInput } from '@/store/useMemoryStore';
 
 export default function EditDeckScreen() {
+  const t = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing } = useTheme();
   const { isTablet } = useResponsive();
@@ -37,7 +39,9 @@ export default function EditDeckScreen() {
 
   function handleUpdate(input: UpdateDeckInput): boolean {
     const saved = updateDeck(id, input);
-    if (saved) router.back();
+    if (saved) {
+      router.canGoBack() ? router.back() : router.replace(`/decks/${id}` as Href);
+    }
     return saved;
   }
 
@@ -53,8 +57,8 @@ export default function EditDeckScreen() {
     return (
       <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
         <Feather name="alert-circle" size={36} color={colors.textMuted} />
-        <AppText variant="h3" style={{ marginTop: spacing.md }}>Deck not found</AppText>
-        <Button label="Go Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: spacing.lg }} />
+        <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.sweep.deckMissing}</AppText>
+        <Button label={t.sweep.goBack} variant="secondary" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/memory' as Href))} style={{ marginTop: spacing.lg }} />
       </ScreenWrapper>
     );
   }
@@ -64,18 +68,17 @@ export default function EditDeckScreen() {
       <ScreenWrapper>
         <View style={styles.headerRow}>
           <TouchableOpacity
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            accessibilityLabel={t.sweep.back}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace(`/decks/${id}` as Href))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={{ marginRight: spacing.md }}
           >
             <Feather name="arrow-left" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <AppText variant={isTablet ? 'h1' : 'h2'}>Edit Deck</AppText>
+            <AppText variant={isTablet ? 'h1' : 'h2'}>{t.sweep.editDeck}</AppText>
             <AppText variant="body" color={colors.textSecondary} style={{ marginTop: 2 }}>
-              Keep the deck easy to recognize at a glance.
-            </AppText>
+              {t.sweep.deckEditHint}</AppText>
           </View>
         </View>
 
@@ -86,10 +89,10 @@ export default function EditDeckScreen() {
             initialDescription={deck.description}
             initialCommitteeId={deck.committeeId}
             committees={committees}
-            submitLabel="Save Changes"
+            submitLabel={t.sweep.save}
             error={error}
             onSubmit={handleUpdate}
-            onCancel={() => router.back()}
+            onCancel={() => (router.canGoBack() ? router.back() : router.replace(`/decks/${id}` as Href))}
           />
         </View>
       </ScreenWrapper>

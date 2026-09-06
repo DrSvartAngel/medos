@@ -1,3 +1,4 @@
+import { translateError } from '@/i18n/errors';
 import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
@@ -93,7 +94,7 @@ export default function DeckReviewScreen() {
         </AppText>
         {error !== null && (
           <AppText variant="bodySmall" color={colors.error} style={styles.loadingError}>
-            {error}
+            {translateError(error, t)}
           </AppText>
         )}
       </ScreenWrapper>
@@ -238,7 +239,7 @@ export default function DeckReviewScreen() {
           <View style={[styles.error, { borderColor: colors.error, marginTop: spacing.md, padding: spacing.md }]}> 
             <Feather name="alert-circle" size={18} color={colors.error} />
             <AppText variant="bodySmall" color={colors.error} style={styles.errorText}>
-              {error}
+              {translateError(error, t)}
             </AppText>
           </View>
         )}

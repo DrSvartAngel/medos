@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/i18n';
 import { TouchableOpacity, View, StyleSheet, ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
@@ -25,30 +26,23 @@ type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'i
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const STATUS_CONFIG: Record<CommitteeStatus, { variant: BadgeVariant; label: string }> = {
-  upcoming:  { variant: 'info',    label: 'Upcoming' },
-  active:    { variant: 'success', label: 'Active' },
-  completed: { variant: 'default', label: 'Completed' },
+const STATUS_CONFIG: Record<CommitteeStatus, { variant: BadgeVariant }> = {
+  upcoming:  { variant: 'info',    },
+  active:    { variant: 'success', },
+  completed: { variant: 'default', },
 };
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-function formatExamDate(ts: number): string {
-  return new Date(ts).toLocaleDateString('en-US', {
+function formatExamDate(ts: number, locale: string): string {
+  return new Date(ts).toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   });
 }
 
-function getDaysLabel(days: number, status: CommitteeStatus): string {
-  if (status === 'completed') return 'Completed';
-  if (days > 1)  return `${days} days left`;
-  if (days === 1) return '1 day left';
-  if (days === 0) return 'Exam today';
-  return 'Exam passed';
-}
 
 function getDaysColor(
   days: number,
@@ -65,18 +59,19 @@ function getDaysColor(
 // Component
 // ---------------------------------------------------------------------------
 export function CommitteeCard({ committee, onPress, style }: CommitteeCardProps) {
+  const t = useTranslation();
   const { colors, spacing, radius } = useTheme();
 
   const currentStatus = getCommitteeDateStatus(committee.startDate, committee.examDate);
   const days = getCommitteeDaysToExam(committee.examDate);
-  const daysLabel = getDaysLabel(days, currentStatus);
+  const daysLabel = currentStatus === 'completed' ? t.sweep.statuses.completed : t.sweep.daysLeft(days);
   const daysColor = getDaysColor(days, currentStatus, colors);
   const badgeConfig = STATUS_CONFIG[currentStatus];
 
   return (
     <TouchableOpacity
       accessibilityRole="button"
-      accessibilityLabel={`Open ${committee.name}, ${badgeConfig.label}, ${daysLabel}`}
+      accessibilityLabel={t.sweep.openCommittee(committee.name, t.sweep.statuses[currentStatus], daysLabel)}
       onPress={onPress}
       activeOpacity={0.75}
       style={[
@@ -101,7 +96,7 @@ export function CommitteeCard({ committee, onPress, style }: CommitteeCardProps)
 
       {/* Status badge */}
       <Badge
-        label={badgeConfig.label}
+        label={t.sweep.statuses[currentStatus]}
         variant={badgeConfig.variant}
         dot
         style={{ marginTop: spacing.xs }}
@@ -115,7 +110,7 @@ export function CommitteeCard({ committee, onPress, style }: CommitteeCardProps)
           color={colors.textSecondary}
           style={{ marginLeft: 4 }}
         >
-          {formatExamDate(committee.examDate)}
+          {formatExamDate(committee.examDate, t.dashboard.locale)}
         </AppText>
         <View style={[styles.dot, { backgroundColor: colors.textMuted }]} />
         <AppText

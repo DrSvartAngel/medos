@@ -1,6 +1,7 @@
+import { useTranslation } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { FlashcardForm } from '@/components/memory/FlashcardForm';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
@@ -12,6 +13,7 @@ import { useAppStore } from '@/store/useAppStore';
 import { useMemoryStore, type UpdateCardInput } from '@/store/useMemoryStore';
 
 export default function NewFlashcardScreen() {
+  const t = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing } = useTheme();
   const { isTablet } = useResponsive();
@@ -34,7 +36,7 @@ export default function NewFlashcardScreen() {
   function handleCreate(input: UpdateCardInput): boolean {
     const cardId = createCard({ deckId: id, ...input });
     if (cardId === null) return false;
-    router.back();
+    router.canGoBack() ? router.back() : router.replace(`/decks/${id}` as Href);
     return true;
   }
 
@@ -49,8 +51,8 @@ export default function NewFlashcardScreen() {
   if (!deck) {
     return (
       <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
-        <AppText variant="h3">Deck not found</AppText>
-        <Button label="Go Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: spacing.lg }} />
+        <AppText variant="h3">{t.sweep.deckMissing}</AppText>
+        <Button label={t.sweep.goBack} variant="secondary" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/memory' as Href))} style={{ marginTop: spacing.lg }} />
       </ScreenWrapper>
     );
   }
@@ -60,15 +62,15 @@ export default function NewFlashcardScreen() {
       <ScreenWrapper includeBottomSafeArea>
         <View style={styles.headerRow}>
           <TouchableOpacity
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            accessibilityLabel={t.sweep.back}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace(`/decks/${id}` as Href))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={{ marginRight: spacing.md }}
           >
             <Feather name="arrow-left" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <AppText variant={isTablet ? 'h1' : 'h2'}>New Card</AppText>
+            <AppText variant={isTablet ? 'h1' : 'h2'}>{t.sweep.newCard}</AppText>
             <AppText variant="body" color={colors.textSecondary} numberOfLines={1} style={{ marginTop: 2 }}>
               {deck.name}
             </AppText>
@@ -77,10 +79,10 @@ export default function NewFlashcardScreen() {
 
         <View style={{ marginTop: spacing.xl }}>
           <FlashcardForm
-            submitLabel="Create Card"
+            submitLabel={t.sweep.createCard}
             error={error}
             onSubmit={handleCreate}
-            onCancel={() => router.back()}
+            onCancel={() => (router.canGoBack() ? router.back() : router.replace(`/decks/${id}` as Href))}
           />
         </View>
       </ScreenWrapper>

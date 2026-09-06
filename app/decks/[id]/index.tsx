@@ -1,3 +1,5 @@
+import { translateError } from '@/i18n/errors';
+import { useTranslation } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useLocalSearchParams, type Href } from 'expo-router';
@@ -16,6 +18,7 @@ import { useCommitteeStore } from '@/store/useCommitteeStore';
 import { useMemoryStore } from '@/store/useMemoryStore';
 
 export default function DeckDetailScreen() {
+  const t = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing, radius } = useTheme();
   const { isTablet } = useResponsive();
@@ -51,12 +54,12 @@ export default function DeckDetailScreen() {
   function handleDeleteDeck() {
     if (!deck) return;
     Alert.alert(
-      'Delete this deck?',
-      `“${deck.name}” and all of its cards and review history will be removed from this device.`,
+      t.sweep.deleteDeckTitle,
+      t.sweep.deleteDeckBody(deck.name),
       [
-        { text: 'Keep Deck', style: 'cancel' },
+        { text: t.sweep.keepDeck, style: 'cancel' },
         {
-          text: 'Delete Deck',
+          text: t.sweep.deleteDeck,
           style: 'destructive',
           onPress: () => {
             if (deleteDeck(deck.id)) {
@@ -70,11 +73,11 @@ export default function DeckDetailScreen() {
 
   function handleDeleteCard(cardId: string) {
     Alert.alert(
-      'Delete this card?',
-      'The card and its review history will be removed from this device.',
+      t.sweep.deleteCardTitle,
+      t.sweep.deleteCardBody,
       [
-        { text: 'Keep Card', style: 'cancel' },
-        { text: 'Delete Card', style: 'destructive', onPress: () => deleteCard(cardId) },
+        { text: t.sweep.keepCard, style: 'cancel' },
+        { text: t.sweep.deleteCard, style: 'destructive', onPress: () => deleteCard(cardId) },
       ]
     );
   }
@@ -91,12 +94,11 @@ export default function DeckDetailScreen() {
     return (
       <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
         <Feather name="alert-circle" size={36} color={colors.textMuted} />
-        <AppText variant="h3" style={{ marginTop: spacing.md }}>Deck not found</AppText>
+        <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.sweep.deckMissing}</AppText>
         <AppText variant="bodySmall" color={colors.textSecondary} style={styles.notFoundText}>
-          It may have been deleted on this device.
-        </AppText>
+          {t.sweep.deleted}</AppText>
         <Button
-          label="Back to Memory"
+          label={t.sweep.backMemory}
           variant="secondary"
           onPress={() => router.replace('/(tabs)/memory' as Href)}
           style={{ marginTop: spacing.lg }}
@@ -109,7 +111,7 @@ export default function DeckDetailScreen() {
     <ScreenWrapper>
       <View style={styles.headerRow}>
         <TouchableOpacity
-          accessibilityLabel="Go back"
+          accessibilityLabel={t.sweep.back}
           onPress={() => router.back()}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
           style={{ marginRight: spacing.md }}
@@ -120,19 +122,19 @@ export default function DeckDetailScreen() {
           <AppText variant={isTablet ? 'h1' : 'h2'} numberOfLines={2}>{deck.name}</AppText>
           <View style={[styles.metaRow, { gap: spacing.sm, marginTop: spacing.xs }]}> 
             <Badge
-              label={`${deckCards.length} ${deckCards.length === 1 ? 'card' : 'cards'}`}
+              label={t.recovery.cards(deckCards.length)}
               variant="primary"
             />
             {deck.committeeId !== null && (
               <Badge
-                label={committee?.name ?? 'Committee removed'}
+                label={committee?.name ?? t.sweep.committeeRemoved}
                 variant={committee ? 'info' : 'warning'}
               />
             )}
           </View>
         </View>
         <TouchableOpacity
-          accessibilityLabel="Edit deck"
+          accessibilityLabel={t.sweep.editDeckLabel}
           onPress={() => router.push(`/decks/${deck.id}/edit` as Href)}
           style={[
             styles.editButton,
@@ -153,21 +155,21 @@ export default function DeckDetailScreen() {
         <View style={[styles.error, { borderColor: colors.error, marginTop: spacing.md, padding: spacing.md }]}> 
           <Feather name="alert-circle" size={18} color={colors.error} />
           <AppText variant="bodySmall" color={colors.error} style={styles.errorText}>
-            {error}
+            {translateError(error, t)}
           </AppText>
         </View>
       )}
 
       <View style={[styles.primaryActions, isTablet && styles.primaryActionsTablet, { gap: spacing.sm, marginTop: spacing.lg }]}> 
         <Button
-          label="Start Review"
+          label={t.sweep.startReview}
           onPress={() => router.push(`/decks/${deck.id}/review` as Href)}
           disabled={deckCards.length === 0}
           size={isTablet ? 'lg' : 'md'}
           style={styles.primaryAction}
         />
         <Button
-          label="Add Card"
+          label={t.sweep.addCard}
           variant="secondary"
           onPress={() => router.push(`/decks/${deck.id}/cards/new` as Href)}
           size={isTablet ? 'lg' : 'md'}
@@ -177,10 +179,9 @@ export default function DeckDetailScreen() {
 
       <MemorySchedulePanel deckId={deck.id} />
       <View style={[styles.sectionHeader, { marginTop: spacing.xl, marginBottom: spacing.sm }]}> 
-        <AppText variant="h3">Cards</AppText>
+        <AppText variant="h3">{t.sweep.cards}</AppText>
         <AppText variant="bodySmall" color={colors.textSecondary}>
-          Oldest first during review
-        </AppText>
+          {t.sweep.oldestFirst}</AppText>
       </View>
 
       {isLoadingCards ? (
@@ -190,12 +191,11 @@ export default function DeckDetailScreen() {
       ) : deckCards.length === 0 ? (
         <Card elevated style={[styles.emptyCards, { paddingVertical: spacing.xl }]}> 
           <Feather name="plus-square" size={36} color={colors.accent} />
-          <AppText variant="h3" style={{ marginTop: spacing.md }}>Add your first card</AppText>
+          <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.sweep.firstCard}</AppText>
           <AppText variant="bodySmall" color={colors.textSecondary} style={styles.emptyText}>
-            A useful first card asks one specific question with one clear answer.
-          </AppText>
+            {t.sweep.firstCardHint}</AppText>
           <Button
-            label="Add Card"
+            label={t.sweep.addCard}
             onPress={() => router.push(`/decks/${deck.id}/cards/new` as Href)}
             style={{ marginTop: spacing.md }}
           />
@@ -213,7 +213,7 @@ export default function DeckDetailScreen() {
       )}
 
       <Button
-        label="Delete Deck"
+        label={t.sweep.deleteDeck}
         variant="danger"
         onPress={handleDeleteDeck}
         style={{ alignSelf: isTablet ? 'flex-start' : 'stretch', marginTop: spacing.xl, marginBottom: spacing.lg }}

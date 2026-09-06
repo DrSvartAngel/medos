@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import React, { useEffect } from 'react';
 import { ActivityIndicator, KeyboardAvoidingView, Platform, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, type Href } from 'expo-router';
@@ -12,6 +13,7 @@ import { useCommitteeStore } from '@/store/useCommitteeStore';
 import { useMemoryStore, type CreateDeckInput } from '@/store/useMemoryStore';
 
 export default function NewDeckScreen() {
+  const t = useTranslation();
   const { colors, spacing } = useTheme();
   const { isTablet } = useResponsive();
   const isDBReady = useAppStore((state) => state.isDBReady);
@@ -46,28 +48,27 @@ export default function NewDeckScreen() {
       <ScreenWrapper>
         <View style={styles.headerRow}>
           <TouchableOpacity
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            accessibilityLabel={t.sweep.back}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/memory' as Href))}
             hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             style={{ marginRight: spacing.md }}
           >
             <Feather name="arrow-left" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
           <View style={styles.headerText}>
-            <AppText variant={isTablet ? 'h1' : 'h2'}>New Deck</AppText>
+            <AppText variant={isTablet ? 'h1' : 'h2'}>{t.sweep.newDeck}</AppText>
             <AppText variant="body" color={colors.textSecondary} style={{ marginTop: 2 }}>
-              Give one medical topic a clear home.
-            </AppText>
+              {t.sweep.deckIntro}</AppText>
           </View>
         </View>
 
         <View style={{ marginTop: spacing.xl }}>
           <DeckForm
             committees={committees}
-            submitLabel="Create Deck"
+            submitLabel={t.sweep.createDeck}
             error={error}
             onSubmit={handleCreate}
-            onCancel={() => router.back()}
+            onCancel={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/memory' as Href))}
           />
         </View>
       </ScreenWrapper>

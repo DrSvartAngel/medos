@@ -64,7 +64,7 @@ export default function DashboardScreen() {
     }
 
     if (recommendation.kind === 'memory_review') {
-      router.push(`/decks/${recommendation.deckId}/review` as Href);
+      router.push(`/decks/${recommendation.deckId}/review?mode=due` as Href);
       return;
     }
 

@@ -38,7 +38,7 @@ export function DatabaseGate({ isInitializing, hasError, onRetry }: DatabaseGate
             color={colors.textMuted}
             style={{ marginTop: spacing.xs, marginBottom: spacing.lg, textAlign: 'center' }}
           >
-            {t.common.dbNotReady}
+            {t.sweep.operationError}
           </AppText>
           <Button
             label={t.common.dbRetry}

@@ -1,3 +1,5 @@
+import { translateError } from '@/i18n/errors';
+import { useTranslation } from '@/i18n';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -7,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
-import { router } from 'expo-router';
+import { router, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
@@ -40,6 +42,7 @@ const DEFAULT_COLOR = '#6C63FF';
 // Screen
 // ---------------------------------------------------------------------------
 export default function NewCommitteeScreen() {
+  const t = useTranslation();
   const { colors, spacing, radius, typography } = useTheme();
   const { isTablet } = useResponsive();
   const addCommittee = useCommitteeStore((s) => s.addCommittee);
@@ -63,7 +66,7 @@ export default function NewCommitteeScreen() {
     let valid = true;
 
     if (name.trim().length === 0) {
-      setNameError('Committee name is required.');
+      setNameError(t.sweep.committeeRequired);
       valid = false;
     } else {
       setNameError('');
@@ -73,10 +76,10 @@ export default function NewCommitteeScreen() {
     const exam  = parseDateInput(examDate);
 
     if (!start || !exam) {
-      setDateError('Please enter dates in YYYY-MM-DD format.');
+      setDateError(t.sweep.datesFormat);
       valid = false;
     } else if (exam < start) {
-      setDateError('Exam date cannot be before the start date.');
+      setDateError(t.sweep.examBefore);
       valid = false;
     } else {
       setDateError('');
@@ -100,7 +103,10 @@ export default function NewCommitteeScreen() {
       color: DEFAULT_COLOR,
     });
     setSaving(false);
-    if (succeeded) router.back();
+    if (succeeded) {
+      // if (succeeded) router.back()
+      router.canGoBack() ? router.back() : router.replace('/(tabs)/committees' as Href);
+    }
   }
 
   // Shared input style
@@ -127,13 +133,13 @@ export default function NewCommitteeScreen() {
         <View style={styles.headerRow}>
           <TouchableOpacity
             accessibilityRole="button"
-            accessibilityLabel="Go back"
-            onPress={() => router.back()}
+            accessibilityLabel={t.sweep.back}
+            onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/committees' as Href))}
             style={[styles.backButton, { marginRight: spacing.sm }]}
           >
             <Feather name="arrow-left" size={24} color={colors.textPrimary} />
           </TouchableOpacity>
-          <AppText variant={isTablet ? 'h1' : 'h2'}>New Committee</AppText>
+          <AppText variant={isTablet ? 'h1' : 'h2'}>{t.sweep.newCommittee}</AppText>
         </View>
 
         <AppText
@@ -141,8 +147,7 @@ export default function NewCommitteeScreen() {
           color={colors.textSecondary}
           style={{ marginBottom: spacing.xl }}
         >
-          Fill in the details below to create your committee.
-        </AppText>
+          {t.sweep.committeeIntro}</AppText>
 
         {mutationError ? (
           <View
@@ -159,25 +164,23 @@ export default function NewCommitteeScreen() {
           >
             <Feather name="alert-circle" size={18} color={colors.error} />
             <AppText color={colors.error} style={{ flex: 1, marginLeft: spacing.sm }}>
-              The committee was not created. Check your local data and try again.
-            </AppText>
+              {t.sweep.committeeCreateFailed}</AppText>
           </View>
         ) : null}
 
         {/* ── Name ─────────────────────────────────────────── */}
         <View style={[styles.field, { marginBottom: spacing.md }]}>
           <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-            Committee Name *
-          </AppText>
+            {t.sweep.committeeNameRequired}</AppText>
           <TextInput
-            accessibilityLabel="Committee name"
+            accessibilityLabel={t.sweep.committeeName}
             value={name}
             onChangeText={(t) => {
               setName(t);
               if (nameError) setNameError('');
               if (mutationError) setError(null);
             }}
-            placeholder="e.g. Cardiology Block 3"
+            placeholder={t.sweep.committeeExample}
             placeholderTextColor={colors.textMuted}
             autoFocus
             returnKeyType="next"
@@ -185,7 +188,7 @@ export default function NewCommitteeScreen() {
           />
           {nameError.length > 0 && (
             <AppText variant="caption" color={colors.error} style={styles.errorText}>
-              {nameError}
+              {translateError(nameError, t)}
             </AppText>
           )}
         </View>
@@ -193,16 +196,15 @@ export default function NewCommitteeScreen() {
         {/* ── Description ──────────────────────────────────── */}
         <View style={[styles.field, { marginBottom: spacing.md }]}>
           <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-            Description
-          </AppText>
+            {t.sweep.description}</AppText>
           <TextInput
-            accessibilityLabel="Committee description"
+            accessibilityLabel={t.sweep.committeeDescription}
             value={description}
             onChangeText={(value) => {
               setDesc(value);
               if (mutationError) setError(null);
             }}
-            placeholder="Optional — e.g. Focus areas, notes…"
+            placeholder={t.sweep.optionalNotes}
             placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={3}
@@ -215,17 +217,16 @@ export default function NewCommitteeScreen() {
         <View style={[styles.datesRow, { gap: spacing.sm, marginBottom: spacing.md }]}>
           <View style={[styles.field, styles.dateField]}>
             <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-              Start Date *
-            </AppText>
+              {t.sweep.startDate}</AppText>
             <TextInput
-              accessibilityLabel="Committee start date in year month day format"
+              accessibilityLabel={t.sweep.startDateLabel}
               value={startDate}
               onChangeText={(t) => {
                 setStartDate(t);
                 if (dateError) setDateError('');
                 if (mutationError) setError(null);
               }}
-              placeholder="YYYY-MM-DD"
+              placeholder={t.sweep.datePlaceholder}
               placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               maxLength={10}
@@ -235,17 +236,16 @@ export default function NewCommitteeScreen() {
 
           <View style={[styles.field, styles.dateField]}>
             <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-              Exam Date *
-            </AppText>
+              {t.sweep.examDate}</AppText>
             <TextInput
-              accessibilityLabel="Committee exam date in year month day format"
+              accessibilityLabel={t.sweep.examDateLabel}
               value={examDate}
               onChangeText={(t) => {
                 setExamDate(t);
                 if (dateError) setDateError('');
                 if (mutationError) setError(null);
               }}
-              placeholder="YYYY-MM-DD"
+              placeholder={t.sweep.datePlaceholder}
               placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
               maxLength={10}
@@ -260,17 +260,16 @@ export default function NewCommitteeScreen() {
             color={colors.error}
             style={[styles.errorText, { marginBottom: spacing.md }]}
           >
-            {dateError}
+            {translateError(dateError, t)}
           </AppText>
         )}
 
         <AppText variant="caption" color={colors.textMuted} style={{ marginBottom: spacing.xl }}>
-          Enter dates as YYYY-MM-DD (e.g. 2026-11-15)
-        </AppText>
+          {t.sweep.dateHelp}</AppText>
 
         {/* ── Save ─────────────────────────────────────────── */}
         <Button
-          label="Create Committee"
+          label={t.sweep.createCommittee}
           onPress={handleSave}
           loading={saving}
           size={isTablet ? 'lg' : 'md'}

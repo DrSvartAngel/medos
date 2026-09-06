@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from '@/i18n';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/Typography';
@@ -16,19 +17,31 @@ interface TimelineItemRowProps {
 
 const ITEM_CONFIG: Record<
   CalendarItemType,
-  { label: string; icon: FeatherName; variant: BadgeVariant; colorKey: 'textPrimary' | 'info' | 'warning' | 'primary' | 'accent' }
+  { icon: FeatherName; variant: BadgeVariant; colorKey: 'textPrimary' | 'info' | 'warning' | 'primary' | 'accent' }
 > = {
-  manual: { label: 'Study', icon: 'calendar', variant: 'default', colorKey: 'textPrimary' },
-  committee_start: { label: 'Committee', icon: 'book-open', variant: 'info', colorKey: 'info' },
-  committee_exam: { label: 'Exam', icon: 'flag', variant: 'warning', colorKey: 'warning' },
-  focus: { label: 'Focus', icon: 'clock', variant: 'primary', colorKey: 'primary' },
-  memory: { label: 'Memory', icon: 'layers', variant: 'success', colorKey: 'accent' },
+  manual: { icon: 'calendar', variant: 'default', colorKey: 'textPrimary' },
+  committee_start: { icon: 'book-open', variant: 'info', colorKey: 'info' },
+  committee_exam: { icon: 'flag', variant: 'warning', colorKey: 'warning' },
+  focus: { icon: 'clock', variant: 'primary', colorKey: 'primary' },
+  memory: { icon: 'layers', variant: 'success', colorKey: 'accent' },
 };
 
 export function TimelineItemRow({ item, onPress }: TimelineItemRowProps) {
+  const t = useTranslation();
   const { colors, spacing, radius } = useTheme();
   const config = ITEM_CONFIG[item.type];
   const accentColor = colors[config.colorKey];
+  const display = item.display;
+  const committee = item.committeeId ? display?.name ?? t.sweep.committeeRemoved : undefined;
+  const title = !display ? item.title : item.type === 'committee_start' ? t.dashboard.startTitle(display.name ?? '')
+    : item.type === 'committee_exam' ? t.dashboard.examTitle(display.name ?? '')
+    : item.type === 'focus' ? t.sweep.focusTitle(display.name ?? null)
+    : item.type === 'memory' ? t.sweep.memoryTitle(display.name ?? '') : item.title;
+  const subtitle = !display ? item.subtitle : item.type === 'manual' ? [committee, display.description].filter(Boolean).join(' · ')
+    : item.type === 'committee_start' ? t.dashboard.committeeStart
+    : item.type === 'committee_exam' ? t.sweep.exam
+    : item.type === 'focus' ? [committee, t.sweep.focused(display.actualSec ?? 0)].filter(Boolean).join(' · ')
+    : t.sweep.cardReviews(display.reviews ?? 0);
 
   return (
     <Pressable
@@ -52,7 +65,7 @@ export function TimelineItemRow({ item, onPress }: TimelineItemRowProps) {
       </View>
       <View style={[styles.content, { marginLeft: spacing.md }]}> 
         <View style={styles.metaRow}>
-          <Badge label={config.label} variant={config.variant} />
+          <Badge label={t.sweep.timelineTypes[item.type]} variant={config.variant} />
           {item.time !== undefined && (
             <AppText variant="caption" color={colors.textMuted} style={{ marginLeft: spacing.sm }}>
               {item.time}
@@ -64,16 +77,16 @@ export function TimelineItemRow({ item, onPress }: TimelineItemRowProps) {
           numberOfLines={2}
           style={{ marginTop: spacing.xs }}
         >
-          {item.title}
+          {title}
         </AppText>
-        {item.subtitle !== undefined && (
+        {subtitle !== undefined && (
           <AppText
             variant="bodySmall"
             color={colors.textSecondary}
             numberOfLines={2}
             style={{ marginTop: spacing.xs }}
           >
-            {item.subtitle}
+            {subtitle}
           </AppText>
         )}
       </View>

@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card } from '@/components/ui/Card';
@@ -12,15 +13,15 @@ interface RecentReviewListProps {
 
 type BadgeVariant = 'error' | 'warning' | 'info' | 'success';
 
-const RATING_BADGES: Record<ReviewRating, { label: string; variant: BadgeVariant }> = {
-  again: { label: 'Again', variant: 'error' },
-  hard: { label: 'Hard', variant: 'warning' },
-  good: { label: 'Good', variant: 'info' },
-  easy: { label: 'Easy', variant: 'success' },
+const RATING_BADGES: Record<ReviewRating, { variant: BadgeVariant }> = {
+  again: { variant: 'error' },
+  hard: { variant: 'warning' },
+  good: { variant: 'info' },
+  easy: { variant: 'success' },
 };
 
-function formatReviewDate(timestamp: number): string {
-  return new Date(timestamp).toLocaleDateString('en-US', {
+function formatReviewDate(timestamp: number, locale: string): string {
+  return new Date(timestamp).toLocaleDateString(locale, {
     month: 'short',
     day: 'numeric',
     hour: 'numeric',
@@ -29,16 +30,16 @@ function formatReviewDate(timestamp: number): string {
 }
 
 export function RecentReviewList({ reviews }: RecentReviewListProps) {
+  const t = useTranslation();
   const { colors, spacing } = useTheme();
 
   return (
     <View>
-      <AppText variant="h3">Recent recall</AppText>
+      <AppText variant="h3">{t.sweep.recentRecall}</AppText>
       {reviews.length === 0 ? (
         <Card style={{ marginTop: spacing.sm }}>
           <AppText variant="bodySmall" color={colors.textSecondary}>
-            Review history will appear here after your first deck session.
-          </AppText>
+            {t.sweep.historyHint}</AppText>
         </Card>
       ) : (
         reviews.map((review) => {
@@ -56,10 +57,10 @@ export function RecentReviewList({ reviews }: RecentReviewListProps) {
                     numberOfLines={1}
                     style={{ marginTop: spacing.xs }}
                   >
-                    {review.deckName} · {formatReviewDate(review.reviewedAt)}
+                    {review.deckName} · {formatReviewDate(review.reviewedAt, t.dashboard.locale)}
                   </AppText>
                 </View>
-                <Badge label={badge.label} variant={badge.variant} style={{ marginLeft: spacing.sm }} />
+                <Badge label={t.review.ratings[review.rating]} variant={badge.variant} style={{ marginLeft: spacing.sm }} />
               </View>
             </Card>
           );

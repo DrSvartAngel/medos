@@ -1,3 +1,4 @@
+import { useTranslation } from '@/i18n';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -17,13 +18,14 @@ export function CalendarMonthHeader({
   onNext,
   onToday,
 }: CalendarMonthHeaderProps) {
+  const t = useTranslation();
   const { colors, spacing, radius } = useTheme();
 
   return (
     <View style={styles.row}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Previous month"
+        accessibilityLabel={t.sweep.previousMonth}
         onPress={onPrevious}
         style={({ pressed }) => [
           styles.iconButton,
@@ -42,14 +44,13 @@ export function CalendarMonthHeader({
         <AppText variant="h3" style={styles.label}>{label}</AppText>
         <Pressable accessibilityRole="button" onPress={onToday} hitSlop={8}>
           <AppText variant="caption" color={colors.accent} style={styles.today}>
-            Today
-          </AppText>
+            {t.sweep.today}</AppText>
         </Pressable>
       </View>
 
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel="Next month"
+        accessibilityLabel={t.sweep.nextMonth}
         onPress={onNext}
         style={({ pressed }) => [
           styles.iconButton,

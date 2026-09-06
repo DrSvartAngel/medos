@@ -1,3 +1,5 @@
+import { translateError } from '@/i18n/errors';
+import { useTranslation } from '@/i18n';
 import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
@@ -30,6 +32,7 @@ export function DeckForm({
   onSubmit,
   onCancel,
 }: DeckFormProps) {
+  const t = useTranslation();
   const { colors, spacing, radius, typography } = useTheme();
   const { isTablet } = useResponsive();
   const [name, setName] = useState(initialName);
@@ -43,7 +46,7 @@ export function DeckForm({
 
   function handleSubmit() {
     if (name.trim().length === 0) {
-      setNameError('Deck name is required.');
+      setNameError(t.sweep.deckRequired);
       return;
     }
 
@@ -74,22 +77,22 @@ export function DeckForm({
         <View style={[styles.error, { borderColor: colors.error, padding: spacing.md }]}> 
           <Feather name="alert-circle" size={18} color={colors.error} />
           <AppText variant="bodySmall" color={colors.error} style={styles.errorText}>
-            {error}
+            {translateError(error, t)}
           </AppText>
         </View>
       )}
 
       <View>
         <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-          Deck name *
-        </AppText>
+          {t.sweep.deckName}</AppText>
         <TextInput
           value={name}
+          accessibilityLabel={t.sweep.deckName}
           onChangeText={(value) => {
             setName(value);
             if (nameError) setNameError('');
           }}
-          placeholder="e.g. Cardiac physiology"
+          placeholder={t.sweep.deckExample}
           placeholderTextColor={colors.textMuted}
           autoFocus={initialName.length === 0}
           returnKeyType="next"
@@ -98,19 +101,19 @@ export function DeckForm({
         />
         {nameError.length > 0 && (
           <AppText variant="caption" color={colors.error} style={styles.fieldError}>
-            {nameError}
+            {translateError(nameError, t)}
           </AppText>
         )}
       </View>
 
       <View>
         <AppText variant="label" color={colors.textSecondary} style={styles.label}>
-          Description · optional
-        </AppText>
+          {t.sweep.optionalDescription}</AppText>
         <TextInput
           value={description}
+          accessibilityLabel={t.sweep.optionalDescription}
           onChangeText={setDescription}
-          placeholder="What will this deck help you recall?"
+          placeholder={t.sweep.deckDescriptionPlaceholder}
           placeholderTextColor={colors.textMuted}
           multiline
           numberOfLines={4}
@@ -121,17 +124,16 @@ export function DeckForm({
       </View>
 
       <Card>
-        <AppText variant="label">Committee · optional</AppText>
+        <AppText variant="label">{t.sweep.optionalCommittee}</AppText>
         <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
-          Keep the deck general, or place it inside an existing committee.
-        </AppText>
+          {t.sweep.deckCommitteeHelp}</AppText>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={[styles.options, { gap: spacing.sm, paddingTop: spacing.md }]}
         >
           <CommitteeOption
-            label="No committee"
+            label={t.sweep.noCommittee}
             selected={committeeId === null}
             onPress={() => setCommitteeId(null)}
           />
@@ -147,14 +149,13 @@ export function DeckForm({
         </ScrollView>
         {missingCommittee && (
           <AppText variant="caption" color={colors.warning} style={{ marginTop: spacing.sm }}>
-            The linked committee was removed. Choose another or select No committee.
-          </AppText>
+            {t.sweep.missingCommitteeHelp}</AppText>
         )}
       </Card>
 
       <View style={[styles.actions, isTablet && styles.actionsTablet, { gap: spacing.sm }]}> 
         <Button
-          label="Cancel"
+          label={t.sweep.cancel}
           variant="secondary"
           onPress={onCancel}
           disabled={saving}
