@@ -5,6 +5,17 @@
 import type { Strings } from './en';
 
 const tr: Strings = {
+  momentum: {
+    title: 'Bugünün 3 Hedefi',
+    focus: 'Bir Odaklanma oturumunu bitir', memory: 'En az bir Bellek kartını değerlendir',
+    topicFocus: 'Bir Konuya bağlı Odaklanma oturumunu bitir',
+    openFocus: 'Odaklanma ekranını aç', openMemory: 'Bellek ekranını aç', openCurriculum: 'Komiteleri aç',
+    recorded: 'Bugün kaydedildi', pending: 'Bugün henüz kaydedilmedi',
+    completed: (n: number) => `Bugün karşılanan çalışma eylemi hedefi: ${n}/3`,
+    zero: 'Küçük bir adımla başla.', one: 'İlk adımı attın.', two: 'Çalışmaya devam ediyorsun.', three: 'Bugünün üç hedefi tamamlandı.',
+    help: 'Bu hedefler isteğe bağlıdır; öğrenme düzeyini göstermez. Konuya bağlı bir oturum iki Odaklanma hedefini de karşılayabilir. Bağlantılı oturum başlatmak için Komitelerden bir Konu aç. Günlük dakika hedefin ayrıdır.',
+    unavailable: 'Bugünün kayıtları yüklenemedi.',
+  },
   reward: {
     focusTitle: 'Oturum tamamlandı', focusBody: 'Çalışma oturumun kaydedildi.',
     reviewTitle: 'Tekrar tamamlandı', reviewBody: 'Yanıtların kaydedildi.',

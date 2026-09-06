@@ -55,6 +55,26 @@ interface WeakDeckRow {
 }
 
 export const dashboardRepo = {
+  /** Today's targets use completion time, not session start time. Read-only. */
+  getMomentum(dayStartMs: number, dayEndMs: number): {
+    focus: boolean; memory: boolean; topicFocus: boolean;
+  } {
+    const row = getDB().getFirstSync<{ focus: number; memory: number; topic_focus: number }>(
+      `WITH completed_today AS (
+         SELECT topic_id FROM focus_sessions
+         WHERE completed = 1 AND cancelled = 0
+           AND typeof(actual_duration_sec) = 'integer' AND actual_duration_sec > 0
+           AND ended_at >= started_at AND ended_at >= ? AND ended_at < ?
+       )
+       SELECT EXISTS(SELECT 1 FROM completed_today) AS focus,
+         EXISTS(SELECT 1 FROM flashcard_reviews WHERE reviewed_at >= ? AND reviewed_at < ?) AS memory,
+         EXISTS(SELECT 1 FROM completed_today f INNER JOIN topics t ON t.id = f.topic_id) AS topic_focus`,
+      [dayStartMs, dayEndMs, dayStartMs, dayEndMs]
+    );
+    if (!row) throw new Error('Momentum query returned no result');
+    return { focus: row.focus === 1, memory: row.memory === 1, topicFocus: row.topic_focus === 1 };
+  },
+
   getRelevantCommittee(dayStartMs: number, dayEndMs: number): DashboardCommitteeSource | null {
     const db = getDB();
     const row = db.getFirstSync<CommitteeRow>(

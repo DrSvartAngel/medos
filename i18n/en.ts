@@ -3,6 +3,17 @@
 // Schema v5, study logic, hydration, and preference normalization are unchanged.
 
 const en = {
+  momentum: {
+    title: "Today's 3",
+    focus: 'Finish one Focus session', memory: 'Rate at least one Memory card',
+    topicFocus: 'Finish a Topic-linked Focus session',
+    openFocus: 'Open Focus', openMemory: 'Open Memory', openCurriculum: 'Open curriculum',
+    recorded: 'Recorded today', pending: 'Not recorded today',
+    completed: (n: number) => `Today's study-action targets met: ${n}/3`,
+    zero: 'Start with one small step.', one: "You've started.", two: 'Good momentum.', three: "Today's three are done.",
+    help: 'Optional targets, not learning progress. A Topic-linked session can meet both Focus targets. Open a Topic from your curriculum to start linked Focus. Your daily minute goal is separate.',
+    unavailable: "Today's records could not be loaded.",
+  },
   reward: {
     focusTitle: 'Session complete', focusBody: 'Your study session was saved.',
     reviewTitle: 'Review complete', reviewBody: 'Your ratings were saved.',

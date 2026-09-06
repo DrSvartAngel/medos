@@ -6,6 +6,7 @@ import { CommitteeOverviewCard } from '@/components/dashboard/CommitteeOverviewC
 import { QuickStartCard } from '@/components/dashboard/QuickStartCard';
 import { TodayAgenda } from '@/components/dashboard/TodayAgenda';
 import { TodayMetrics } from '@/components/dashboard/TodayMetrics';
+import { MomentumCard } from '@/components/dashboard/MomentumCard';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
@@ -204,6 +205,7 @@ export default function DashboardScreen() {
         <View style={[styles.twoPane, { gap: spacing.lg, marginTop: spacing.lg }]}>
           <View style={[styles.column, { gap: spacing.lg }]}>
             {quickStart}
+            <MomentumCard />
             {committee}
           </View>
           <View style={[styles.column, { gap: spacing.lg }]}>
@@ -214,6 +216,7 @@ export default function DashboardScreen() {
       ) : (
         <View style={[styles.stacked, { gap: spacing.lg, marginTop: spacing.lg }]}>
           {quickStart}
+          <MomentumCard />
           {committee}
           {metrics}
           {agenda}

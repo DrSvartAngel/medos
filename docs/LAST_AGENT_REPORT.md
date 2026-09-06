@@ -1,6 +1,19 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 6.1 Reward Foundation
+## Current — Phase 6.2 Momentum Engine
+
+- Implementation COMPLETE; Phase 6 ACTIVE. Phase 6.1 and 6.2 physical phone/tablet QA remain PENDING. Master Phase 5 stays CLOSED with user-confirmed QA PASS.
+- Today's 3 are optional action targets: (1) finish a positive-duration, non-cancelled Focus session; (2) persist at least one Memory rating; (3) finish such a Focus session linked to an existing Topic. Opening a screen/Topic or starting a timer does not qualify.
+- The third target uses existing Focus-to-Topic linkage, not curriculum edit/open inference. One linked session may satisfy both Focus targets; UI explicitly discloses this overlap. The fraction counts targets met, not distinct sessions, mastery or curriculum progress.
+- Derived by one parameterized read-only query per refresh. Focus uses ended_at within the local day (including sessions crossing midnight); Memory uses reviewed_at. No completion flags/history persisted. Deleted/unlinked evidence is reflected on refresh.
+- MomentumCard reuses focused Dashboard refresh: navigation return, foreground and local midnight; listeners/timers cleaned on blur, no polling/background jobs. Query failure clears stale results and offers Retry instead of false 0/3 or stale completion.
+- Same EN/TR content/actions in Low-Stimulation, only recorded-label color becomes neutral. Existing daily minute goal, MiniVictory, Quick Start, Check-In/Recovery, Focus and SRS semantics unchanged. All-three celebration deferred to avoid replay spam; no reward persistence, streaks, XP, coins, levels, scores or notifications.
+- Schema v10; dependencies, lockfile, stores and preferences unchanged. Created components/dashboard/MomentumCard.tsx. Modified Dashboard insertion points, dashboardRepo, EN/TR, validate-phase6 and four memory docs.
+- Static validation: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21, Phase 3 85, Phase 4 43, Phase 5 29, Phase 6 18 PASS — 196 total. No device/emulator/ADB QA performed.
+- User QA: Focus Finish vs Cancel, one Memory rating, Topic-linked finish, overlap explanation, navigation/foreground/midnight refresh, restart-derived state, EN/TR/Low-Stimulation, phone/tablet large-text and safe area.
+- Next: user Phase 6.2 QA and branch review. Phase 6.3 NOT STARTED. No automatic main merge; PDF/Gemini and broad localization deferred.
+
+## Historical — Phase 6.1 Reward Foundation
 
 - Implementation COMPLETE; Phase 6 ACTIVE. Master Phase 5 remains CLOSED with user-confirmed phone/tablet/combined QA PASS. Phase 6.1 phone/tablet physical QA PENDING; no device automation performed.
 - Inline dismissible MiniVictory acknowledges a successfully persisted, positive-duration Focus finish (including entry Finish here), or a completed Memory queue with at least one persisted rating. Cancel, zero-duration finish, empty queue, failed writes and merely reaching the entry milestone do not trigger feedback.

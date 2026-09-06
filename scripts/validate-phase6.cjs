@@ -105,10 +105,90 @@ check('EN/TR contain the same small factual copy set', () => {
 check('Phase 5 scheduling, Memory store/repository, schema, preferences, Dashboard and dependency versions unchanged', () => {
   const baseline = file => execFileSync('git', ['show', '99fa648:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   for (const file of ['utils/memoryScheduling.ts', 'store/useMemoryStore.ts', 'db/repositories/memoryRepo.ts',
-    'db/migrations.ts', 'store/useAppStore.ts', 'app/(tabs)/index.tsx', 'package-lock.json']) {
+    'db/migrations.ts', 'store/useAppStore.ts', 'package-lock.json']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file), file);
   }
   const before = JSON.parse(baseline('package.json')), after = JSON.parse(read('package.json'));
   assert.deepEqual(after.dependencies, before.dependencies); assert.deepEqual(after.devDependencies, before.devDependencies);
+  // Phase 6.2 may insert only the Momentum card into the existing responsive branches.
+  const dashboard = read('app/(tabs)/index.tsx').replace(/\r\n/g, '\n')
+    .replace("import { MomentumCard } from '@/components/dashboard/MomentumCard';\n", '')
+    .replace(/^\s*<MomentumCard \/>\n/gm, '');
+  assert.equal(dashboard, baseline('app/(tabs)/index.tsx'));
+  assert.equal(read('components/ui/MiniVictory.tsx').replace(/\r\n/g, '\n'),
+    execFileSync('git', ['show', 'c13c31e:components/ui/MiniVictory.tsx'], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n'));
+});
+
+// Actual derived SQL on an in-memory evidence fixture. Full schema regressions run in Phases 2–5.
+function momentumFixture(run) {
+  const { DatabaseSync } = require('node:sqlite');
+  const db = new DatabaseSync(':memory:');
+  try {
+    db.exec(`CREATE TABLE focus_sessions (completed INTEGER, cancelled INTEGER, actual_duration_sec INTEGER,
+      started_at INTEGER, ended_at INTEGER, topic_id TEXT);
+      CREATE TABLE topics (id TEXT PRIMARY KEY);
+      CREATE TABLE flashcard_reviews (reviewed_at INTEGER);`);
+    const repo = load('db/repositories/dashboardRepo.ts', { '../client': { getDB: () => ({
+      getFirstSync: (sql, args) => db.prepare(sql).get(...args),
+    }) } }).dashboardRepo;
+    const dates = load('utils/calendarDate.ts');
+    const { startMs: start, endMs: end } = dates.getLocalDayRange('2026-09-06');
+    const addFocus = (completed, cancelled, duration, endedAt = start + 1000, topic = null, startedAt = start) =>
+      db.prepare('INSERT INTO focus_sessions VALUES (?,?,?,?,?,?)').run(completed, cancelled, duration, startedAt, endedAt, topic);
+    run({ db, repo, start, end, addFocus, get: () => repo.getMomentum(start, end) });
+  } finally { db.close(); }
+}
+check('Momentum: empty/cancelled/zero/invalid duration records do not meet Focus targets', () => momentumFixture(({ addFocus, get }) => {
+  assert.deepEqual(get(), { focus: false, memory: false, topicFocus: false });
+  addFocus(0, 1, 120); addFocus(1, 1, 120); addFocus(1, 0, 0); addFocus(1, 0, -1); addFocus(1, 0, 1.5);
+  assert.equal(get().focus, false);
+}));
+check('Momentum: positive completed Focus uses local finish-day and exclusive midnight boundary', () => momentumFixture(({ addFocus, get, repo, start, end }) => {
+  addFocus(1, 0, 60, start - 1, null, start - 100000);
+  addFocus(1, 0, 60, end);
+  assert.equal(get().focus, false);
+  addFocus(1, 0, 120, start, null, start - 120000);
+  assert.equal(get().focus, true);
+  assert.equal(repo.getMomentum(end + (end - start), end + 2 * (end - start)).focus, false);
+}));
+check('Momentum: persisted rating today, not yesterday/tomorrow, meets Memory target', () => momentumFixture(({ db, start, end, get }) => {
+  const add = at => db.prepare('INSERT INTO flashcard_reviews VALUES (?)').run(at);
+  add(start - 1); add(end); assert.equal(get().memory, false);
+  add(start); assert.equal(get().memory, true); assert.equal(get().focus, false);
+}));
+check('Momentum: linked positive completion meets both Focus targets; mere Topic existence does not', () => momentumFixture(({ db, addFocus, get, start }) => {
+  db.exec("INSERT INTO topics VALUES ('t')"); assert.equal(get().topicFocus, false);
+  addFocus(0, 1, 120, start + 1000, 't'); assert.equal(get().topicFocus, false);
+  addFocus(1, 0, 120, start + 1000, 't');
+  assert.deepEqual(get(), { focus: true, memory: false, topicFocus: true });
+  db.prepare('INSERT INTO flashcard_reviews VALUES (?)').run(start + 1000);
+  assert.equal(Object.values(get()).filter(Boolean).length, 3);
+  db.exec("UPDATE focus_sessions SET topic_id=NULL; DELETE FROM topics");
+  assert.deepEqual(get(), { focus: true, memory: true, topicFocus: false });
+}));
+check('Momentum: errors propagate instead of fabricated empty/complete state', () => {
+  for (const getFirstSync of [() => { throw Error('DB unavailable'); }, () => null]) {
+    const repo = load('db/repositories/dashboardRepo.ts', { '../client': { getDB: () => ({ getFirstSync }) } }).dashboardRepo;
+    assert.throws(() => repo.getMomentum(0, 100));
+  }
+});
+check('Momentum: focused local-midnight/foreground refresh and truthful error source contracts', () => {
+  const card = read('components/dashboard/MomentumCard.tsx'), hook = read('hooks/useDashboardRefresh.ts');
+  assert.ok(card.includes('getLocalDayRange(todayLocalDateKey())'));
+  assert.ok(card.includes('useDashboardRefresh(isDBReady, refresh)'));
+  assert.ok(card.includes('setEvidence(null)')); assert.ok(card.includes('t.momentum.unavailable'));
+  for (const text of ['useFocusEffect', "nextState === 'active'", 'millisecondsUntilNextLocalMidnight', 'subscription.remove()', 'clearTimeout']) assert.ok(hook.includes(text));
+  assert.doesNotMatch(hook, /setInterval/);
+});
+check('Momentum: quiet variant preserves bilingual targets, accessible actions and no reward trigger', () => {
+  const card = read('components/dashboard/MomentumCard.tsx');
+  assert.ok(card.includes('!lowStimulation ? colors.success : colors.textSecondary'));
+  assert.ok(card.includes('accessibilityLabel={row.action}')); assert.ok(card.includes('minHeight: 44'));
+  assert.doesNotMatch(card, /MiniVictory|AsyncStorage|persist\(|Notification|Vibration|Audio|Animated|dailyFocusGoalMin/);
+  const en = load('i18n/en.ts').default.momentum, tr = load('i18n/tr.ts').default.momentum;
+  assert.deepEqual(Object.keys(en), Object.keys(tr));
+  assert.ok(en.help.includes('both Focus targets')); assert.ok(tr.help.includes('iki Odaklanma hedefini'));
+  assert.equal(en.completed(3), "Today's study-action targets met: 3/3");
+  assert.doesNotMatch(Object.values(en).join(' '), /streak|XP|coins|levels|failed yesterday|\d%/);
 });
 console.log(`Phase 6 validation: ${passed} PASS`);
