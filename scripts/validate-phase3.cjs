@@ -1354,7 +1354,11 @@ check('Low-Stimulation presentation is confined to the active Focus workspace', 
     /useAppStore\(\s*\(state\) => state\.lowStimulationMode\s*\)/
   );
   assert.equal((activeBranch.match(/lowStimulation=\{lowStimulationMode\}/g) ?? []).length, 3);
-  assert.doesNotMatch(idleBranch, /lowStimulation/);
+  // Phase 6.1 explicitly allows a quiet just-completed acknowledgement.
+  // Idle setup itself must still have no Low-Stimulation variant.
+  assert.doesNotMatch(idleBranch.replace(
+    '{showVictory && <MiniVictory kind="focus" lowStimulation={lowStimulationMode} />}', ''
+  ), /lowStimulation/);
   assert.doesNotMatch(dashboard, /lowStimulationMode|gentleNudgesEnabled/);
   assert.doesNotMatch(checkIn, /lowStimulationMode|gentleNudgesEnabled/);
   assert.doesNotMatch(recovery, /lowStimulationMode|gentleNudgesEnabled/);

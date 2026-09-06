@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { MiniVictory } from '@/components/ui/MiniVictory';
 import {
   AccessibilityInfo,
   ActivityIndicator,
@@ -31,6 +33,8 @@ export default function FocusScreen() {
   const { isTablet, isLargeTablet } = useResponsive();
   const t = useTranslation();
   const [gentleReturnOpen, setGentleReturnOpen] = useState(false);
+  const [showVictory, setShowVictory] = useState(false);
+  useFocusEffect(useCallback(() => () => setShowVictory(false), []));
   const [gentleReturnError, setGentleReturnError] = useState<string | null>(null);
   const isDBReady = useAppStore((state) => state.isDBReady);
   const defaultFocusSec = useAppStore((state) => state.defaultFocusSec);
@@ -182,6 +186,15 @@ export default function FocusScreen() {
     setGentleReturnError(null);
   };
 
+  const handleFinish = () => {
+    const receipt = finishSession();
+    setShowVictory(receipt !== null && receipt.completed && !receipt.cancelled && receipt.actualSec > 0);
+  };
+
+  useEffect(() => {
+    if (isActive) setShowVictory(false);
+  }, [isActive]);
+
   const handleDismissGentleReturn = () => {
     setGentleReturnOpen(false);
     setGentleReturnError(null);
@@ -239,7 +252,7 @@ export default function FocusScreen() {
               {showEntryMilestone ? (
                 <EntryMilestone
                   defaultFocusSec={normalizedDefaultFocusSec}
-                  onFinish={finishSession}
+                  onFinish={handleFinish}
                   onKeepGoing={keepGoingFromEntry}
                   onContinueToDefault={continueEntryToDefault}
                   lowStimulation={lowStimulationMode}
@@ -250,7 +263,7 @@ export default function FocusScreen() {
                   onStart={startTimer}
                   onPause={pauseTimer}
                   onResume={resumeTimer}
-                  onFinish={finishSession}
+                  onFinish={handleFinish}
                   onCancel={cancelSession}
                   onReset={resetTimer}
                 />
@@ -308,6 +321,7 @@ export default function FocusScreen() {
         ]}
       >
         <View style={[styles.workspace, { gap: spacing.md }]}>
+          {showVictory && <MiniVictory kind="focus" lowStimulation={lowStimulationMode} />}
           <DurationPicker plannedSec={plannedSec} onSelect={setPlannedSec} />
           <CommitteePicker
             committees={committees}

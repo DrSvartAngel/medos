@@ -5,6 +5,11 @@
 import type { Strings } from './en';
 
 const tr: Strings = {
+  reward: {
+    focusTitle: 'Oturum tamamlandı', focusBody: 'Çalışma oturumun kaydedildi.',
+    reviewTitle: 'Tekrar tamamlandı', reviewBody: 'Yanıtların kaydedildi.',
+    dismiss: 'Mesajı kapat',
+  },
   committeeEvidence: {
     subjects: (n:number) => `Ders: ${n}`, attentionSubjects: (n:number) => `Tekrar uyarısı olan Konu içeren Ders: ${n}`,
     reviews: (n:number) => `Bu Komitenin Konuları için kaydedilen tekrar: ${n}`,

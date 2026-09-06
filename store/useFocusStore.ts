@@ -84,7 +84,8 @@ interface FocusState extends ElapsedState {
   keepGoingFromEntry: () => boolean;
   continueEntryToDefault: () => boolean;
   markEntryMilestoneAnnounced: () => void;
-  finishSession: () => void;
+  /** Returns the durable completion receipt, never an unpersisted session. */
+  finishSession: () => FocusSession | null;
   cancelSession: () => void;
   resetTimer: () => void;
   loadRecentSessions: () => void;
@@ -396,25 +397,26 @@ export const useFocusStore = create<FocusState>()((set, get) => ({
 
   finishSession: () => {
     const state = get();
-    if (state.timerStatus === 'idle') return;
+    if (state.timerStatus === 'idle') return null;
 
     const session = buildSession(state, Date.now(), false);
     if (session === null) {
       set({ error: 'This focus session could not be completed.' });
-      return;
+      return null;
     }
 
     try {
       focusRepo.insert(session);
     } catch (error) {
       set({ error: (error as Error).message ?? 'Failed to save focus session' });
-      return;
+      return null;
     }
 
     // The session is already durable. Reset before refreshing so a history-read
     // failure cannot cause a retry to insert the same completed session twice.
     set({ ...createEmptyTimer(), error: null });
     get().loadRecentSessions();
+    return session;
   },
 
   cancelSession: () => {

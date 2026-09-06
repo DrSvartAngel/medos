@@ -5,6 +5,7 @@ import { Feather } from '@expo/vector-icons';
 import { ReviewCard } from '@/components/memory/ReviewCard';
 import { ReviewControls } from '@/components/memory/ReviewControls';
 import { ReviewSummary } from '@/components/memory/ReviewSummary';
+import { MiniVictory } from '@/components/ui/MiniVictory';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Card } from '@/components/ui/Card';
 import { AppText } from '@/components/ui/Typography';
@@ -26,6 +27,7 @@ export default function DeckReviewScreen() {
   const t = useTranslation();
   const [attemptedStart, setAttemptedStart] = useState(false);
   const isDBReady = useAppStore((state) => state.isDBReady);
+  const lowStimulationMode = useAppStore((state) => state.lowStimulationMode);
   const decks = useMemoryStore((state) => state.decks);
   const reviewStatus = useMemoryStore((state) => state.reviewStatus);
   const reviewQueue = useMemoryStore((state) => state.reviewQueue);
@@ -153,12 +155,15 @@ export default function DeckReviewScreen() {
               />
             </Card>
           ) : (
+            <>
+            <MiniVictory kind="review" lowStimulation={lowStimulationMode} />
             <ReviewSummary
               summary={reviewSummary}
               onReviewAgain={() => startReview(id, reviewLimit, dueMode ? 'due' : 'all')}
               onDone={handleClose}
               doneLabel={backLabel}
             />
+            </>
           )}
         </View>
       </ScreenWrapper>

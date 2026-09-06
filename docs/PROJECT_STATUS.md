@@ -1,6 +1,18 @@
 # MedOS — Project Status
 
-## Master Phase 5 — CLOSED after user-confirmed physical QA
+## Current — Phase 6.1 Reward Foundation
+
+- Implementation COMPLETE; Phase 6 ACTIVE. Master Phase 5 remains CLOSED with user-confirmed phone/tablet/combined QA PASS. Phase 6.1 phone/tablet physical QA PENDING; no device automation performed.
+- Inline dismissible MiniVictory acknowledges a successfully persisted, positive-duration Focus finish (including entry Finish here), or a completed Memory queue with at least one persisted rating. Cancel, zero-duration finish, empty queue, failed writes and merely reaching the entry milestone do not trigger feedback.
+- Focus finish now returns its durable session receipt (null on failure/idle); persistence, timer transitions and history refresh semantics are unchanged. A history-read error after a successful write does not lose the receipt. Reward visibility is component/route-local, clears on a new Focus session or leaving Focus, and is never persisted.
+- EN/TR factual copy; Low-Stimulation changes only banner title color, preserving content/dismissal. No blocking overlay, animation, sound, vibration, notifications, analytics, reward history, XP, coins, levels or streak mechanics.
+- Schema v10 and dependencies/lockfile unchanged. Memory store/repository/SRS, full-deck/due/Lighter Plan max-five flows, Dashboard and preference architecture unchanged. No new store.
+- Validation: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2: 21 PASS, Phase 3: 85 PASS, Phase 4: 43 PASS, Phase 5: 29 PASS, Phase 6: 11 PASS — 189 total. New tests exercise real stores with injected persistence plus explicitly static UI contracts, not physical UI tests. One old Phase 3 idle-presentation guard was narrowly updated for the approved completion banner; rerun passed.
+- Created components/ui/MiniVictory.tsx and scripts/validate-phase6.cjs. Modified Focus screen/store, Memory review route, EN/TR dictionaries, package.json (validator script only), Phase 3 validator and these four documents.
+- Manual QA (user-owned): phone/tablet Focus Finish vs Cancel; entry milestone vs Finish here; positive/empty full/due/Lighter Plan reviews; dismiss, navigate away/back, restart; Low-Stimulation and EN/TR; large text/safe area. Confirm normal study controls remain available.
+- Next action: user Phase 6.1 phone/tablet QA and branch review. Do not merge automatically. Phase 6.2 NOT STARTED; broader motivation features, PDF/Gemini and broad localization remain deferred.
+
+## Historical — Master Phase 5 closure
 
 - Closure recorded on main after verifying a clean tree and main == origin/main at 1368fc3 (Phase 5.6 merged). This update changes only the four project-memory documents.
 - Phase 5.1–5.6 implementation and technical closure COMPLETE. User explicitly confirmed phone PASS, tablet PASS and combined Phase 5.1–5.6 physical QA PASS. Master Phase 5 CLOSED. Phase 6 NOT STARTED.

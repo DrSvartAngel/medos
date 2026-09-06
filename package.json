@@ -30,7 +30,8 @@
     "validate:phase2": "node scripts/validate-phase2.cjs",
     "validate:phase3": "node scripts/validate-phase3.cjs",
     "validate:phase4": "node scripts/validate-phase4.cjs",
-    "validate:phase5": "node scripts/validate-phase5.cjs"
+    "validate:phase5": "node scripts/validate-phase5.cjs",
+    "validate:phase6": "node scripts/validate-phase6.cjs"
   },
   "private": true
 }

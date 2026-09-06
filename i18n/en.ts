@@ -3,6 +3,11 @@
 // Schema v5, study logic, hydration, and preference normalization are unchanged.
 
 const en = {
+  reward: {
+    focusTitle: 'Session complete', focusBody: 'Your study session was saved.',
+    reviewTitle: 'Review complete', reviewBody: 'Your ratings were saved.',
+    dismiss: 'Dismiss message',
+  },
   committeeEvidence: {
     subjects: (n:number) => `Subjects: ${n}`, attentionSubjects: (n:number) => `Subjects with review-attention topics: ${n}`,
     reviews: (n:number) => `Reviews recorded for this committee's topics: ${n}`,
