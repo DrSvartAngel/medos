@@ -5,6 +5,7 @@ import { committeeRepo } from '@/db/repositories/committeeRepo';
 import { subjectRepo } from '@/db/repositories/subjectRepo';
 import { topicRepo } from '@/db/repositories/topicRepo';
 import { focusRepo } from '@/db/repositories/focusRepo';
+import { TopicReviewEvidence } from '@/components/memory/TopicReviewEvidence';
 import { useFocusStore } from '@/store/useFocusStore';
 import type { Topic, Subject } from '@/models/curriculum';
 import type { Committee } from '@/store/useCommitteeStore';
@@ -103,6 +104,7 @@ export default function TopicDetailScreen() {
       {data.topic.learningObjectives.trim() !== '' && <Section title={t.topics.learningObjectives}>
         <AppText>{data.topic.learningObjectives}</AppText>
       </Section>}
+      <TopicReviewEvidence topicId={id} />
       <Button label={t.topics.edit} variant="secondary" onPress={() => router.push(`/topics/edit/${encodeURIComponent(id)}` as Href)} />
       {deleteError && <FeedbackState kind="error" message={t.topics.deleteError} />}
       <Button label={t.topics.remove} variant="danger" onPress={remove} />

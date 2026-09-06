@@ -68,7 +68,7 @@ function seed(db) {
   db.execSync("INSERT INTO focus_sessions (id,duration_sec,committee_id,started_at) VALUES ('f',1500,'c',1)");
   db.execSync("INSERT INTO decks (id,name,subject,committee_id,created_at) VALUES ('d','Deck','legacy','c',1)");
   db.execSync("INSERT INTO flashcards (id,deck_id,front,back,next_review,created_at) VALUES ('card','d','Q','A',1,1)");
-  db.execSync("INSERT INTO flashcard_reviews VALUES ('r','card','hard',1)");
+  db.execSync("INSERT INTO flashcard_reviews (id,card_id,rating,reviewed_at) VALUES ('r','card','hard',1)");
   db.execSync("INSERT INTO calendar_events (id,title,start_time,end_time,committee_id,created_at,event_date) VALUES ('e','Event',1,2,'c',1,'2026-09-05')");
 }
 const legacyTables = ['committees','focus_sessions','decks','flashcards','flashcard_reviews','calendar_events'];
@@ -147,7 +147,7 @@ async function main() {
       assert.ok(t.summary(1,1)); assert.ok(t.summary(2,3));
       assert.equal(t.openTopic('İlaç','Ders'), 'Ders — İlaç');
     }
-    assert.match(migrations,/const CURRENT_VERSION = 9/); assert.doesNotMatch(migrations,/currentVersion < 10/);
+    assert.match(migrations,/const CURRENT_VERSION = 10/); assert.doesNotMatch(migrations,/currentVersion < 11/);
   });
   await check('v8 optional Topic FK preserves legacy rows, rolls back failure and unlinks on deletion', async () => {
     const db = new Adapter();
@@ -228,7 +228,7 @@ async function main() {
       const t = load('i18n/'+lang+'.ts').default.topics;
       assert.ok(t.studyRecorded); assert.ok(t.studyUnrecorded); assert.ok(t.studyEvidenceError);
     }
-    for (const file of ['db/repositories/memoryRepo.ts','store/useMemoryStore.ts','db/repositories/calendarRepo.ts'])
+    for (const file of ['db/repositories/calendarRepo.ts'])
       assert.doesNotMatch(read(file), /topicId|topic_id/);
     assert.doesNotMatch(read('db/repositories/focusRepo.ts'), /learningObjectives|learning_objectives|mastery|percentage|Gemini/);
   });
@@ -327,8 +327,8 @@ async function main() {
     assert.equal(closes, 2); assert.equal(opens, 2);
     await fixture(db => assert.equal(db.getFirstSync('PRAGMA foreign_keys').foreign_keys, 1));
   });
-  await check('Clean install v9, exact columns/FKs/indexes and safe rerun', () => fixture(async db => {
-    assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 9);
+  await check('Clean install v10, exact columns/FKs/indexes and safe rerun', () => fixture(async db => {
+    assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 10);
     for (const [table,parent,parentTable,index] of [
       ['subjects','committee_id','committees','idx_subjects_committee_order'],
       ['topics','subject_id','subjects','idx_topics_subject_order'],
@@ -395,7 +395,7 @@ async function main() {
       client.getDB(); await migrate(db);
       assert.equal(db.getAllSync('PRAGMA foreign_key_check').length, 1);
       assert.equal(db.getFirstSync("SELECT id FROM flashcards WHERE id='orphan'").id, 'orphan');
-      assert.throws(() => db.execSync("INSERT INTO flashcard_reviews VALUES ('bad','missing','good',1)"), /FOREIGN KEY/);
+      assert.throws(() => db.execSync("INSERT INTO flashcard_reviews (id,card_id,rating,reviewed_at) VALUES ('bad','missing','good',1)"), /FOREIGN KEY/);
     } finally { db.closeSync(); }
   });
   await check('Shared validation handles boundaries, optional description and Unicode whitespace', () => {
@@ -502,19 +502,19 @@ async function main() {
       assert.equal(db.getFirstSync('SELECT count(*) n FROM ' + table).n, 0);
     assert.deepEqual(db.getAllSync('PRAGMA foreign_key_check'), []);
   }));
-  await check('No curriculum curriculum store/unapproved linkage/v9/dependencies; Subject and Topic UI are approved', () => {
+  await check('No curriculum curriculum store/unapproved linkage/v10/dependencies; Subject and Topic UI are approved', () => {
     const pkg = JSON.parse(read('package.json'));
     const lock = JSON.parse(read('package-lock.json')).packages[''];
     assert.deepEqual(pkg.dependencies, lock.dependencies);
     assert.deepEqual(pkg.devDependencies, lock.devDependencies);
     assert.equal(pkg.scripts['validate:phase4'], 'node scripts/validate-phase4.cjs');
-    assert.match(migrations, /const CURRENT_VERSION = 9/);
-    assert.doesNotMatch(migrations, /currentVersion < 10/);
+    assert.match(migrations, /const CURRENT_VERSION = 10/);
+    assert.doesNotMatch(migrations, /currentVersion < 11/);
     const v6 = migrations.slice(migrations.indexOf('  if (currentVersion < 6)'), migrations.indexOf('  if (currentVersion < 7)'));
     assert.doesNotMatch(v6, /ALTER TABLE|DROP TABLE|DELETE FROM|UPDATE (?!_schema_version)/);
     for (const dir of ['store/useSubjectStore.ts','store/useTopicStore.ts'])
       assert.equal(fs.existsSync(path.join(root, dir)), false);
-    for (const file of ['store/useMemoryStore.ts','store/useCalendarStore.ts','store/useStudySupportStore.ts'])
+    for (const file of ['store/useCalendarStore.ts','store/useStudySupportStore.ts'])
       assert.doesNotMatch(read(file), /subjectId|topicId|subject_id|topic_id/);
     for (const file of ['db/repositories/subjectRepo.ts','db/repositories/topicRepo.ts']) {
       assert.match(read(file), /ORDER BY created_at ASC, id ASC LIMIT \? OFFSET \?/);

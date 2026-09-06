@@ -3,6 +3,16 @@
 // Schema v5, study logic, hydration, and preference normalization are unchanged.
 
 const en = {
+  memoryTopic: {
+    label: 'Topic (optional)', choose: 'Choose or change topic', unlink: 'Remove topic link', close: 'Close topic selection',
+    none: 'No topic linked', help: 'Optional. New reviews use the topic linked when the rating is saved. Earlier reviews are not reassigned.',
+    committee: 'Choose committee', subject: 'Choose subject', topic: 'Choose topic', restart: 'Choose another committee',
+    empty: 'No items here yet.', more: 'Next page', previous: 'Previous page', error: 'Topic information could not be loaded.',
+    missing: 'The linked topic is no longer available. Remove the link or choose another topic.',
+    evidenceTitle: 'Memory review activity', recorded: 'Review activity recorded', unrecorded: 'No linked review evidence yet',
+    evidenceHelp: 'Reviews recorded while a card was linked to this topic. This does not measure learning or completion.',
+    evidenceError: 'Review activity could not be loaded.', select: (name:string) => `Select ${name}`,
+  },
   scheduling: {
     reviewDue: 'Review due cards',
     counts: (due:number, fresh:number, unscheduled:number) => `Due now: ${due} · New: ${fresh} · Previously reviewed, unscheduled: ${unscheduled}`,

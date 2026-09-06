@@ -53,11 +53,119 @@ async function fixture(run) {
   } finally { db.closeSync(); }
 }
 async function main() {
+  await check('v9 to v10 preserves legacy cards/reviews, defaults null and rolls back both link columns', async()=>{
+    const db=new Adapter();
+    const v9=migrations.slice(0,migrations.indexOf('  if (currentVersion < 10)'))+'\n}\nexport { CURRENT_VERSION };';
+    try {
+      db.execSync('PRAGMA foreign_keys=ON');await migrate(db,v9);
+      db.execSync("INSERT INTO decks(id,name,subject,created_at) VALUES ('d','D','',1); INSERT INTO flashcards(id,deck_id,front,back,next_review,created_at) VALUES ('c','d','İlaç','Yanıt',1,1); INSERT INTO flashcard_reviews(id,card_id,rating,reviewed_at) VALUES ('r','c','good',1)");
+      const before=db.getFirstSync('SELECT * FROM flashcards'), history=db.getFirstSync('SELECT * FROM flashcard_reviews');
+      for(const part of ['ALTER TABLE flashcards','ALTER TABLE flashcard_reviews','UPDATE _schema_version']) {
+        db.fail=sql=>sql.startsWith(part);await assert.rejects(()=>migrate(db),/injected/);
+        assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version,9);
+        assert.deepEqual(db.getFirstSync('SELECT * FROM flashcards'),before);
+        assert.deepEqual(db.getFirstSync('SELECT * FROM flashcard_reviews'),history);
+      }
+      db.fail=()=>false;await migrate(db);await migrate(db);
+      assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version,10);
+      assert.deepEqual({...db.getFirstSync('SELECT * FROM flashcards')},{...before,topic_id:null});
+      assert.deepEqual({...db.getFirstSync('SELECT * FROM flashcard_reviews')},{...history,topic_id:null});
+      for(const table of ['flashcards','flashcard_reviews']) {
+        const fk=db.getAllSync('PRAGMA foreign_key_list('+table+')').find(f=>f.from==='topic_id');
+        assert.equal(fk.table,'topics');assert.equal(fk.on_delete,'SET NULL');
+      }
+      assert.deepEqual(db.getAllSync('PRAGMA foreign_key_check'),[]);
+    }finally{db.closeSync();}
+  });
+  function curriculum(db) {
+    db.execSync("INSERT INTO committees(id,name,subject,created_at) VALUES ('committee','Komite','',1); INSERT INTO subjects(id,committee_id,name,created_at,updated_at) VALUES ('s','committee','Ders',1,1); INSERT INTO topics(id,subject_id,name,created_at,updated_at) VALUES ('t','s','Konu',1,1),('t2','s','İkinci konu',2,2)");
+  }
+  await check('Optional link/unlink persists without changing deck, content, timestamps or schedule',()=>fixture((db,r)=>{
+    curriculum(db);r.insertCard(card());assert.equal(r.getCardById('c').topicId,null);
+    r.insertReview({id:'first',cardId:'c',rating:'good',reviewedAt:1});
+    const before=r.getCardById('c');
+    r.updateCard({...before,topicId:'t'});const linked=repo(db).getCardById('c');
+    assert.equal(linked.topicId,'t');assert.equal(linked.deckId,'d');assert.deepEqual(linked.schedule,before.schedule);
+    assert.equal(linked.front,before.front);assert.equal(linked.createdAt,before.createdAt);
+    r.updateCard({...linked,topicId:undefined});assert.equal(r.getCardById('c').topicId,'t');
+    r.updateCard({...linked,topicId:null});assert.equal(repo(db).getCardById('c').topicId,null);
+    r.insertCard({...card('linked'),topicId:'t'});assert.equal(r.getCardById('linked').topicId,'t');
+    for(const topicId of ['missing','',42,[],{}]) assert.throws(()=>r.insertCard({...card('bad'),topicId}));
+    assert.throws(()=>r.updateCard({...linked,topicId:'missing'}));
+    assert.throws(()=>r.updateCard({...linked,id:'missing'}));
+    assert.throws(()=>r.updateCard({...linked,deckId:'other'}));
+    assert.equal(r.getReviewCount(),1);
+  }));
+  await check('Reviews snapshot current persisted link; legacy/relink/unlink never reattribute history',()=>fixture((db,r)=>{
+    curriculum(db);r.insertCard(card());
+    r.insertReview({id:'legacy',cardId:'c',rating:'hard',reviewedAt:1});
+    r.updateCard({...r.getCardById('c'),topicId:'t'});
+    assert.equal(r.hasTopicReviewActivity('t'),false);
+    r.insertReview({id:'linked',cardId:'c',rating:'again',reviewedAt:2});
+    assert.equal(r.hasTopicReviewActivity('t'),true);assert.equal(r.hasTopicReviewActivity('t2'),false);
+    r.updateCard({...r.getCardById('c'),topicId:'t2'});
+    assert.equal(r.hasTopicReviewActivity('t2'),false);
+    r.insertReview({id:'relinked',cardId:'c',rating:'easy',reviewedAt:3});
+    r.updateCard({...r.getCardById('c'),topicId:null});
+    r.insertReview({id:'unlinked',cardId:'c',rating:'good',reviewedAt:4});
+    assert.deepEqual(db.getAllSync('SELECT topic_id FROM flashcard_reviews ORDER BY reviewed_at').map(r=>r.topic_id),[null,'t','t2',null]);
+    assert.equal(r.hasTopicReviewActivity('t'),true);assert.equal(r.hasTopicReviewActivity('t2'),true);
+    // Failed schedule update cannot leave a falsely attributed review behind.
+    r.updateCard({...r.getCardById('c'),topicId:'t'});db.fail=sql=>sql.startsWith('UPDATE flashcards');
+    assert.throws(()=>r.insertReview({id:'failed',cardId:'c',rating:'good',reviewedAt:5}));
+    assert.equal(r.getReviewCount(),4);
+  }));
+  await check('Deleting Topic or its ancestors preserves cards/reviews/schedules with null references',()=>fixture((db,r)=>{
+    curriculum(db);r.insertCard({...card(),topicId:'t'});r.insertReview({id:'r',cardId:'c',rating:'good',reviewedAt:1});
+    const schedule=r.getCardById('c').schedule;
+    db.runSync('DELETE FROM topics WHERE id=?',['t']);
+    assert.equal(r.getCardById('c').topicId,null);assert.deepEqual(r.getCardById('c').schedule,schedule);
+    assert.equal(r.getReviewCount(),1);assert.equal(db.getFirstSync('SELECT topic_id FROM flashcard_reviews').topic_id,null);
+    r.updateCard({...r.getCardById('c'),topicId:'t2'});r.insertReview({id:'r2',cardId:'c',rating:'hard',reviewedAt:2});
+    db.runSync('DELETE FROM committees WHERE id=?',['committee']);
+    assert.equal(r.getCardById('c').topicId,null);assert.equal(r.getReviewCount(),2);assert.equal(r.getAllDecks().length,1);
+    assert.deepEqual(db.getAllSync('PRAGMA foreign_key_check'),[]);
+  }));
+  await check('Picker queries are bounded, parent-scoped, deterministic and parameterized',()=>fixture((db,r)=>{
+    curriculum(db);
+    for(let i=0;i<55;i++)db.runSync('INSERT INTO topics(id,subject_id,name,created_at,updated_at) VALUES (?,?,?,?,?)',['x'+String(i).padStart(2,'0'),'s',"O'Brien İlaç",3,3]);
+    assert.equal(r.listTopicLinkChoices('committee',null).length,1);
+    assert.equal(r.listTopicLinkChoices('subject','committee').length,1);
+    const a=r.listTopicLinkChoices('topic','s'),b=r.listTopicLinkChoices('topic','s',50);
+    assert.equal(a.length,51);assert.equal(b.length,7);assert.equal(a[50].id,b[0].id);
+    assert.deepEqual(r.listTopicLinkChoices('topic',"' OR 1=1 --"),[]);
+    assert.throws(()=>r.listTopicLinkChoices('topic','s',-1));
+    assert.deepEqual({...r.getTopicLinkContext('t')},{topic:'Konu',subject:'Ders',committee:'Komite'});
+  }));
+  await check('Evidence query failure is not no-evidence; exact rating-time evidence has no score',()=>fixture((db,r)=>{
+    curriculum(db);assert.equal(r.hasTopicReviewActivity('t'),false);
+    db.getFirstSync=()=>{throw Error('unavailable');};assert.throws(()=>r.hasTopicReviewActivity('t'));
+    const source=read('components/memory/TopicReviewEvidence.tsx');
+    assert.match(source,/useFocusEffect/);assert.match(source,/recorded === null/);assert.match(source,/t.common.retry/);
+    assert.doesNotMatch(source,/schedule|percentage|mastery|learningObjectives|weak|dueAt/);
+  }));
+  await check('Phase 5.2 UI wiring uses optional local state, EN/TR, Foundation and stack safe-area',()=>{
+    const form=read('components/memory/FlashcardForm.tsx'),picker=read('components/memory/TopicLinkPicker.tsx');
+    assert.match(form,/initialTopicId = null/);assert.match(form,/topicId \}/);assert.match(form,/TopicLinkPicker/);
+    assert.match(picker,/PAGE_SIZE = 50/);assert.match(picker,/accessibilityLabel/);assert.match(picker,/onChange\(null\)/);
+    assert.match(picker,/slice\(0, PAGE_SIZE\)/);assert.match(picker,/setFailed\(page\)/);
+    assert.match(picker,/components\/ui\/Section/);assert.doesNotMatch(picker,/zustand|AsyncStorage|router/);
+    for(const route of ['app/decks/[id]/cards/new.tsx','app/decks/[id]/cards/[cardId]/edit.tsx'])assert.match(read(route),/includeBottomSafeArea/);
+    assert.match(read('app/topics/[id].tsx'),/<TopicReviewEvidence topicId=\{id\}/);
+    for(const lang of ['en','tr']) {
+      const t=load('i18n/'+lang+'.ts').default.memoryTopic;
+      for(const key of ['label','help','recorded','unrecorded','evidenceError','unlink','missing'])assert.ok(t[key]);
+    }
+    for(const file of ['store/useTopicStore.ts','store/useCurriculumStore.ts'])assert.equal(fs.existsSync(path.join(root,file)),false);
+    assert.doesNotMatch(read('store/useMemoryStore.ts'),/mastery|weakTopic|retentionPercent/);
+    const v10=migrations.slice(migrations.indexOf('  if (currentVersion < 10)'));
+    assert.equal((v10.match(/ADD COLUMN/g)||[]).length,2);assert.doesNotMatch(v10,/CREATE TABLE|CREATE INDEX|DELETE FROM|currentVersion < 11/);
+  });
   await check('v8 migration preserves historical values/content/reviews, rolls back and reruns',async()=>{
     const db=new Adapter();
     try {
       await migrate(db,oldSource);
-      db.execSync("INSERT INTO decks(id,name,subject,created_at) VALUES ('d','D','',1); INSERT INTO flashcards(id,deck_id,front,back,interval,ease,next_review,created_at) VALUES ('c','d','İlaç','Yanıt',123,2.1,99,1); INSERT INTO flashcard_reviews VALUES ('old','c','hard',2)");
+      db.execSync("INSERT INTO decks(id,name,subject,created_at) VALUES ('d','D','',1); INSERT INTO flashcards(id,deck_id,front,back,interval,ease,next_review,created_at) VALUES ('c','d','İlaç','Yanıt',123,2.1,99,1); INSERT INTO flashcard_reviews (id,card_id,rating,reviewed_at) VALUES ('old','c','hard',2)");
       const before=db.getFirstSync('SELECT * FROM flashcards'), reviews=db.getAllSync('SELECT * FROM flashcard_reviews');
       for(const part of ['ALTER TABLE flashcards','UPDATE _schema_version']) {
         db.fail=sql=>sql.startsWith(part); await assert.rejects(()=>migrate(db),/injected/);
@@ -65,9 +173,9 @@ async function main() {
         assert.deepEqual(db.getFirstSync('SELECT * FROM flashcards'),before);
       }
       db.fail=()=>false; await migrate(db); await migrate(db);
-      assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version,9);
-      assert.deepEqual({...db.getFirstSync('SELECT * FROM flashcards')},{...before,schedule_state:'unscheduled'});
-      assert.deepEqual(db.getAllSync('SELECT * FROM flashcard_reviews'),reviews);
+      assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version,10);
+      assert.deepEqual({...db.getFirstSync('SELECT * FROM flashcards')},{...before,schedule_state:'unscheduled',topic_id:null});
+      assert.deepEqual(db.getAllSync('SELECT * FROM flashcard_reviews').map(r=>({...r})),reviews.map(r=>({...r,topic_id:null})));
       assert.equal(repo(db).getCardById('c').schedule.state,'unscheduled');
       assert.equal(repo(db).getCardById('c').schedule.nextReviewAt,null);
     }finally{db.closeSync();}
@@ -95,7 +203,7 @@ async function main() {
   });
   await check('Due-first ordering excludes future cards and distinguishes new from legacy unscheduled',()=>fixture((db,r)=>{
     for(const id of ['new','legacy','due-a','due-b','future'])r.insertCard(card(id));
-    db.runSync("INSERT INTO flashcard_reviews VALUES ('legacy-review','legacy','good',1)");
+    db.runSync("INSERT INTO flashcard_reviews (id,card_id,rating,reviewed_at) VALUES ('legacy-review','legacy','good',1)");
     for(const id of ['due-a','due-b'])r.insertReview({id:'r'+id,cardId:id,rating:'again',reviewedAt:1000});
     r.insertReview({id:'future-review',cardId:'future',rating:'good',reviewedAt:1000});
     assert.deepEqual(r.getDueReviewQueue('d',601000).map(c=>c.id),['due-a','due-b','legacy','new']);
@@ -145,14 +253,14 @@ async function main() {
     db.getFirstSync=()=>{throw Error('read unavailable');};
     assert.throws(()=>r.getScheduleSummary('d'),/read unavailable/);
   }));
-  await check('UI mode/retry/again keep due routing and preserve all/recovery; no new linkage/dependencies',()=>{
+  await check('UI mode/retry/again keep due routing and preserve all/recovery; no unapproved scoring/dependencies',()=>{
     const screen=read('app/decks/[id]/review.tsx');
     assert.equal((screen.match(/startReview\(id, reviewLimit, dueMode \? 'due' : 'all'\)/g)||[]).length,3);
     assert.match(screen,/RECOVERY_REVIEW_LIMIT/);assert.match(screen,/t.scheduling.noneDue/);
     assert.match(read('components/memory/MemorySchedulePanel.tsx'),/useFocusEffect/);
     assert.match(read('components/memory/FlashcardListItem.tsx'),/t.scheduling.next/);
     for(const lang of ['en','tr'])assert.ok(load('i18n/'+lang+'.ts').default.scheduling.reviewDue);
-    assert.doesNotMatch(read('db/repositories/memoryRepo.ts'),/topicId|topic_id|Gemini|mastery|retention/);
+    assert.doesNotMatch(read('db/repositories/memoryRepo.ts'),/Gemini|mastery|retention/);
     const pkg=JSON.parse(read('package.json')),lock=JSON.parse(read('package-lock.json')).packages[''];
     assert.deepEqual(pkg.dependencies,lock.dependencies);assert.deepEqual(pkg.devDependencies,lock.devDependencies);
   });

@@ -13,6 +13,7 @@ export interface Deck {
 
 export interface Flashcard {
   id: string;
+  topicId?: string | null;
   deckId: string;
   front: string;
   back: string;
@@ -54,12 +55,14 @@ export interface CreateDeckInput {
 export type UpdateDeckInput = CreateDeckInput;
 
 export interface CreateCardInput {
+  topicId?: string | null;
   deckId: string;
   front: string;
   back: string;
 }
 
 export interface UpdateCardInput {
+  topicId?: string | null;
   front: string;
   back: string;
 }
@@ -242,6 +245,7 @@ export const useMemoryStore = create<MemoryState>()((set, get) => ({
     const card: Flashcard = {
       id: generateId(),
       deckId: input.deckId,
+      topicId: input.topicId ?? null,
       front: input.front.trim(),
       back: input.back.trim(),
       createdAt: now,
@@ -281,6 +285,7 @@ export const useMemoryStore = create<MemoryState>()((set, get) => ({
 
     const updated: Flashcard = {
       ...existing,
+      topicId: input.topicId === undefined ? existing.topicId : input.topicId,
       front: input.front.trim(),
       back: input.back.trim(),
       updatedAt: Date.now(),

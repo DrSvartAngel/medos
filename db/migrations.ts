@@ -1,7 +1,7 @@
 import { getDB } from './client';
 import { formatLocalDateKey } from '@/utils/calendarDate';
 
-const CURRENT_VERSION = 9;
+const CURRENT_VERSION = 10;
 
 interface TableInfoRow {
   name: string;
@@ -333,6 +333,14 @@ export async function runMigrations(): Promise<void> {
       // Legacy interval/ease/next_review values are not evidence of an actual schedule.
       db.execSync("ALTER TABLE flashcards ADD COLUMN schedule_state TEXT NOT NULL DEFAULT 'unscheduled' CHECK(schedule_state IN ('unscheduled','learning','reviewing'))");
       db.runSync('UPDATE _schema_version SET version = ?', [9]);
+    });
+  }
+  if (currentVersion < 10) {
+    db.withTransactionSync(() => {
+      db.execSync('ALTER TABLE flashcards ADD COLUMN topic_id TEXT REFERENCES topics(id) ON DELETE SET NULL');
+      // Snapshot at rating time: relinking a card must never reattribute old reviews.
+      db.execSync('ALTER TABLE flashcard_reviews ADD COLUMN topic_id TEXT REFERENCES topics(id) ON DELETE SET NULL');
+      db.runSync('UPDATE _schema_version SET version = ?', [10]);
     });
   }
 }

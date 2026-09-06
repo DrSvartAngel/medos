@@ -43,7 +43,7 @@ export default function EditFlashcardScreen() {
 
   if (!isDBReady || !prepared) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
         <ActivityIndicator size="large" color={colors.accent} />
       </ScreenWrapper>
     );
@@ -51,7 +51,7 @@ export default function EditFlashcardScreen() {
 
   if (!deck || !card) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
         <AppText variant="h3">Card not found</AppText>
         <Button label="Go Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: spacing.lg }} />
       </ScreenWrapper>
@@ -60,7 +60,7 @@ export default function EditFlashcardScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScreenWrapper>
+      <ScreenWrapper includeBottomSafeArea>
         <View style={styles.headerRow}>
           <TouchableOpacity
             accessibilityLabel="Go back"
@@ -83,6 +83,7 @@ export default function EditFlashcardScreen() {
             key={card.id}
             initialFront={card.front}
             initialBack={card.back}
+            initialTopicId={card.topicId ?? null}
             submitLabel="Save Changes"
             error={error}
             onSubmit={handleUpdate}

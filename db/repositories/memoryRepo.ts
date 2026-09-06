@@ -18,6 +18,7 @@ interface DeckRow {
 }
 
 interface FlashcardRow {
+  topic_id: string | null;
   id: string;
   deck_id: string;
   front: string;
@@ -59,6 +60,7 @@ function rowToFlashcard(row: FlashcardRow): Flashcard {
   return {
     id: row.id,
     deckId: row.deck_id,
+    topicId: row.topic_id ?? null,
     front: row.front,
     back: row.back,
     createdAt: row.created_at,
@@ -86,7 +88,7 @@ const DECK_SELECT = `
   FROM decks d`;
 
 const CARD_SELECT = `
-  SELECT id, deck_id, front, back, created_at, updated_at, schedule_state, next_review,
+  SELECT id, deck_id, topic_id, front, back, created_at, updated_at, schedule_state, next_review,
          EXISTS(SELECT 1 FROM flashcard_reviews r WHERE r.card_id = flashcards.id) AS has_reviews
   FROM flashcards`;
 
@@ -97,7 +99,37 @@ const REVIEW_HISTORY_SELECT = `
   INNER JOIN flashcards f ON f.id = r.card_id
   INNER JOIN decks d ON d.id = f.deck_id`;
 
+function checkedTopicId(value: unknown): string | null {
+  if (value === undefined || value === null) return null;
+  if (typeof value !== 'string' || !value.trim() || /[\u0000-\u001f\u007f]/.test(value)) throw new Error('memory_topic_unavailable');
+  if (!getDB().getFirstSync('SELECT id FROM topics WHERE id = ?', [value])) throw new Error('memory_topic_unavailable');
+  return value;
+}
+
 export const memoryRepo = {
+  getTopicLinkContext(topicId: string): { topic: string; subject: string; committee: string } | null {
+    return getDB().getFirstSync<{topic:string;subject:string;committee:string}>(
+      `SELECT t.name AS topic, s.name AS subject, c.name AS committee FROM topics t
+       JOIN subjects s ON s.id=t.subject_id JOIN committees c ON c.id=s.committee_id WHERE t.id=?`, [topicId]);
+  },
+
+  // Only one hierarchy level/page is loaded. No global curriculum cache.
+  listTopicLinkChoices(level: 'committee' | 'subject' | 'topic', parentId: string | null, offset = 0): {id:string;name:string}[] {
+    if (!Number.isSafeInteger(offset) || offset < 0) throw new Error('Invalid page');
+    if (level === 'committee') return getDB().getAllSync('SELECT id,name FROM committees ORDER BY created_at ASC,id ASC LIMIT ? OFFSET ?', [51,offset]);
+    if (!parentId || typeof parentId !== 'string') throw new Error('Parent unavailable');
+    if (level === 'subject') return getDB().getAllSync('SELECT id,name FROM subjects WHERE committee_id=? ORDER BY created_at ASC,id ASC LIMIT ? OFFSET ?', [parentId,51,offset]);
+    if (level === 'topic') return getDB().getAllSync('SELECT id,name FROM topics WHERE subject_id=? ORDER BY created_at ASC,id ASC LIMIT ? OFFSET ?', [parentId,51,offset]);
+    throw new Error('Invalid hierarchy level');
+  },
+
+  hasTopicReviewActivity(topicId: string): boolean {
+    if (typeof topicId !== 'string' || !topicId.trim()) throw new Error('Topic unavailable');
+    const row = getDB().getFirstSync<{recorded:number}>(
+      'SELECT EXISTS(SELECT 1 FROM flashcard_reviews WHERE topic_id = ?) AS recorded', [topicId]);
+    if (!row) throw new Error('Review evidence unavailable');
+    return row.recorded === 1;
+  },
   getScheduleSummary(deckId: string, now = Date.now()): { due: number; newCards: number; unscheduled: number; nextReviewAt: number | null } {
     const row = getDB().getFirstSync<{due:number;newCards:number;unscheduled:number;nextReviewAt:number|null}>(
       `SELECT COALESCE(SUM(CASE WHEN schedule_state != 'unscheduled' AND next_review <= ? THEN 1 ELSE 0 END),0) AS due,
@@ -196,11 +228,12 @@ export const memoryRepo = {
 
   insertCard(card: Flashcard): void {
     const db = getDB();
+    const topicId = checkedTopicId(card.topicId);
     // These values remain inert until schedule_state changes from unscheduled.
     db.runSync(
       `INSERT INTO flashcards
-         (id, deck_id, front, back, interval, ease, next_review, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+         (id, deck_id, front, back, interval, ease, next_review, created_at, updated_at, topic_id)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         card.id,
         card.deckId,
@@ -211,18 +244,23 @@ export const memoryRepo = {
         card.createdAt,
         card.createdAt,
         card.updatedAt,
+        topicId,
       ]
     );
   },
 
   updateCard(card: Flashcard): void {
     const db = getDB();
-    db.runSync(
+    const existing = this.getCardById(card.id);
+    if (!existing || existing.deckId !== card.deckId) throw new Error('Card unavailable');
+    const topicId = checkedTopicId(card.topicId === undefined ? existing.topicId : card.topicId);
+    const result = db.runSync(
       `UPDATE flashcards
-       SET front = ?, back = ?, updated_at = ?
-       WHERE id = ?`,
-      [card.front, card.back, card.updatedAt, card.id]
+       SET front = ?, back = ?, updated_at = ?, topic_id = ?
+       WHERE id = ? AND deck_id = ?`,
+      [card.front, card.back, card.updatedAt, topicId, card.id, card.deckId]
     );
+    if (result.changes !== 1) throw new Error('Card was not saved');
   },
 
   deleteCard(id: string): void {
@@ -253,14 +291,14 @@ export const memoryRepo = {
   insertReview(review: ReviewRecord): void {
     const db = getDB();
     db.withTransactionSync(() => {
-      const card = db.getFirstSync<{schedule_state:ScheduleState;interval:number}>(
-        'SELECT schedule_state, interval FROM flashcards WHERE id = ?', [review.cardId]);
+      const card = db.getFirstSync<{schedule_state:ScheduleState;interval:number;topic_id:string|null}>(
+        'SELECT schedule_state, interval, topic_id FROM flashcards WHERE id = ?', [review.cardId]);
       if (!card) throw new Error('Card unavailable');
       const next = scheduleReview({state:card.schedule_state,intervalDays:card.interval},review.rating,review.reviewedAt);
       db.runSync(
-        `INSERT INTO flashcard_reviews (id, card_id, rating, reviewed_at)
-         VALUES (?, ?, ?, ?)`,
-        [review.id, review.cardId, review.rating, review.reviewedAt]
+        `INSERT INTO flashcard_reviews (id, card_id, rating, reviewed_at, topic_id)
+         VALUES (?, ?, ?, ?, ?)`,
+        [review.id, review.cardId, review.rating, review.reviewedAt, card.topic_id ?? null]
       );
       const updated = db.runSync('UPDATE flashcards SET schedule_state = ?, interval = ?, next_review = ? WHERE id = ?',
         [next.state,next.intervalDays,next.nextReviewAt,review.cardId]);

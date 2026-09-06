@@ -6,10 +6,13 @@ import { Button } from '@/components/ui/Button';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTheme } from '@/hooks/useTheme';
 import type { UpdateCardInput } from '@/store/useMemoryStore';
+import { TopicLinkPicker } from './TopicLinkPicker';
+import { useTranslation } from '@/i18n';
 
 interface FlashcardFormProps {
   initialFront?: string;
   initialBack?: string;
+  initialTopicId?: string | null;
   submitLabel: string;
   error?: string | null;
   onSubmit: (input: UpdateCardInput) => boolean;
@@ -19,20 +22,24 @@ interface FlashcardFormProps {
 export function FlashcardForm({
   initialFront = '',
   initialBack = '',
+  initialTopicId = null,
   submitLabel,
   error,
   onSubmit,
   onCancel,
 }: FlashcardFormProps) {
+  const t = useTranslation();
   const { colors, spacing, radius, typography } = useTheme();
   const { isTablet } = useResponsive();
   const [front, setFront] = useState(initialFront);
   const [back, setBack] = useState(initialBack);
+  const [topicId, setTopicId] = useState(initialTopicId);
   const [frontError, setFrontError] = useState('');
   const [backError, setBackError] = useState('');
   const [saving, setSaving] = useState(false);
 
   function handleSubmit() {
+    if (saving) return;
     const nextFrontError = front.trim().length === 0 ? 'The front cannot be empty.' : '';
     const nextBackError = back.trim().length === 0 ? 'The back cannot be empty.' : '';
     setFrontError(nextFrontError);
@@ -40,7 +47,7 @@ export function FlashcardForm({
     if (nextFrontError || nextBackError) return;
 
     setSaving(true);
-    const saved = onSubmit({ front: front.trim(), back: back.trim() });
+    const saved = onSubmit({ front: front.trim(), back: back.trim(), topicId });
     if (!saved) setSaving(false);
   }
 
@@ -63,7 +70,7 @@ export function FlashcardForm({
         <View style={[styles.error, { borderColor: colors.error, padding: spacing.md }]}> 
           <Feather name="alert-circle" size={18} color={colors.error} />
           <AppText variant="bodySmall" color={colors.error} style={styles.errorText}>
-            {error}
+            {error === 'memory_topic_unavailable' ? t.memoryTopic.missing : error}
           </AppText>
         </View>
       )}
@@ -117,7 +124,8 @@ export function FlashcardForm({
         )}
       </View>
 
-      <View style={[styles.actions, isTablet && styles.actionsTablet, { gap: spacing.sm }]}> 
+      <TopicLinkPicker value={topicId} onChange={setTopicId} disabled={saving} />
+      <View style={[styles.actions, isTablet && styles.actionsTablet, { gap: spacing.sm }]}>
         <Button
           label="Cancel"
           variant="secondary"

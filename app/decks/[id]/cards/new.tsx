@@ -40,7 +40,7 @@ export default function NewFlashcardScreen() {
 
   if (!isDBReady || !prepared) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
         <ActivityIndicator size="large" color={colors.accent} />
       </ScreenWrapper>
     );
@@ -48,7 +48,7 @@ export default function NewFlashcardScreen() {
 
   if (!deck) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
         <AppText variant="h3">Deck not found</AppText>
         <Button label="Go Back" variant="secondary" onPress={() => router.back()} style={{ marginTop: spacing.lg }} />
       </ScreenWrapper>
@@ -57,7 +57,7 @@ export default function NewFlashcardScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScreenWrapper>
+      <ScreenWrapper includeBottomSafeArea>
         <View style={styles.headerRow}>
           <TouchableOpacity
             accessibilityLabel="Go back"

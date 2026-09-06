@@ -5,6 +5,16 @@
 import type { Strings } from './en';
 
 const tr: Strings = {
+  memoryTopic: {
+    label: 'Konu (isteğe bağlı)', choose: 'Konu seç veya değiştir', unlink: 'Konu bağlantısını kaldır', close: 'Konu seçimini kapat',
+    none: 'Konu bağlantısı yok', help: 'İsteğe bağlıdır. Yeni tekrarlar, yanıt kaydedilirken bağlı olan Konuya aittir. Önceki tekrarların Konusu değiştirilmez.',
+    committee: 'Komite seç', subject: 'Ders seç', topic: 'Konu seç', restart: 'Başka komite seç',
+    empty: 'Burada henüz öğe yok.', more: 'Sonraki sayfa', previous: 'Önceki sayfa', error: 'Konu bilgileri yüklenemedi.',
+    missing: 'Bağlı Konu artık mevcut değil. Bağlantıyı kaldırabilir veya başka bir Konu seçebilirsin.',
+    evidenceTitle: 'Hafıza tekrar kaydı', recorded: 'Tekrar kaydı var', unrecorded: 'Henüz Konuya bağlı tekrar kaydı yok',
+    evidenceHelp: 'Kart bu Konuya bağlıyken kaydedilen tekrarları gösterir. Öğrenme veya tamamlanma ölçütü değildir.',
+    evidenceError: 'Tekrar kayıtları yüklenemedi.', select: (name:string) => `${name} seç`,
+  },
   scheduling: {
     reviewDue: 'Zamanı gelen kartları tekrarla',
     counts: (due:number, fresh:number, unscheduled:number) => `Zamanı gelen: ${due} · Yeni: ${fresh} · Önceden tekrar edilmiş, planlanmamış: ${unscheduled}`,
