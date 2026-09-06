@@ -1,6 +1,19 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 6.5 Motivation UI / Presentation Polish
+## Current — Phase 6.6 Technical Closure
+
+- Phase 6.1–6.6 implementation/technical closure COMPLETE. Master Phase 6 remains ACTIVE until user phone AND tablet QA passes. Combined physical QA PENDING; no device/emulator/ADB automation. Phase 7 NOT STARTED.
+- Final reward semantics: one inline acknowledgement after positive-duration persisted non-cancelled Focus finish, including entry Finish here, or successful final Memory rating with positive session count. No reward for cancel, screen/Recovery opening, selection, milestone alone, foreground or navigation return. Route-local blur/reset guards prevent replay; no reward history.
+- Today's 3: positive completed Focus today; at least one persisted Memory rating today; positive completed Topic-linked Focus today. Existing local finish/rating-day query and focus/foreground/midnight refresh unchanged. One linked session may meet both Focus targets, explicitly disclosed; daily-minute preference remains separate.
+- Adaptive Motivation reuses Phase 3 exactly (scattered/okay/focused): low 2/15/15, steady 15/25/25, good 15/25/45. Overrides and Lighter Plan remain available; explicit actions only. Recovery/Start Small keep original flows; completed records alone affect Momentum.
+- Low-Stimulation preserves copy, controls, accessibility state and destinations; only styling differs. Bilingual JS element-tree contracts now cover both reward types, Momentum states, all nine recommendations and every duration override. This is not native layout/device QA.
+- Audit found no new product defect requiring a change. No product code modified. Fixed a validator portability defect by normalizing CRLF before source assertions; retained all regression groups. Added entry milestone/Keep Going no-write and single durable finish coverage.
+- Schema v10; dependencies, stores, persistence, Focus, SRS/evidence, Exam Plan and UI unchanged. No analytics, telemetry, trends, reward tracking, streaks, XP, coins, levels, notifications or PDF/Gemini.
+- Validation: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21, Phase 3 85, Phase 4 43, Phase 5 29, Phase 6 33 PASS — 211 total. Phase 6 rerun passed after the CRLF test correction.
+- Modified only scripts/validate-phase6.cjs and four project-memory docs. Combined QA checklist is in AGENT_HANDOFF.md below; prior phase QA statuses remain unchanged.
+- Local branch phase-6-6-phase6-closure; commit only, no push/main merge. Next action: user runs the combined checklist on phone first, then tablet. Master Phase 6 must not be marked CLOSED before both results are explicitly confirmed.
+
+## Historical — Phase 6.5 Motivation UI / Presentation Polish
 
 - Implementation COMPLETE; Phase 6 ACTIVE. Phase 6.1–6.5 phone/tablet physical QA PENDING. Prior user-confirmed QA unchanged; no device/emulator/ADB automation.
 - Only MiniVictory, MomentumCard and AdaptiveRecommendationCard presentation touched. Cards now use width 100% with the existing 620dp constrained-workspace pattern; no navigation/container/safe-area redesign.

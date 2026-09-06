@@ -6,9 +6,11 @@ const vm = require('node:vm');
 const ts = require('typescript');
 const { execFileSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
-const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+const read = file => fs.readFileSync(path.join(root, file), 'utf8').replace(/\r\n/g, '\n');
 function load(file, mocks = {}) {
-  const code = ts.transpileModule(read(file), { compilerOptions: { module: ts.ModuleKind.CommonJS } }).outputText;
+  const code = ts.transpileModule(read(file), { fileName: file, compilerOptions: {
+    module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true,
+  } }).outputText;
   const module = { exports: {} };
   vm.runInThisContext('(function(require,module,exports){' + code + '\n})')(
     key => Object.hasOwn(mocks, key) ? mocks[key] : require(key), module, module.exports);
@@ -342,5 +344,78 @@ check('Polish: trigger routes, all persisted rules and shared primitives remain 
     assert.equal(read(file).replace(/\r\n/g, '\n'), execFileSync('git', ['show', '037072f:' + file],
       { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n'));
   }
+});
+// JS element-tree contracts only: no native rendering, screen automation or physical QA.
+function motivationTree(file, name, locale, props, quiet, evidence = null) {
+  const react = {
+    createElement: (type, attrs, ...children) => ({ type, props: { ...attrs, children } }),
+    Fragment: 'Fragment', useCallback: f => f,
+    useState: initial => [initial === null ? evidence : initial, () => {}],
+  };
+  const ui = { Card: 'Card', AppText: 'AppText', Button: 'Button', Badge: 'Badge' };
+  const dates = load('utils/calendarDate.ts');
+  const mocks = {
+    react, 'react-native': { View: 'View', TouchableOpacity: 'TouchableOpacity', StyleSheet: { create: s => s } },
+    '@expo/vector-icons': { Feather: 'Feather' },
+    '@/hooks/useTheme': { useTheme: () => ({ colors: {}, spacing: {}, radius: {} }) },
+    '@/hooks/useResponsive': { useResponsive: () => ({ isTablet: true }) },
+    '@/hooks/useDashboardRefresh': { useDashboardRefresh: () => {} },
+    '@/store/useAppStore': { useAppStore: selector => selector({ lowStimulationMode: quiet, isDBReady: true }) },
+    '@/db/repositories/dashboardRepo': { dashboardRepo: {} },
+    '@/utils/calendarDate': dates,
+    '@/utils/studySupportRules': load('utils/studySupportRules.ts', { './calendarDate': dates }),
+    '@/i18n': { useTranslation: () => locale, ...load('i18n/studySupport.ts') },
+    'expo-router': { router: { push: () => { throw Error('Render must not navigate'); } } },
+  };
+  for (const [key, value] of Object.entries(ui)) {
+    const filename = key === 'AppText' ? 'Typography' : key;
+    mocks['./' + filename] = { [key]: value };
+    mocks['@/components/ui/' + filename] = { [key]: value };
+  }
+  const tree = load(file, mocks)[name]({ ...props, lowStimulation: quiet });
+  function semantics(node) {
+    if (Array.isArray(node)) return node.map(semantics);
+    if (!node || typeof node !== 'object') return node;
+    return { type: node.type, props: Object.fromEntries(Object.entries(node.props)
+      .filter(([key]) => !['style', 'textStyle', 'color', 'variant', 'elevated', 'size'].includes(key))
+      .map(([key, value]) => [key, typeof value === 'function' ? value.toString() : key === 'children' ? semantics(value) : value])) };
+  }
+  return semantics(tree);
+}
+check('Closure: MiniVictory and Momentum EN/TR content/actions match in quiet and regular presentation', () => {
+  for (const locale of [load('i18n/en.ts').default, load('i18n/tr.ts').default]) {
+    for (const kind of ['focus', 'review']) assert.deepEqual(
+      motivationTree('components/ui/MiniVictory.tsx', 'MiniVictory', locale, { kind }, false),
+      motivationTree('components/ui/MiniVictory.tsx', 'MiniVictory', locale, { kind }, true));
+    for (const evidence of [null, { focus: false, memory: false, topicFocus: false },
+      { focus: true, memory: false, topicFocus: false }, { focus: true, memory: true, topicFocus: false },
+      { focus: true, memory: true, topicFocus: true }]) assert.deepEqual(
+      motivationTree('components/dashboard/MomentumCard.tsx', 'MomentumCard', locale, {}, false, evidence),
+      motivationTree('components/dashboard/MomentumCard.tsx', 'MomentumCard', locale, {}, true, evidence));
+  }
+});
+check('Closure: all nine bilingual recommendations and every override retain quiet-mode action parity', () => {
+  const rules = load('utils/studySupportRules.ts', { './calendarDate': load('utils/calendarDate.ts') });
+  const action = () => { throw Error('Recommendation rendering must not execute actions'); };
+  for (const locale of [load('i18n/en.ts').default, load('i18n/tr.ts').default]) {
+    for (const energy of ['low', 'steady', 'good']) for (const attention of ['scattered', 'okay', 'focused']) {
+      for (const selectedDurationSec of rules.ADAPTIVE_DURATION_OPTIONS) {
+        const props = { energy, attention, selectedDurationSec, recommendation: rules.getAdaptiveRecommendation(energy, attention),
+          committeeName: 'User: Kalp / Heart', contextError: null,
+          onSelectDuration: action, onStart: action, onChangeAnswers: action, onRemoveCommittee: action,
+          onRetryContext: action, onContinueWithoutCommittee: action, onOpenFocusSetup: action, onOpenRecovery: action };
+        assert.deepEqual(motivationTree('components/study-support/AdaptiveRecommendationCard.tsx', 'AdaptiveRecommendationCard', locale, props, false),
+          motivationTree('components/study-support/AdaptiveRecommendationCard.tsx', 'AdaptiveRecommendationCard', locale, props, true));
+      }
+    }
+  }
+});
+check('Closure: entry milestone and Keep Going create no persistence; final completion still records once', () => {
+  const { store, writes } = focus();
+  store.setState({ sessionMode: 'entry', plannedSec: 120 });
+  store.getState().markEntryMilestoneAnnounced(); assert.equal(writes.length, 0);
+  assert.equal(store.getState().keepGoingFromEntry(), true); assert.equal(writes.length, 0);
+  assert.ok(eligible(store.getState().finishSession())); assert.equal(writes.length, 1);
+  assert.equal(store.getState().finishSession(), null); assert.equal(writes.length, 1);
 });
 console.log(`Phase 6 validation: ${passed} PASS`);
