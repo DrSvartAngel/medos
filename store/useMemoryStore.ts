@@ -18,6 +18,7 @@ export interface Flashcard {
   back: string;
   createdAt: number;
   updatedAt: number;
+  schedule?: { state: 'new' | 'unscheduled' | 'learning' | 'reviewing'; nextReviewAt: number | null };
 }
 
 export type ReviewRating = 'again' | 'hard' | 'good' | 'easy';
@@ -88,7 +89,7 @@ interface MemoryState {
   updateCard: (id: string, input: UpdateCardInput) => boolean;
   deleteCard: (id: string) => boolean;
   loadRecentReviews: (limit?: number) => void;
-  startReview: (deckId: string, limit?: number) => void;
+  startReview: (deckId: string, limit?: number, queueMode?: 'all' | 'due') => void;
   revealAnswer: () => void;
   rateCurrentCard: (rating: ReviewRating) => boolean;
   exitReview: () => void;
@@ -339,7 +340,7 @@ export const useMemoryStore = create<MemoryState>()((set, get) => ({
     }
   },
 
-  startReview: (deckId, limit) => {
+  startReview: (deckId, limit, queueMode = 'all') => {
     set({
       reviewStatus: 'loading',
       reviewDeckId: deckId,
@@ -360,7 +361,7 @@ export const useMemoryStore = create<MemoryState>()((set, get) => ({
         return;
       }
 
-      const reviewQueue = memoryRepo.getReviewQueue(deckId, limit);
+      const reviewQueue = queueMode === 'due' ? memoryRepo.getDueReviewQueue(deckId) : memoryRepo.getReviewQueue(deckId, limit);
       set({
         reviewQueue,
         reviewStatus: reviewQueue.length === 0 ? 'complete' : 'question',

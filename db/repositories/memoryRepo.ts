@@ -1,4 +1,5 @@
 import { getDB } from '../client';
+import { scheduleReview, type ScheduleState } from '@/utils/memoryScheduling';
 import type {
   Deck,
   Flashcard,
@@ -23,6 +24,9 @@ interface FlashcardRow {
   back: string;
   created_at: number;
   updated_at: number;
+  schedule_state: ScheduleState;
+  next_review: number;
+  has_reviews: number;
 }
 
 interface ReviewHistoryRow {
@@ -59,6 +63,8 @@ function rowToFlashcard(row: FlashcardRow): Flashcard {
     back: row.back,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
+    schedule: { state: row.schedule_state === 'unscheduled' ? (row.has_reviews ? 'unscheduled' : 'new') : row.schedule_state,
+      nextReviewAt: row.schedule_state === 'unscheduled' ? null : row.next_review },
   };
 }
 
@@ -80,7 +86,8 @@ const DECK_SELECT = `
   FROM decks d`;
 
 const CARD_SELECT = `
-  SELECT id, deck_id, front, back, created_at, updated_at
+  SELECT id, deck_id, front, back, created_at, updated_at, schedule_state, next_review,
+         EXISTS(SELECT 1 FROM flashcard_reviews r WHERE r.card_id = flashcards.id) AS has_reviews
   FROM flashcards`;
 
 const REVIEW_HISTORY_SELECT = `
@@ -91,6 +98,23 @@ const REVIEW_HISTORY_SELECT = `
   INNER JOIN decks d ON d.id = f.deck_id`;
 
 export const memoryRepo = {
+  getScheduleSummary(deckId: string, now = Date.now()): { due: number; newCards: number; unscheduled: number; nextReviewAt: number | null } {
+    const row = getDB().getFirstSync<{due:number;newCards:number;unscheduled:number;nextReviewAt:number|null}>(
+      `SELECT COALESCE(SUM(CASE WHEN schedule_state != 'unscheduled' AND next_review <= ? THEN 1 ELSE 0 END),0) AS due,
+       COALESCE(SUM(CASE WHEN schedule_state = 'unscheduled' AND NOT EXISTS(SELECT 1 FROM flashcard_reviews r WHERE r.card_id=f.id) THEN 1 ELSE 0 END),0) AS newCards,
+       COALESCE(SUM(CASE WHEN schedule_state = 'unscheduled' AND EXISTS(SELECT 1 FROM flashcard_reviews r WHERE r.card_id=f.id) THEN 1 ELSE 0 END),0) AS unscheduled,
+       MIN(CASE WHEN schedule_state != 'unscheduled' AND next_review > ? THEN next_review END) AS nextReviewAt
+       FROM flashcards f WHERE deck_id = ?`, [now,now,deckId]);
+    if (!row) throw new Error('Schedule unavailable');
+    return row;
+  },
+
+  getDueReviewQueue(deckId: string, now = Date.now()): Flashcard[] {
+    return getDB().getAllSync<FlashcardRow>(`${CARD_SELECT}
+      WHERE deck_id = ? AND (schedule_state = 'unscheduled' OR next_review <= ?)
+      ORDER BY CASE WHEN schedule_state = 'unscheduled' THEN 1 ELSE 0 END,
+        CASE WHEN schedule_state != 'unscheduled' THEN next_review END ASC, created_at ASC, id ASC`, [deckId,now]).map(rowToFlashcard);
+  },
   getAllDecks(): Deck[] {
     const db = getDB();
     const rows = db.getAllSync<DeckRow>(`${DECK_SELECT} ORDER BY d.updated_at DESC, d.id ASC`);
@@ -172,7 +196,7 @@ export const memoryRepo = {
 
   insertCard(card: Flashcard): void {
     const db = getDB();
-    // Legacy scheduler fields are compatibility-only and are not used by Phase 2.3.
+    // These values remain inert until schedule_state changes from unscheduled.
     db.runSync(
       `INSERT INTO flashcards
          (id, deck_id, front, back, interval, ease, next_review, created_at, updated_at)
@@ -228,11 +252,20 @@ export const memoryRepo = {
 
   insertReview(review: ReviewRecord): void {
     const db = getDB();
-    db.runSync(
-      `INSERT INTO flashcard_reviews (id, card_id, rating, reviewed_at)
-       VALUES (?, ?, ?, ?)`,
-      [review.id, review.cardId, review.rating, review.reviewedAt]
-    );
+    db.withTransactionSync(() => {
+      const card = db.getFirstSync<{schedule_state:ScheduleState;interval:number}>(
+        'SELECT schedule_state, interval FROM flashcards WHERE id = ?', [review.cardId]);
+      if (!card) throw new Error('Card unavailable');
+      const next = scheduleReview({state:card.schedule_state,intervalDays:card.interval},review.rating,review.reviewedAt);
+      db.runSync(
+        `INSERT INTO flashcard_reviews (id, card_id, rating, reviewed_at)
+         VALUES (?, ?, ?, ?)`,
+        [review.id, review.cardId, review.rating, review.reviewedAt]
+      );
+      const updated = db.runSync('UPDATE flashcards SET schedule_state = ?, interval = ?, next_review = ? WHERE id = ?',
+        [next.state,next.intervalDays,next.nextReviewAt,review.cardId]);
+      if (updated.changes !== 1) throw new Error('Card schedule was not saved');
+    });
   },
 
   getRecentReviews(limit = 10, deckId?: string): ReviewHistoryItem[] {

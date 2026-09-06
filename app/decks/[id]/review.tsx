@@ -41,6 +41,7 @@ export default function DeckReviewScreen() {
   const card = reviewQueue[reviewIndex];
   const revealed = reviewStatus === 'answer';
   const recoveryMode = (Array.isArray(mode) ? mode[0] : mode) === 'recovery';
+  const dueMode = mode === 'due';
   const reviewLimit = recoveryMode ? RECOVERY_REVIEW_LIMIT : undefined;
   const backLabel = recoveryMode ? t.review.backToLighterPlan : t.review.backToDeck;
   const progress = reviewQueue.length > 0
@@ -50,10 +51,10 @@ export default function DeckReviewScreen() {
   useEffect(() => {
     if (!isDBReady || !id) return;
     loadDecks();
-    startReview(id, reviewLimit);
+    startReview(id, reviewLimit, dueMode ? 'due' : 'all');
     setAttemptedStart(true);
     return () => exitReview();
-  }, [exitReview, id, isDBReady, loadDecks, reviewLimit, startReview]);
+  }, [exitReview, id, isDBReady, loadDecks, reviewLimit, startReview, dueMode]);
 
   function handleClose() {
     exitReview();
@@ -98,7 +99,7 @@ export default function DeckReviewScreen() {
         </AppText>
         <Button
           label={t.common.retry}
-          onPress={() => startReview(id, reviewLimit)}
+          onPress={() => startReview(id, reviewLimit, dueMode ? 'due' : 'all')}
           style={{ marginTop: spacing.lg, minWidth: 180 }}
         />
         <Button
@@ -125,16 +126,16 @@ export default function DeckReviewScreen() {
                 color={colors.accent}
               />
               <AppText variant="h2" style={{ marginTop: spacing.md, textAlign: 'center' }}>
-                {deck ? t.review.noCards : t.review.deckUnavailable}
+                {dueMode ? t.scheduling.noneDue : deck ? t.review.noCards : t.review.deckUnavailable}
               </AppText>
               <AppText variant="body" color={colors.textSecondary} style={styles.emptyText}>
-                {recoveryMode
+                {dueMode ? t.scheduling.emptyHelp : recoveryMode
                   ? t.review.returnForStep
                   : deck
                     ? t.review.addFirstDescription
                     : t.review.removedDescription}
               </AppText>
-              {!recoveryMode && deck ? (
+              {!recoveryMode && !dueMode && deck ? (
                 <Button
                   label={t.review.addCard}
                   onPress={() => {
@@ -154,7 +155,7 @@ export default function DeckReviewScreen() {
           ) : (
             <ReviewSummary
               summary={reviewSummary}
-              onReviewAgain={() => startReview(id, reviewLimit)}
+              onReviewAgain={() => startReview(id, reviewLimit, dueMode ? 'due' : 'all')}
               onDone={handleClose}
               doneLabel={backLabel}
             />

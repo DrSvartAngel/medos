@@ -3,6 +3,16 @@
 // Schema v5, study logic, hydration, and preference normalization are unchanged.
 
 const en = {
+  scheduling: {
+    reviewDue: 'Review due cards',
+    counts: (due:number, fresh:number, unscheduled:number) => `Due now: ${due} · New: ${fresh} · Previously reviewed, unscheduled: ${unscheduled}`,
+    next: (at:number) => `Next review: ${new Date(at).toLocaleString('en-GB')}`,
+    states: {new:'New — not reviewed yet',unscheduled:'Previously reviewed — schedule not set',learning:'Learning',reviewing:'Reviewing'},
+    error: 'Review dates could not be loaded.',
+    noneDue: 'No cards due right now',
+    emptyHelp: 'No due or unscheduled cards are available in this deck right now. You can return later or use full-deck review.',
+    explanation: 'Due cards come first, then unscheduled cards. Every rating, including full-deck and early reviews, sets a new review date. Again returns in 10 minutes, not in this session. These dates are a study aid, not a measure of mastery.',
+  },
   examPlan: {
     title: 'Exam plan',
     missing: 'Committee not found.',

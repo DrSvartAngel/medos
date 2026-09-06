@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/Card';
 import { AppText } from '@/components/ui/Typography';
 import { useTheme } from '@/hooks/useTheme';
 import type { Flashcard } from '@/store/useMemoryStore';
+import { useTranslation } from '@/i18n';
 
 interface FlashcardListItemProps {
   card: Flashcard;
@@ -15,6 +16,7 @@ interface FlashcardListItemProps {
 
 export function FlashcardListItem({ card, index, onEdit, onDelete }: FlashcardListItemProps) {
   const { colors, spacing, radius } = useTheme();
+  const t = useTranslation();
 
   return (
     <Card style={{ marginBottom: spacing.sm }}>
@@ -53,6 +55,10 @@ export function FlashcardListItem({ card, index, onEdit, onDelete }: FlashcardLi
           </TouchableOpacity>
         </View>
       </View>
+      {card.schedule && <View>
+        <AppText variant="caption">{t.scheduling.states[card.schedule.state]}</AppText>
+        {card.schedule.nextReviewAt !== null && <AppText variant="caption">{t.scheduling.next(card.schedule.nextReviewAt)}</AppText>}
+      </View>}
     </Card>
   );
 }

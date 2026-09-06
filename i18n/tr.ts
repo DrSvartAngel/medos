@@ -5,6 +5,16 @@
 import type { Strings } from './en';
 
 const tr: Strings = {
+  scheduling: {
+    reviewDue: 'Zamanı gelen kartları tekrarla',
+    counts: (due:number, fresh:number, unscheduled:number) => `Zamanı gelen: ${due} · Yeni: ${fresh} · Önceden tekrar edilmiş, planlanmamış: ${unscheduled}`,
+    next: (at:number) => `Sonraki tekrar: ${new Date(at).toLocaleString('tr-TR')}`,
+    states: {new:'Yeni — henüz tekrar edilmedi',unscheduled:'Önceden tekrar edildi — tekrar tarihi belirlenmedi',learning:'Öğrenme aşamasında',reviewing:'Tekrar aşamasında'},
+    error: 'Tekrar tarihleri yüklenemedi.',
+    noneDue: 'Şu an tekrar zamanı gelen kart yok',
+    emptyHelp: 'Bu destede şu an zamanı gelen veya planlanmamış kart yok. Daha sonra dönebilir ya da tüm desteyi tekrar edebilirsin.',
+    explanation: 'Önce zamanı gelen, sonra planlanmamış kartlar gösterilir. Erken tekrarlar ve tüm deste tekrarları dahil her yanıt yeni bir tekrar tarihi belirler. Tekrar seçeneği kartı 10 dakika sonraya planlar; aynı oturuma eklemez. Bu tarihler öğrenme düzeyini ölçmez, çalışmaya yardımcı olur.',
+  },
   examPlan: {
     title: 'Sınav planı',
     missing: 'Komite bulunamadı.',

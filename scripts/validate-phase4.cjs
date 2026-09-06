@@ -47,7 +47,7 @@ function migrate(db, source = migrations) {
   }, source).runMigrations();
 }
 function repositories(db) {
-  const mocks = { '../client': { getDB: () => db }, '@/utils/curriculumValidation': validation };
+  const mocks = { '../client': { getDB: () => db }, '@/utils/curriculumValidation': validation, '@/utils/memoryScheduling': load('utils/memoryScheduling.ts') };
   return {
     subjects: load('db/repositories/subjectRepo.ts', mocks).subjectRepo,
     topics: load('db/repositories/topicRepo.ts', mocks).topicRepo,
@@ -147,7 +147,7 @@ async function main() {
       assert.ok(t.summary(1,1)); assert.ok(t.summary(2,3));
       assert.equal(t.openTopic('İlaç','Ders'), 'Ders — İlaç');
     }
-    assert.match(migrations,/const CURRENT_VERSION = 8/); assert.doesNotMatch(migrations,/currentVersion < 9/);
+    assert.match(migrations,/const CURRENT_VERSION = 9/); assert.doesNotMatch(migrations,/currentVersion < 10/);
   });
   await check('v8 optional Topic FK preserves legacy rows, rolls back failure and unlinks on deletion', async () => {
     const db = new Adapter();
@@ -327,8 +327,8 @@ async function main() {
     assert.equal(closes, 2); assert.equal(opens, 2);
     await fixture(db => assert.equal(db.getFirstSync('PRAGMA foreign_keys').foreign_keys, 1));
   });
-  await check('Clean install v8, exact columns/FKs/indexes and safe rerun', () => fixture(async db => {
-    assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 8);
+  await check('Clean install v9, exact columns/FKs/indexes and safe rerun', () => fixture(async db => {
+    assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version, 9);
     for (const [table,parent,parentTable,index] of [
       ['subjects','committee_id','committees','idx_subjects_committee_order'],
       ['topics','subject_id','subjects','idx_topics_subject_order'],
@@ -508,8 +508,8 @@ async function main() {
     assert.deepEqual(pkg.dependencies, lock.dependencies);
     assert.deepEqual(pkg.devDependencies, lock.devDependencies);
     assert.equal(pkg.scripts['validate:phase4'], 'node scripts/validate-phase4.cjs');
-    assert.match(migrations, /const CURRENT_VERSION = 8/);
-    assert.doesNotMatch(migrations, /currentVersion < 9/);
+    assert.match(migrations, /const CURRENT_VERSION = 9/);
+    assert.doesNotMatch(migrations, /currentVersion < 10/);
     const v6 = migrations.slice(migrations.indexOf('  if (currentVersion < 6)'), migrations.indexOf('  if (currentVersion < 7)'));
     assert.doesNotMatch(v6, /ALTER TABLE|DROP TABLE|DELETE FROM|UPDATE (?!_schema_version)/);
     for (const dir of ['store/useSubjectStore.ts','store/useTopicStore.ts'])

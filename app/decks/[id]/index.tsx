@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, StyleSheet, TouchableOpacity, View } from 're
 import { router, useLocalSearchParams, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { FlashcardListItem } from '@/components/memory/FlashcardListItem';
+import { MemorySchedulePanel } from '@/components/memory/MemorySchedulePanel';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
@@ -174,6 +175,7 @@ export default function DeckDetailScreen() {
         />
       </View>
 
+      <MemorySchedulePanel deckId={deck.id} />
       <View style={[styles.sectionHeader, { marginTop: spacing.xl, marginBottom: spacing.sm }]}> 
         <AppText variant="h3">Cards</AppText>
         <AppText variant="bodySmall" color={colors.textSecondary}>

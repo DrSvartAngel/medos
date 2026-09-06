@@ -1,7 +1,7 @@
 import { getDB } from './client';
 import { formatLocalDateKey } from '@/utils/calendarDate';
 
-const CURRENT_VERSION = 8;
+const CURRENT_VERSION = 9;
 
 interface TableInfoRow {
   name: string;
@@ -326,6 +326,13 @@ export async function runMigrations(): Promise<void> {
     db.withTransactionSync(() => {
       db.execSync('ALTER TABLE focus_sessions ADD COLUMN topic_id TEXT REFERENCES topics(id) ON DELETE SET NULL');
       db.runSync('UPDATE _schema_version SET version = ?', [8]);
+    });
+  }
+  if (currentVersion < 9) {
+    db.withTransactionSync(() => {
+      // Legacy interval/ease/next_review values are not evidence of an actual schedule.
+      db.execSync("ALTER TABLE flashcards ADD COLUMN schedule_state TEXT NOT NULL DEFAULT 'unscheduled' CHECK(schedule_state IN ('unscheduled','learning','reviewing'))");
+      db.runSync('UPDATE _schema_version SET version = ?', [9]);
     });
   }
 }
