@@ -19,13 +19,13 @@ const zustand = { create: () => init => {
   const get = () => state, set = patch => { state = { ...state, ...(typeof patch === 'function' ? patch(state) : patch) }; };
   state = init(set, get); return { getState: get, setState: set };
 } };
-function focus({ fail = false, historyFail = false } = {}) {
+function focus({ fail = false, historyFail = false, onInsert = () => {} } = {}) {
   const writes = [];
   const store = load('store/useFocusStore.ts', {
     zustand,
     '@/db/repositories/committeeRepo': { committeeRepo: {} },
     '@/db/repositories/focusRepo': { focusRepo: {
-      insert: session => { if (fail) throw Error('write failed'); writes.push(session); },
+      insert: session => { if (fail) throw Error('write failed'); onInsert(session); writes.push(session); },
       getRecent: () => { if (historyFail) throw Error('read failed'); return writes; },
     } },
     '@/store/useAppStore': { useAppStore: { getState: () => ({ defaultFocusSec: 1500 }) } },
@@ -35,12 +35,12 @@ function focus({ fail = false, historyFail = false } = {}) {
   store.setState({ timerStatus: 'paused', accumulatedSec: 120, startedAt: Date.now() - 120000, pausedAt: Date.now() });
   return { store, writes };
 }
-function memory({ fail = false, empty = false } = {}) {
+function memory({ fail = false, empty = false, onInsert = () => {} } = {}) {
   const writes = [], card = { id: 'c', deckId: 'd', front: 'Ön', back: 'Arka' };
   const store = load('store/useMemoryStore.ts', { zustand, '@/db/repositories/memoryRepo': { memoryRepo: {
     getDeckById: () => ({ id: 'd' }), getReviewQueue: () => empty ? [] : [card],
     getCardById: () => card, getRecentReviews: () => writes,
-    insertReview: review => { if (fail) throw Error('write failed'); writes.push(review); },
+    insertReview: review => { if (fail) throw Error('write failed'); onInsert(review); writes.push(review); },
   } } }).useMemoryStore;
   store.getState().startReview('d'); return { store, writes };
 }
@@ -210,7 +210,7 @@ check('Adaptive Motivation changes no matrix, state, timer, Recovery, Momentum, 
   for (const file of ['utils/studySupportRules.ts', 'store/useStudySupportStore.ts', 'store/useFocusStore.ts',
     'store/useAppStore.ts', 'app/study-support/recovery.tsx', 'components/dashboard/MomentumCard.tsx',
     'db/repositories/dashboardRepo.ts', 'components/ui/MiniVictory.tsx', 'app/(tabs)/focus.tsx',
-    'app/decks/[id]/review.tsx', 'db/migrations.ts', 'package.json', 'package-lock.json']) {
+    'db/migrations.ts', 'package.json', 'package-lock.json']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file), file);
   }
   const route = read('app/study-support/check-in.tsx').replace(/\r\n/g, '\n')
@@ -235,5 +235,66 @@ check('Adaptive Motivation explains explicit input and optional alternatives in 
   assert.ok(tr.adaptiveRec.optionalExplanation.includes('yalnızca seçtiğin enerji ve dikkat'));
   assert.ok(read('components/study-support/AdaptiveRecommendationCard.tsx').includes('t.adaptiveRec.optionalExplanation'));
   assert.ok(read('components/study-support/AdaptiveRecommendationCard.tsx').includes('translateStudySupportMessage(recommendation.reason, t)'));
+});
+check('Integration: actual completion stores feed Momentum SQL only after durable actions', () => momentumFixture(({ db, repo }) => {
+  const dates = load('utils/calendarDate.ts');
+  const { startMs, endMs } = dates.getLocalDayRange(dates.todayLocalDateKey());
+  const get = () => repo.getMomentum(startMs, endMs);
+  const onInsert = s => db.prepare('INSERT INTO focus_sessions VALUES (?,?,?,?,?,?)')
+    .run(Number(s.completed), Number(s.cancelled), s.actualSec, s.startedAt, s.endedAt, s.topicId);
+  const entry = focus({ onInsert }); entry.store.setState({ sessionMode: 'entry', plannedSec: 120 });
+  assert.deepEqual(get(), { focus: false, memory: false, topicFocus: false });
+  entry.store.getState().cancelSession(); assert.equal(get().focus, false);
+  const completed = focus({ onInsert }); completed.store.setState({ sessionMode: 'entry', plannedSec: 120 });
+  assert.ok(eligible(completed.store.getState().finishSession()));
+  assert.deepEqual(get(), { focus: true, memory: false, topicFocus: false });
+  db.exec("INSERT INTO topics VALUES ('linked')");
+  const linked = focus({ onInsert }); linked.store.setState({ selectedTopicId: 'linked' });
+  linked.store.getState().finishSession(); assert.equal(get().topicFocus, true);
+  const review = memory({ onInsert: r => db.prepare('INSERT INTO flashcard_reviews VALUES (?)').run(r.reviewedAt) });
+  assert.equal(get().memory, false); review.store.getState().revealAnswer();
+  assert.equal(get().memory, false); review.store.getState().rateCurrentCard('good');
+  assert.deepEqual(get(), { focus: true, memory: true, topicFocus: true });
+  const again = get(); assert.deepEqual(get(), again);
+}));
+check('Integration: Memory reward is event-gated and cleared on blur/new review, not replayed by derived state', () => {
+  const r = read('app/decks/[id]/review.tsx');
+  assert.ok(r.includes('const saved = rateCurrentCard(rating)'));
+  assert.ok(r.includes("if (saved && current.reviewStatus === 'complete' && current.reviewSummary.reviewed > 0)"));
+  assert.equal((r.match(/setShowReviewVictory\(true\)/g) || []).length, 1);
+  assert.ok(r.includes('useFocusEffect(useCallback(() => () => setShowReviewVictory(false), []))'));
+  assert.ok(r.includes("if (reviewStatus !== 'complete') setShowReviewVictory(false)"));
+  assert.ok(r.includes('{showReviewVictory && <MiniVictory'));
+  assert.doesNotMatch(r, /AppState|AsyncStorage|rewardHistory/);
+  assert.ok(read('app/(tabs)/focus.tsx').includes('useFocusEffect(useCallback(() => () => setShowVictory(false), []))'));
+});
+check('Integration: Dashboard refresh executes on focus/foreground and removes its listener on blur', () => {
+  let effect, listener, removed = false, refreshes = 0;
+  const hook = load('hooks/useDashboardRefresh.ts', {
+    react: { useCallback: callback => callback },
+    'expo-router': { useFocusEffect: callback => { effect = callback; } },
+    'react-native': { AppState: { addEventListener: (event, callback) => {
+      listener = callback; return { remove: () => { removed = true; listener = null; } };
+    } } },
+  });
+  hook.useDashboardRefresh(true, () => refreshes++);
+  const cleanup = effect();
+  try {
+    assert.equal(refreshes, 1); listener('background'); assert.equal(refreshes, 1);
+    listener('active'); assert.equal(refreshes, 2);
+  } finally { cleanup(); }
+  assert.ok(removed); assert.equal(listener, null);
+});
+check('Integration: Recovery remains side-effect-free until explicit actions; quiet feedback and matrix unchanged', () => {
+  const baseline = file => execFileSync('git', ['show', '45a130b:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
+  for (const file of ['app/study-support/recovery.tsx', 'app/study-support/check-in.tsx', 'utils/recoveryRules.ts',
+    'utils/studySupportRules.ts', 'components/ui/MiniVictory.tsx', 'components/dashboard/MomentumCard.tsx',
+    'components/study-support/AdaptiveRecommendationCard.tsx', 'hooks/useDashboardRefresh.ts']) {
+    assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file));
+  }
+  const recovery = read('app/study-support/recovery.tsx');
+  assert.ok(recovery.includes('startEntrySession({ committeeId: verifiedCommitteeId })'));
+  assert.ok(recovery.includes("params: { id: deck.id, mode: 'recovery' }"));
+  assert.doesNotMatch(recovery, /MiniVictory|getMomentum|finishSession\(|insertReview\(/);
 });
 console.log(`Phase 6 validation: ${passed} PASS`);

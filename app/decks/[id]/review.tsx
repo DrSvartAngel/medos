@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, TouchableOpacity, View } from 'react-native';
-import { router, useLocalSearchParams, type Href } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { ReviewCard } from '@/components/memory/ReviewCard';
 import { ReviewControls } from '@/components/memory/ReviewControls';
@@ -26,10 +26,15 @@ export default function DeckReviewScreen() {
   const { isTablet } = useResponsive();
   const t = useTranslation();
   const [attemptedStart, setAttemptedStart] = useState(false);
+  const [showReviewVictory, setShowReviewVictory] = useState(false);
+  useFocusEffect(useCallback(() => () => setShowReviewVictory(false), []));
   const isDBReady = useAppStore((state) => state.isDBReady);
   const lowStimulationMode = useAppStore((state) => state.lowStimulationMode);
   const decks = useMemoryStore((state) => state.decks);
   const reviewStatus = useMemoryStore((state) => state.reviewStatus);
+  useEffect(() => {
+    if (reviewStatus !== 'complete') setShowReviewVictory(false);
+  }, [reviewStatus]);
   const reviewQueue = useMemoryStore((state) => state.reviewQueue);
   const reviewIndex = useMemoryStore((state) => state.reviewIndex);
   const reviewSummary = useMemoryStore((state) => state.reviewSummary);
@@ -72,7 +77,11 @@ export default function DeckReviewScreen() {
   }
 
   function handleRate(rating: ReviewRating) {
-    rateCurrentCard(rating);
+    const saved = rateCurrentCard(rating);
+    const current = useMemoryStore.getState();
+    if (saved && current.reviewStatus === 'complete' && current.reviewSummary.reviewed > 0) {
+      setShowReviewVictory(true);
+    }
   }
 
   if (!isDBReady || reviewStatus === 'loading' || (reviewStatus === 'idle' && !attemptedStart)) {
@@ -156,7 +165,7 @@ export default function DeckReviewScreen() {
             </Card>
           ) : (
             <>
-            <MiniVictory kind="review" lowStimulation={lowStimulationMode} />
+            {showReviewVictory && <MiniVictory kind="review" lowStimulation={lowStimulationMode} />}
             <ReviewSummary
               summary={reviewSummary}
               onReviewAgain={() => startReview(id, reviewLimit, dueMode ? 'due' : 'all')}

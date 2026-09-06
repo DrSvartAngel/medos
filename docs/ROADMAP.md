@@ -1,6 +1,20 @@
 # MedOS — Development Roadmap
 
-## Current — Phase 6.3 Adaptive Motivation
+## Current — Phase 6.4 Reward & Recovery Integration
+
+- Implementation COMPLETE; Phase 6 ACTIVE. Phase 6.1–6.4 physical phone/tablet QA PENDING; no emulator/ADB/device automation. Earlier user-confirmed QA unchanged.
+- Recovery remains an optional route into existing entry Focus, bounded Memory or Calendar. Opening/selecting does not write completion, meet Momentum or show MiniVictory. No Recovery behavior changes.
+- Start Small decision: preserve existing positive-duration persisted Finish here acknowledgement. Elapsed milestone/Keep Going alone are not durable completion and do not earn feedback. No new persistence or extra milestone reward.
+- Narrow fix: Memory MiniVictory now appears only from a successful final rating callback with positive reviewed count. Its route-local visibility clears on blur and when starting another review. Returning to a retained complete screen cannot replay it. Foreground/Low-Stimulation rerenders cannot create another reward; Focus already has equivalent blur cleanup and durable receipt gating.
+- Today’s 3 unchanged: completed non-cancelled positive Focus today; at least one persisted rating today; completed Topic-linked positive Focus today. Partial Memory exit has no completion reward but already-persisted ratings still truthfully meet the Memory target. No unrelated targets auto-complete.
+- Recovery, matrix (low 2/15/15; steady 15/25/25; good 15/25/45 for scattered/okay/focused), alternative durations and Lighter Plan unchanged. MiniVictory/Momentum/adaptive quiet styling and content unchanged.
+- Existing focused navigation/foreground/local-midnight refresh reused, listener cleanup verified; no polling, repeated all-three celebration, analytics, reward history or new global state. Schema v10, dependencies and SRS unchanged.
+- Changed only Memory review route, validate-phase6 and these four documents; no new files. Tests combine real store callbacks with in-memory Momentum SQL and exercise refresh listener cleanup; reward UI gating checks remain explicitly static contracts, not physical QA.
+- Validation: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21, Phase 3 85, Phase 4 43, Phase 5 29, Phase 6 26 PASS — 204 total.
+- User QA: Recovery → Start Small → Finish/Cancel; Recovery max-five review → completion/early exit; leave/return/foreground after acknowledgement; Review again; Momentum refresh; Low-Stimulation and phone/tablet safe area. No need to retest unrelated CRUD.
+- Branch phase-6-4-reward-recovery-integration, local commit only. Next: user physical QA and review. Do not push, merge main or start Phase 6.5. PDF/Gemini remains deferred.
+
+## Historical — Phase 6.3 Adaptive Motivation
 
 - Implementation COMPLETE; Phase 6 ACTIVE. Phase 6.1–6.3 phone/tablet physical QA remains PENDING. Prior user-confirmed Phase 5 closure unchanged.
 - Intentionally reuses the existing Phase 3 getAdaptiveRecommendation matrix; no duplicate recommendation engine. Exact energy categories: low / steady / good; attention: scattered / okay / focused.
