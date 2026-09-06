@@ -5,6 +5,13 @@
 import type { Strings } from './en';
 
 const tr: Strings = {
+  committeeEvidence: {
+    subjects: (n:number) => `Ders: ${n}`, attentionSubjects: (n:number) => `Tekrar uyarısı olan Konu içeren Ders: ${n}`,
+    reviews: (n:number) => `Bu Komitenin Konuları için kaydedilen tekrar: ${n}`,
+    all: 'Tüm Dersler', empty: 'Henüz Ders yok.', noneAttention: 'Şu anda tekrar uyarısı olan Konu içeren Ders yok.',
+    more: 'Daha fazla Ders göster', open: (name:string) => `Dersi aç: ${name}`,
+    help: 'Toplamlar filtreden bağımsız olarak bu Komitenin tüm Ders ve Konularını kapsar. Tekrar uyarısı için Konuya bağlı tekrar kaydı ve zamanı gelmiş bağlı kart gerekir. Kartların güncel bağlantısı ile tekrarın kaydedildiği bağlantı ayrıdır. Çalışma kaydı yalnızca bilgidir, puan değildir.',
+  },
   subjectEvidence: {
     reviews: (n:number) => `Bu Dersin Konuları için kaydedilen tekrar: ${n}`,
     topics: (n:number) => `Konu: ${n}`, studied: (n:number) => `Çalışma kaydı olan Konu: ${n}`,

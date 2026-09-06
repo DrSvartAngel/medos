@@ -3,6 +3,13 @@
 // Schema v5, study logic, hydration, and preference normalization are unchanged.
 
 const en = {
+  committeeEvidence: {
+    subjects: (n:number) => `Subjects: ${n}`, attentionSubjects: (n:number) => `Subjects with review-attention topics: ${n}`,
+    reviews: (n:number) => `Reviews recorded for this committee's topics: ${n}`,
+    all: 'All subjects', empty: 'No subjects yet.', noneAttention: 'No subjects currently contain review-attention topics.',
+    more: 'Show more subjects', open: (name:string) => `Open subject: ${name}`,
+    help: 'Totals include every subject and topic in this committee, regardless of the filter. Review attention requires topic-linked reviews and a currently due linked card. Current card links and rating-time review links remain separate. Study activity is context only, not a score.',
+  },
   subjectEvidence: {
     reviews: (n:number) => `Reviews recorded for this subject's topics: ${n}`,
     topics: (n:number) => `Topics: ${n}`, studied: (n:number) => `Topics with recorded study activity: ${n}`,

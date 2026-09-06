@@ -1,4 +1,5 @@
 import { SubjectList } from '@/components/curriculum/SubjectList';
+import { CommitteeLearningEvidence } from '@/components/curriculum/CommitteeLearningEvidence';
 import { useTranslation } from '@/i18n';
 import React, { useCallback } from 'react';
 import { ActivityIndicator, Alert, BackHandler, StyleSheet, TouchableOpacity, View } from 'react-native';
@@ -260,6 +261,7 @@ export default function CommitteeDetailScreen() {
       </Card>
 
       <SubjectList key={committee.id} committeeId={committee.id} />
+      <CommitteeLearningEvidence key={`evidence-${committee.id}`} committeeId={committee.id} />
       <Button label={t.examPlan.title} variant="secondary"
         onPress={() => router.push(`/committees/exam-plan/${encodeURIComponent(committee.id)}` as Href)} />
 

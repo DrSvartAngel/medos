@@ -54,7 +54,48 @@ async function fixture(run) {
 }
 async function main() {
   const evidenceState=load('utils/topicEvidenceRules.ts').topicReviewEvidenceState;
+  const committeeRules=load('utils/committeeEvidenceRules.ts');
   const subjectRules=load('utils/subjectEvidenceRules.ts',{'./topicEvidenceRules':load('utils/topicEvidenceRules.ts')});
+  await check('Committee totals equal all Subject-derived evidence including empty Subjects and exact attention counts',()=>fixture((db,r)=>{
+    curriculum(db);
+    db.execSync("INSERT INTO subjects(id,committee_id,name,created_at,updated_at) VALUES ('a','committee','Empty',1,1),('b','committee','Other',1,1); INSERT INTO topics(id,subject_id,name,created_at,updated_at) VALUES ('future','b','Future',1,1),('untracked','b','Untracked',2,2),('due-no-review','b','Due',3,3)");
+    r.insertCard({...card('one'),topicId:'t'});r.insertCard({...card('two'),topicId:'future'});r.insertCard({...card('three'),topicId:'due-no-review'});
+    r.insertReview({id:'r1',cardId:'one',rating:'again',reviewedAt:1});r.insertReview({id:'r2',cardId:'one',rating:'again',reviewedAt:2});
+    r.insertReview({id:'r3',cardId:'two',rating:'good',reviewedAt:1});
+    db.execSync("UPDATE flashcards SET schedule_state='learning',next_review=1 WHERE id='three'; INSERT INTO focus_sessions(id,topic_id,duration_sec,actual_duration_sec,completed,cancelled,started_at,ended_at) VALUES ('f','t',30,30,0,1,1,30001),('f2','t',30,30,1,0,1,30001)");
+    const rows=r.getCommitteeLearningEvidence('committee',600002);
+    assert.deepEqual(rows.map(x=>x.id),['a','b','s']);
+    for(const row of rows){
+      const expected=subjectRules.summarizeSubjectEvidence(r.getSubjectLearningEvidence(row.id,600002));
+      const {id,name,...actual}=row;assert.deepEqual(actual,expected);
+    }
+    assert.deepEqual(committeeRules.summarizeCommitteeEvidence(rows),{subjects:3,topics:5,studiedTopics:1,linkedCards:3,linkedReviews:3,dueCards:2,attentionTopics:1,attentionSubjects:1,nextReviewAt:259200001});
+    assert.deepEqual(committeeRules.filterCommitteeEvidence(rows,true).map(x=>x.id),['s']);
+    assert.deepEqual(committeeRules.filterCommitteeEvidence(rows,false),rows);
+    assert.equal(rows[1].attentionTopics,0);assert.equal(rows[0].topics,0);
+    r.insertReview({id:'r4',cardId:'three',rating:'again',reviewedAt:3});
+    assert.equal(committeeRules.summarizeCommitteeEvidence(r.getCommitteeLearningEvidence('committee',600003)).attentionSubjects,2);
+  }));
+  await check('Committee scope excludes other committees/legacy unlinked records and query count stays constant',()=>fixture((db,r)=>{
+    curriculum(db);db.execSync("INSERT INTO committees(id,name,subject,created_at) VALUES ('other','Other','',1); INSERT INTO subjects(id,committee_id,name,created_at,updated_at) VALUES ('outside','other','Outside',1,1); INSERT INTO topics(id,subject_id,name,created_at,updated_at) VALUES ('outside-topic','outside','Outside',1,1)");
+    r.insertCard({...card('outside'),topicId:'outside-topic'});r.insertReview({id:'outside',cardId:'outside',rating:'again',reviewedAt:1});
+    r.insertCard(card('legacy'));r.insertReview({id:'legacy',cardId:'legacy',rating:'again',reviewedAt:1});
+    for(let i=0;i<55;i++)db.runSync('INSERT INTO subjects(id,committee_id,name,created_at,updated_at) VALUES (?,?,?,?,?)',['x'+i,'committee',"Ders O'Brien",2,2]);
+    let queries=0;const first=db.getFirstSync.bind(db),all=db.getAllSync.bind(db);
+    db.getFirstSync=(...a)=>{queries++;return first(...a);};db.getAllSync=(...a)=>{queries++;return all(...a);};
+    const rows=r.getCommitteeLearningEvidence('committee',600001);assert.equal(queries,2);assert.equal(rows.length,56);
+    const sum=committeeRules.summarizeCommitteeEvidence(rows);assert.equal(sum.linkedReviews,0);assert.equal(sum.linkedCards,0);assert.equal(sum.attentionSubjects,0);
+    assert.throws(()=>r.getCommitteeLearningEvidence('missing'));assert.throws(()=>r.getCommitteeLearningEvidence('committee',NaN));
+    db.getAllSync=()=>{throw Error('unavailable');};assert.throws(()=>r.getCommitteeLearningEvidence('committee'));
+  }));
+  await check('Committee view keeps curriculum order, totals before filtering/paging, focused refresh and no scoring',()=>{
+    const ui=read('components/curriculum/CommitteeLearningEvidence.tsx');
+    for(const text of ['summarizeCommitteeEvidence(rows)','filterCommitteeEvidence(rows, attentionOnly)','filtered.slice(0,visible)','useFocusEffect','AppState.addEventListener','clearTimeout(timer)','listener.remove()','deadline - Date.now()','/subjects/${encodeURIComponent(row.id)}','accessibilityLabel'])assert.ok(ui.includes(text));
+    assert.match(read('app/committees/[id].tsx'),/CommitteeLearningEvidence/);
+    assert.doesNotMatch(ui,/setInterval|scheduleReview|examPlan|mastery|percentage|retention|useFocusStore/);
+    for(const lang of ['en','tr'])assert.ok(load('i18n/'+lang+'.ts').default.committeeEvidence.noneAttention);
+    assert.match(migrations,/const CURRENT_VERSION = 10/);assert.doesNotMatch(migrations,/currentVersion < 11/);
+  });
   await check('Subject aggregates equal exact Topic facts, preserve order and filter only approved attention',()=>fixture((db,r)=>{
     curriculum(db);
     db.execSync("INSERT INTO topics(id,subject_id,name,created_at,updated_at) VALUES ('a','s','Untracked',1,1),('b','s','Future',1,1),('c0','s','Due without review',1,1)");
