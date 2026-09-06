@@ -1,9 +1,9 @@
 # MedOS — compact handoff
 
-## Phase 5.6 — Technical closure — COMPLETE; combined physical QA PENDING
+## Master Phase 5 — CLOSED after user-confirmed physical QA
 
-- Started from clean main db3a6fa, equal to origin/main. Branch phase-5-6-phase5-closure; no automatic merge.
-- Phase 5.1–5.6 technically complete; Master Phase 5 remains ACTIVE until the user completes combined physical QA and reports results. Phase 6 NOT STARTED.
+- Closure recorded on main after verifying a clean tree and main == origin/main at 1368fc3 (Phase 5.6 merged). This update changes only the four project-memory documents.
+- Phase 5.1–5.6 implementation and technical closure COMPLETE. User explicitly confirmed phone PASS, tablet PASS and combined Phase 5.1–5.6 physical QA PASS. Master Phase 5 CLOSED. Phase 6 NOT STARTED.
 - Final attention semantics unchanged: recorded Topic-linked reviews AND a currently due linked card on THAT Topic. No cross-Topic inference, scores, percentages, mastery, retention or Focus+Memory weighting. Unknown remains unknown.
 - Exact current-card counts and rating-time review snapshots remain separate; relinking never moves old review evidence. Subject/Committee totals include every owned record, independent of filters/display limits, without join multiplication.
 - Safe refactor: identical Subject/Committee card/review/Focus aggregation CTEs now share one repository-local SQL fragment. No query/API/ownership change. Topic predicate and SQL attention condition are checked against each other across time boundaries.
@@ -12,13 +12,13 @@
 - Topic deletion nulls Card/Review/Focus references and preserves historical records; existing Card/Deck deletion semantics unchanged. Exam Plan unchanged. Objectives descriptive only.
 - Schema v10, packages/lockfile/dependencies/stores unchanged. No PDF/Gemini; broad localization remains deferred.
 - Modified Topic detail, memoryRepo, validate-phase5 and four project-memory docs. No new product feature or UI redesign.
-- Static: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS, Phase 3 85 PASS, Phase 4 43 PASS, Phase 5 29 PASS (178 total). Existing regression groups retained. Source/in-memory validation is not physical QA.
-- Phase 5.1–5.6 combined phone/tablet physical QA PENDING. Prior individual statuses retained: 5.1 DEFERRED; 5.2–5.5 PENDING. No physical/emulator/ADB automation performed. Older phase QA states unchanged.
-- One combined user walkthrough is recorded under “Combined Phase 5 physical QA” in AGENT_HANDOFF.md. Next: run that walkthrough on phone and tablet, report results, then explicit merge/closure approval. Do not start Phase 6 automatically.
+- Closure validation rerun: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS, Phase 3 85 PASS, Phase 4 43 PASS, Phase 5 29 PASS (178 total). Existing regression groups retained. Static/in-memory results are separate from the user-confirmed physical QA above.
+- Phase 5.1–5.6 combined physical QA: phone PASS; tablet PASS; combined walkthrough PASS, reported by the user. This supersedes historical Phase 5 PENDING/DEFERRED entries below, not unrelated older phase QA. No physical/emulator/ADB automation was performed by the agent.
+- Next roadmap phase: Phase 6 — Motivation, NOT STARTED. Await explicit scope/implementation approval; no Phase 6 or PDF/Gemini work is authorized by this closure.
 
 ## Combined Phase 5 physical QA
 
-Run once on Android phone and tablet (portrait/landscape), record each device separately. Use disposable test data for deletion checks. All items are PENDING until user confirmation.
+User-confirmed result: phone PASS; tablet PASS; combined Phase 5.1–5.6 walkthrough PASS. The checklist below is retained as closure coverage, not a new test request. Evidence is user-reported, not agent device automation.
 
 1. Restart: existing cards/reviews/linkage survive; new vs previously-reviewed-unscheduled labels are truthful.
 2. Review: all four ratings, stored next dates, Again 10-minute boundary with no same-session reinsertion; early/full-deck rescheduling, due excludes future, Lighter Plan remains max-five.
