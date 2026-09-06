@@ -53,6 +53,58 @@ async function fixture(run) {
   } finally { db.closeSync(); }
 }
 async function main() {
+  const evidenceState=load('utils/topicEvidenceRules.ts').topicReviewEvidenceState;
+  await check('Attention requires recorded topic reviews AND due linked cards; unknown is not weak',()=>{
+    for(const dueCards of [0,1,8])assert.equal(evidenceState({linkedReviews:0,dueCards}),'insufficient');
+    assert.equal(evidenceState({linkedReviews:2,dueCards:0}),'available');
+    assert.equal(evidenceState({linkedReviews:2,dueCards:1}),'attention');
+    assert.throws(()=>evidenceState({linkedReviews:NaN,dueCards:0}));
+    assert.throws(()=>evidenceState({linkedReviews:1,dueCards:-1}));
+    assert.doesNotMatch(read('utils/topicEvidenceRules.ts'),/learningObjectives|focusRepo|percentage|rating|again|hard/);
+  });
+  await check('Exact Topic counts distinguish unscheduled, future and due boundaries without multiplying reviews',()=>fixture((db,r)=>{
+    curriculum(db);
+    assert.deepEqual({...r.getTopicLearningEvidence('t',1000)},{linkedCards:0,linkedReviews:0,dueCards:0,nextReviewAt:null});
+    r.insertCard({...card('a'),topicId:'t'});r.insertCard({...card('b'),topicId:'t'});r.insertCard(card('legacy'));
+    r.insertReview({id:'old',cardId:'legacy',rating:'again',reviewedAt:1000});
+    assert.equal(r.getTopicLearningEvidence('t',999999).dueCards,0);
+    r.insertReview({id:'a1',cardId:'a',rating:'again',reviewedAt:1000});
+    r.insertReview({id:'b1',cardId:'b',rating:'good',reviewedAt:1000});
+    r.insertReview({id:'b2',cardId:'b',rating:'hard',reviewedAt:2000});
+    const before=r.getTopicLearningEvidence('t',600999);
+    assert.deepEqual({...before},{linkedCards:2,linkedReviews:3,dueCards:0,nextReviewAt:601000});
+    assert.equal(evidenceState(before),'available');
+    const at=r.getTopicLearningEvidence('t',601000);
+    assert.equal(at.dueCards,1);assert.equal(evidenceState(at),'attention');
+    assert.equal(at.nextReviewAt,2000+4*86400000);
+    assert.equal(r.getTopicLearningEvidence('t2',601000).linkedReviews,0);
+    db.runSync("UPDATE topics SET learning_objectives='Many lines' WHERE id='t'");
+    assert.deepEqual(r.getTopicLearningEvidence('t',601000),at);
+  }));
+  await check('Relinking preserves snapshot counts, legacy evidence stays unlinked, missing/error is not zero',()=>fixture((db,r)=>{
+    curriculum(db);r.insertCard({...card(),topicId:'t'});
+    r.insertReview({id:'r',cardId:'c',rating:'again',reviewedAt:1});
+    r.updateCard({...r.getCardById('c'),topicId:'t2'});
+    assert.deepEqual({...r.getTopicLearningEvidence('t',600001)},{linkedCards:0,linkedReviews:1,dueCards:0,nextReviewAt:null});
+    const moved=r.getTopicLearningEvidence('t2',600001);
+    assert.equal(moved.linkedCards,1);assert.equal(moved.dueCards,1);assert.equal(moved.linkedReviews,0);
+    assert.equal(evidenceState(moved),'insufficient');
+    db.runSync("DELETE FROM topics WHERE id='t2'");assert.equal(r.getCardById('c').topicId,null);assert.equal(r.getReviewCount(),1);
+    assert.throws(()=>r.getTopicLearningEvidence('t2'));assert.throws(()=>r.getTopicLearningEvidence('t',NaN));
+    db.getFirstSync=()=>{throw Error('unavailable');};assert.throws(()=>r.getTopicLearningEvidence('t'));
+  }));
+  await check('Evidence presentation is focus/foreground/deadline refreshed, cleaned on blur, factual and bilingual',()=>{
+    const source=read('components/memory/TopicReviewEvidence.tsx');
+    for(const text of ['useFocusEffect','AppState.addEventListener','clearTimeout(timer)','listener.remove()','next.nextReviewAt - Date.now()','topicReviewEvidenceState(evidence)'])assert.ok(source.includes(text));
+    assert.doesNotMatch(source,/setInterval|useFocusStore|focusRepo|scheduleReview|learningObjectives/);
+    assert.match(source,/evidence === undefined/);assert.match(source,/evidence === null/);
+    for(const lang of ['en','tr']){
+      const copy=load('i18n/'+lang+'.ts').default.topicEvidence;
+      for(const key of ['title','attention','available','insufficient','help'])assert.ok(copy[key]);
+      for(const key of ['cards','reviews','due'])assert.ok(copy[key](3).includes('3'));
+    }
+    assert.match(migrations,/const CURRENT_VERSION = 10/);assert.doesNotMatch(migrations,/currentVersion < 11/);
+  });
   await check('v9 to v10 preserves legacy cards/reviews, defaults null and rolls back both link columns', async()=>{
     const db=new Adapter();
     const v9=migrations.slice(0,migrations.indexOf('  if (currentVersion < 10)'))+'\n}\nexport { CURRENT_VERSION };';
@@ -141,7 +193,7 @@ async function main() {
     curriculum(db);assert.equal(r.hasTopicReviewActivity('t'),false);
     db.getFirstSync=()=>{throw Error('unavailable');};assert.throws(()=>r.hasTopicReviewActivity('t'));
     const source=read('components/memory/TopicReviewEvidence.tsx');
-    assert.match(source,/useFocusEffect/);assert.match(source,/recorded === null/);assert.match(source,/t.common.retry/);
+    assert.match(source,/useFocusEffect/);assert.match(source,/evidence === null/);assert.match(source,/t.common.retry/);
     assert.doesNotMatch(source,/schedule|percentage|mastery|learningObjectives|weak|dueAt/);
   }));
   await check('Phase 5.2 UI wiring uses optional local state, EN/TR, Foundation and stack safe-area',()=>{

@@ -5,6 +5,14 @@
 import type { Strings } from './en';
 
 const tr: Strings = {
+  topicEvidence: {
+    title: 'Öğrenme kanıtları', attention: 'Bağlı kartlar arasında tekrar zamanı gelenler var',
+    available: 'Tekrar kanıtı var', insufficient: 'Konuya bağlı yeterli tekrar kanıtı yok',
+    cards: (n:number) => `Şu anda bağlı kart: ${n}`,
+    reviews: (n:number) => `Bu Konu için kaydedilen tekrar: ${n}`,
+    due: (n:number) => `Tekrar zamanı gelen bağlı kart: ${n}`,
+    help: 'Tekrar uyarısı, Konuya ait tekrar kaydı ve şu anda bağlı, tekrar zamanı gelmiş kart bulunduğunu gösterir. Tekrar tarihi belirlenmemiş kartlar bu sayıya katılmaz. Kartın Konusu değişse de eski tekrarların Konusu değişmez. Bu, öğrenme veya tamamlanma ölçütü değildir; Odak kaydı ayrı bir bilgidir.',
+  },
   memoryTopic: {
     label: 'Konu (isteğe bağlı)', choose: 'Konu seç veya değiştir', unlink: 'Konu bağlantısını kaldır', close: 'Konu seçimini kapat',
     none: 'Konu bağlantısı yok', help: 'İsteğe bağlıdır. Yeni tekrarlar, yanıt kaydedilirken bağlı olan Konuya aittir. Önceki tekrarların Konusu değiştirilmez.',

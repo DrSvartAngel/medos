@@ -3,6 +3,14 @@
 // Schema v5, study logic, hydration, and preference normalization are unchanged.
 
 const en = {
+  topicEvidence: {
+    title: 'Learning evidence', attention: 'Linked cards need review attention',
+    available: 'Review evidence available', insufficient: 'Not enough linked review evidence',
+    cards: (n:number) => `Currently linked cards: ${n}`,
+    reviews: (n:number) => `Reviews recorded for this topic: ${n}`,
+    due: (n:number) => `Currently due linked cards: ${n}`,
+    help: 'Review attention means recorded topic reviews exist and currently linked cards are due. Unscheduled cards are not counted as due. Past reviews keep their original topic when cards are relinked. This is not a measure of learning or completion; Focus activity is separate context.',
+  },
   memoryTopic: {
     label: 'Topic (optional)', choose: 'Choose or change topic', unlink: 'Remove topic link', close: 'Close topic selection',
     none: 'No topic linked', help: 'Optional. New reviews use the topic linked when the rating is saved. Earlier reviews are not reassigned.',

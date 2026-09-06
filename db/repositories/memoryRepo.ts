@@ -107,6 +107,21 @@ function checkedTopicId(value: unknown): string | null {
 }
 
 export const memoryRepo = {
+  // Card counts describe current links; review counts describe rating-time snapshots.
+  getTopicLearningEvidence(topicId: string, now = Date.now()): {
+    linkedCards: number; linkedReviews: number; dueCards: number; nextReviewAt: number | null;
+  } {
+    if (typeof topicId !== 'string' || !topicId.trim() || !Number.isSafeInteger(now) || now < 0) throw new Error('Evidence unavailable');
+    const row = getDB().getFirstSync<{linkedCards:number;linkedReviews:number;dueCards:number;nextReviewAt:number|null}>(
+      `SELECT
+       (SELECT COUNT(*) FROM flashcards WHERE topic_id=t.id) AS linkedCards,
+       (SELECT COUNT(*) FROM flashcard_reviews WHERE topic_id=t.id) AS linkedReviews,
+       (SELECT COUNT(*) FROM flashcards WHERE topic_id=t.id AND schedule_state != 'unscheduled' AND next_review <= ?) AS dueCards,
+       (SELECT MIN(next_review) FROM flashcards WHERE topic_id=t.id AND schedule_state != 'unscheduled' AND next_review > ?) AS nextReviewAt
+       FROM topics t WHERE t.id = ?`, [now,now,topicId]);
+    if (!row) throw new Error('Evidence unavailable');
+    return row;
+  },
   getTopicLinkContext(topicId: string): { topic: string; subject: string; committee: string } | null {
     return getDB().getFirstSync<{topic:string;subject:string;committee:string}>(
       `SELECT t.name AS topic, s.name AS subject, c.name AS committee FROM topics t
