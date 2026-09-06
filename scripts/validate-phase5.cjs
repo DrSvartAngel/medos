@@ -56,6 +56,58 @@ async function main() {
   const evidenceState=load('utils/topicEvidenceRules.ts').topicReviewEvidenceState;
   const committeeRules=load('utils/committeeEvidenceRules.ts');
   const subjectRules=load('utils/subjectEvidenceRules.ts',{'./topicEvidenceRules':load('utils/topicEvidenceRules.ts')});
+  await check('Closure truth table agrees across Topic, Subject and Committee without cross-Topic attention',()=>fixture((db,r)=>{
+    curriculum(db);r.insertCard({...card('due'),topicId:'t'});r.insertCard({...card('future'),topicId:'t2'});
+    db.runSync("UPDATE flashcards SET schedule_state='learning',next_review=1000 WHERE id='due'");
+    r.insertReview({id:'r',cardId:'future',rating:'good',reviewedAt:1});
+    function compare(at) {
+      const topics=r.getSubjectLearningEvidence('s',at),subjects=r.getCommitteeLearningEvidence('committee',at);
+      const subject=subjectRules.summarizeSubjectEvidence(topics),committee=committeeRules.summarizeCommitteeEvidence(subjects);
+      let attention=0;
+      for(const row of topics){
+        const topic=r.getTopicLearningEvidence(row.id,at);
+        assert.equal(evidenceState(row),evidenceState(topic));
+        if(evidenceState(topic)==='attention')attention++;
+      }
+      assert.equal(subject.attentionTopics,attention);assert.equal(committee.attentionTopics,attention);
+      for(const key of ['topics','studiedTopics','linkedCards','linkedReviews','dueCards','nextReviewAt'])assert.equal(committee[key],subject[key]);
+      return committee;
+    }
+    // One Topic has due cards, the other reviews: the Committee must NOT infer attention.
+    assert.equal(compare(1000).attentionSubjects,0);
+    r.insertReview({id:'r2',cardId:'due',rating:'again',reviewedAt:1000});
+    assert.equal(compare(600999).attentionTopics,0);assert.equal(compare(601000).attentionTopics,1);
+    assert.equal(compare(259200001).attentionTopics,2);
+    db.runSync("UPDATE topics SET learning_objectives='One\nTwo' WHERE subject_id='s'");
+    assert.equal(compare(601000).attentionTopics,1);
+  }));
+  await check('Closure relink/delete preserves original review attribution, Focus history and schedule',()=>fixture((db,r)=>{
+    curriculum(db);r.insertCard({...card(),topicId:'t'});
+    r.insertReview({id:'r',cardId:'c',rating:'good',reviewedAt:1000});
+    db.execSync("INSERT INTO focus_sessions(id,topic_id,duration_sec,actual_duration_sec,completed,cancelled,started_at,ended_at) VALUES ('f','t',60,60,1,0,1,60001)");
+    r.updateCard({...r.getCardById('c'),topicId:'t2'});
+    assert.equal(r.getTopicLearningEvidence('t').linkedReviews,1);assert.equal(r.getTopicLearningEvidence('t2').linkedReviews,0);
+    const schedule=r.getCardById('c').schedule;
+    db.runSync('DELETE FROM topics WHERE id=?',['t']);
+    assert.equal(db.getFirstSync('SELECT topic_id FROM flashcard_reviews').topic_id,null);
+    assert.equal(db.getFirstSync('SELECT topic_id FROM focus_sessions').topic_id,null);
+    assert.equal(db.getFirstSync('SELECT actual_duration_sec FROM focus_sessions').actual_duration_sec,60);
+    assert.equal(r.getReviewCount(),1);
+    db.runSync('DELETE FROM topics WHERE id=?',['t2']);
+    assert.equal(r.getCardById('c').topicId,null);assert.deepEqual(r.getCardById('c').schedule,schedule);
+    assert.equal(r.getReviewCount(),1);assert.deepEqual(db.getAllSync('PRAGMA foreign_key_check'),[]);
+  }));
+  await check('Closure uses shared aggregation, foreground Focus refresh and existing accessible evidence surfaces',()=>{
+    const repoSource=read('db/repositories/memoryRepo.ts');
+    assert.equal((repoSource.match(/const TOPIC_EVIDENCE_CTES/g)||[]).length,1);
+    assert.equal((repoSource.match(/\$\{TOPIC_EVIDENCE_CTES\}/g)||[]).length,2);
+    const topic=read('app/topics/[id].tsx');assert.match(topic,/AppState.addEventListener/);assert.match(topic,/listener.remove\(\)/);
+    for(const file of ['components/memory/TopicReviewEvidence.tsx','components/curriculum/SubjectLearningEvidence.tsx','components/curriculum/CommitteeLearningEvidence.tsx']) {
+      const ui=read(file);for(const text of ['useFocusEffect','listener.remove()','clearTimeout(timer)','t.common.retry'])assert.ok(ui.includes(text));
+      assert.doesNotMatch(ui,/setInterval|masteryPercent|progressPercent|retentionPercent|scheduleReview/);
+    }
+    assert.match(migrations,/const CURRENT_VERSION = 10/);assert.doesNotMatch(migrations,/currentVersion < 11/);
+  });
   await check('Committee totals equal all Subject-derived evidence including empty Subjects and exact attention counts',()=>fixture((db,r)=>{
     curriculum(db);
     db.execSync("INSERT INTO subjects(id,committee_id,name,created_at,updated_at) VALUES ('a','committee','Empty',1,1),('b','committee','Other',1,1); INSERT INTO topics(id,subject_id,name,created_at,updated_at) VALUES ('future','b','Future',1,1),('untracked','b','Untracked',2,2),('due-no-review','b','Due',3,3)");

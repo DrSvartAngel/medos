@@ -1,5 +1,24 @@
 # MedOS — Last Agent Report
 
+## Phase 5.6 — Technical closure — COMPLETE; combined physical QA PENDING
+
+- Started from clean main db3a6fa, equal to origin/main. Branch phase-5-6-phase5-closure; no automatic merge.
+- Phase 5.1–5.6 technically complete; Master Phase 5 remains ACTIVE until the user completes combined physical QA and reports results. Phase 6 NOT STARTED.
+- Final attention semantics unchanged: recorded Topic-linked reviews AND a currently due linked card on THAT Topic. No cross-Topic inference, scores, percentages, mastery, retention or Focus+Memory weighting. Unknown remains unknown.
+- Exact current-card counts and rating-time review snapshots remain separate; relinking never moves old review evidence. Subject/Committee totals include every owned record, independent of filters/display limits, without join multiplication.
+- Safe refactor: identical Subject/Committee card/review/Focus aggregation CTEs now share one repository-local SQL fragment. No query/API/ownership change. Topic predicate and SQL attention condition are checked against each other across time boundaries.
+- Refresh fix: Topic detail revalidates its hierarchy and Focus evidence on foreground while focused; listener cleaned on blur. Existing evidence panels already handle focus/foreground/due boundaries. No polling or broad UI redesign.
+- SRS unchanged: Again +10 minutes, interval reset to zero, no same-session reinsertion. First scheduled non-Again (also after reset) Hard 1d / Good 3d / Easy 7d; later Hard ×1.2 / Good ×2 / Easy ×3, ceil and at least previous+1 day. Early/free ratings reschedule from rating time. Atomic history+schedule, due-first queue, legacy unscheduled distinction, full-deck and Lighter Plan max-five preserved.
+- Topic deletion nulls Card/Review/Focus references and preserves historical records; existing Card/Deck deletion semantics unchanged. Exam Plan unchanged. Objectives descriptive only.
+- Schema v10, packages/lockfile/dependencies/stores unchanged. No PDF/Gemini; broad localization remains deferred.
+- Modified Topic detail, memoryRepo, validate-phase5 and four project-memory docs. No new product feature or UI redesign.
+- Static: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21 PASS, Phase 3 85 PASS, Phase 4 43 PASS, Phase 5 29 PASS (178 total). Existing regression groups retained. Source/in-memory validation is not physical QA.
+- Phase 5.1–5.6 combined phone/tablet physical QA PENDING. Prior individual statuses retained: 5.1 DEFERRED; 5.2–5.5 PENDING. No physical/emulator/ADB automation performed. Older phase QA states unchanged.
+- One combined user walkthrough is recorded under “Combined Phase 5 physical QA” in AGENT_HANDOFF.md. Next: run that walkthrough on phone and tablet, report results, then explicit merge/closure approval. Do not start Phase 6 automatically.
+
+## Phase 5.5 checkpoint (historical)
+
+
 ## Phase 5.5 — Committee Learning Evidence — IMPLEMENTATION COMPLETE
 
 - Started from clean main 46b9652, equal to origin/main. Branch phase-5-5-committee-learning-evidence; no automatic merge.

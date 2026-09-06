@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Alert, BackHandler } from 'react-native';
+import { Alert, AppState, BackHandler } from 'react-native';
 import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { committeeRepo } from '@/db/repositories/committeeRepo';
 import { subjectRepo } from '@/db/repositories/subjectRepo';
@@ -56,7 +56,11 @@ export default function TopicDetailScreen() {
       if (topic && subject && committee) loadEvidence();
     } catch { setData({ status: 'error' }); }
   }, [id]);
-  useFocusEffect(useCallback(() => { load(); }, [load]));
+  useFocusEffect(useCallback(() => {
+    load();
+    const listener = AppState.addEventListener('change', state => { if (state === 'active') load(); });
+    return () => listener.remove();
+  }, [load]));
   function target(committeeOnly = false): Href {
     try { return topicFallback(context.current.committeeId, committeeOnly ? '' : context.current.subjectId) as Href; }
     catch { return '/(tabs)/committees'; }
