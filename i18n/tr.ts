@@ -5,6 +5,16 @@
 import type { Strings } from './en';
 
 const tr: Strings = {
+  subjectEvidence: {
+    reviews: (n:number) => `Bu Dersin Konuları için kaydedilen tekrar: ${n}`,
+    topics: (n:number) => `Konu: ${n}`, studied: (n:number) => `Çalışma kaydı olan Konu: ${n}`,
+    attention: (n:number) => `Tekrar uyarısı olan Konu: ${n}`,
+    all: 'Tüm Konular', filter: 'Tekrar uyarısı olanlar', selected: (s:string) => `${s} — seçili`,
+    empty: 'Henüz Konu yok.', noneAttention: 'Şu anda tekrar uyarısı koşulunu karşılayan Konu yok.', more: 'Daha fazla Konu göster',
+    row: (cards:number,reviews:number,due:number) => `Kart: ${cards} · Tekrar: ${reviews} · Zamanı gelen: ${due}`,
+    open: (name:string) => `Konuyu aç: ${name}`,
+    help: 'Toplamlar filtreden bağımsız olarak bu Dersin tüm Konularını kapsar. Kartlar güncel bağlantıyı, tekrarlar kaydedildikleri Konuyu gösterir. Uyarı için Konuya ait tekrar kaydı ve zamanı gelmiş bağlı kart gerekir. Tekrar tarihi belirlenmemiş kartlar dahil değildir. Çalışma kaydı ayrı bir bilgidir, puan değildir.',
+  },
   topicEvidence: {
     title: 'Öğrenme kanıtları', attention: 'Bağlı kartlar arasında tekrar zamanı gelenler var',
     available: 'Tekrar kanıtı var', insufficient: 'Konuya bağlı yeterli tekrar kanıtı yok',

@@ -107,6 +107,32 @@ function checkedTopicId(value: unknown): string | null {
 }
 
 export const memoryRepo = {
+  getSubjectLearningEvidence(subjectId: string, now = Date.now()): {
+    id: string; name: string; studyRecorded: number; linkedCards: number; linkedReviews: number;
+    dueCards: number; nextReviewAt: number | null;
+  }[] {
+    if (typeof subjectId !== 'string' || !subjectId.trim() || !Number.isSafeInteger(now) || now < 0) throw new Error('Evidence unavailable');
+    const db = getDB();
+    if (!db.getFirstSync('SELECT id FROM subjects WHERE id=?', [subjectId])) throw new Error('Subject unavailable');
+    // Aggregate each evidence source separately to avoid multiplying cards/reviews/Focus rows.
+    return db.getAllSync(`WITH scope AS (SELECT id,name,created_at FROM topics WHERE subject_id=?),
+      cards AS (SELECT f.topic_id,COUNT(*) AS linkedCards,
+        SUM(CASE WHEN f.schedule_state != 'unscheduled' AND f.next_review <= ? THEN 1 ELSE 0 END) AS dueCards,
+        MIN(CASE WHEN f.schedule_state != 'unscheduled' AND f.next_review > ? THEN f.next_review END) AS nextReviewAt
+        FROM flashcards f JOIN scope ON scope.id=f.topic_id GROUP BY f.topic_id),
+      reviews AS (SELECT r.topic_id,COUNT(*) AS linkedReviews FROM flashcard_reviews r
+        JOIN scope ON scope.id=r.topic_id GROUP BY r.topic_id),
+      study AS (SELECT DISTINCT f.topic_id FROM focus_sessions f JOIN scope ON scope.id=f.topic_id
+        WHERE typeof(f.actual_duration_sec) = 'integer' AND f.actual_duration_sec > 0
+        AND f.ended_at IS NOT NULL AND f.ended_at >= f.started_at
+        AND ((f.completed = 1 AND f.cancelled = 0) OR
+          (f.cancelled = 1 AND f.completed = 0 AND f.actual_duration_sec >= 30)))
+      SELECT scope.id,scope.name,CASE WHEN study.topic_id IS NULL THEN 0 ELSE 1 END AS studyRecorded,
+        COALESCE(cards.linkedCards,0) AS linkedCards,COALESCE(reviews.linkedReviews,0) AS linkedReviews,
+        COALESCE(cards.dueCards,0) AS dueCards,cards.nextReviewAt
+      FROM scope LEFT JOIN cards ON cards.topic_id=scope.id LEFT JOIN reviews ON reviews.topic_id=scope.id
+      LEFT JOIN study ON study.topic_id=scope.id ORDER BY scope.created_at ASC,scope.id ASC`, [subjectId,now,now]);
+  },
   // Card counts describe current links; review counts describe rating-time snapshots.
   getTopicLearningEvidence(topicId: string, now = Date.now()): {
     linkedCards: number; linkedReviews: number; dueCards: number; nextReviewAt: number | null;

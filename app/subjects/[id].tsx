@@ -1,6 +1,7 @@
 import React, { useCallback, useRef, useState } from 'react';
 import { Alert, BackHandler } from 'react-native';
 import { TopicList } from '@/components/curriculum/TopicList';
+import { SubjectLearningEvidence } from '@/components/curriculum/SubjectLearningEvidence';
 import { Section } from '@/components/ui/Section';
 import { FeedbackState } from '@/components/ui/FeedbackState';
 import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
@@ -91,6 +92,7 @@ export default function SubjectDetailScreen() {
         {deleteError && <FeedbackState kind="error" message={t.subjects.deleteError} />}
         <Button label={t.subjects.remove} variant="danger" onPress={remove} />
         <TopicList key={data.subject.id} subjectId={data.subject.id} />
+        <SubjectLearningEvidence key={`evidence-${data.subject.id}`} subjectId={data.subject.id} />
       </>}
     </Section>
   </ScreenWrapper>;

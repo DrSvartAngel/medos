@@ -54,6 +54,56 @@ async function fixture(run) {
 }
 async function main() {
   const evidenceState=load('utils/topicEvidenceRules.ts').topicReviewEvidenceState;
+  const subjectRules=load('utils/subjectEvidenceRules.ts',{'./topicEvidenceRules':load('utils/topicEvidenceRules.ts')});
+  await check('Subject aggregates equal exact Topic facts, preserve order and filter only approved attention',()=>fixture((db,r)=>{
+    curriculum(db);
+    db.execSync("INSERT INTO topics(id,subject_id,name,created_at,updated_at) VALUES ('a','s','Untracked',1,1),('b','s','Future',1,1),('c0','s','Due without review',1,1)");
+    r.insertCard({...card('one'),topicId:'t'});r.insertCard({...card('two'),topicId:'b'});r.insertCard({...card('three'),topicId:'c0'});
+    r.insertReview({id:'r1',cardId:'one',rating:'again',reviewedAt:1});
+    r.insertReview({id:'r2',cardId:'one',rating:'again',reviewedAt:2});
+    r.insertReview({id:'r3',cardId:'two',rating:'good',reviewedAt:1});
+    db.runSync("UPDATE flashcards SET schedule_state='learning',next_review=1 WHERE id='three'");
+    db.execSync("INSERT INTO focus_sessions(id,topic_id,duration_sec,actual_duration_sec,completed,cancelled,started_at,ended_at) VALUES ('f','a',30,30,1,0,1,30001),('f2','a',40,40,1,0,1,40001),('false-start','t2',10,10,0,1,1,10001)");
+    const rows=r.getSubjectLearningEvidence('s',600002);
+    assert.deepEqual(rows.map(x=>x.id),['a','b','c0','t','t2']);
+    for(const row of rows) {
+      const one=r.getTopicLearningEvidence(row.id,600002);
+      for(const key of ['linkedCards','linkedReviews','dueCards','nextReviewAt'])assert.equal(row[key],one[key]);
+    }
+    assert.equal(rows[0].studyRecorded,1);assert.equal(rows[4].studyRecorded,0);
+    assert.deepEqual(subjectRules.summarizeSubjectEvidence(rows),{topics:5,studiedTopics:1,linkedCards:3,linkedReviews:3,dueCards:2,attentionTopics:1,nextReviewAt:259200001});
+    assert.deepEqual(subjectRules.filterSubjectEvidence(rows,true).map(x=>x.id),['t']);
+    assert.deepEqual(subjectRules.filterSubjectEvidence(rows,false),rows);
+    assert.equal(evidenceState(rows[0]),'insufficient');assert.equal(evidenceState(rows[1]),'available');assert.equal(evidenceState(rows[2]),'insufficient');
+  }));
+  await check('Subject query is scoped, bounded in query count, independent of presentation limits and legacy records',()=>fixture((db,r)=>{
+    curriculum(db);db.execSync("INSERT INTO subjects(id,committee_id,name,created_at,updated_at) VALUES ('empty','committee','Empty',1,1)");
+    r.insertCard(card('legacy'));r.insertReview({id:'unlinked',cardId:'legacy',rating:'again',reviewedAt:1});
+    for(let i=0;i<55;i++)db.runSync('INSERT INTO topics(id,subject_id,name,created_at,updated_at) VALUES (?,?,?,?,?)',['x'+i,'s','Konu',3,3]);
+    let queries=0;const first=db.getFirstSync.bind(db),all=db.getAllSync.bind(db);
+    db.getFirstSync=(...args)=>{queries++;return first(...args);};db.getAllSync=(...args)=>{queries++;return all(...args);};
+    const rows=r.getSubjectLearningEvidence('s',600001);assert.equal(queries,2);
+    const totals=subjectRules.summarizeSubjectEvidence(rows);assert.equal(totals.topics,57);assert.equal(totals.linkedReviews,0);assert.equal(totals.attentionTopics,0);
+    assert.deepEqual(r.getSubjectLearningEvidence('empty'),[]);assert.throws(()=>r.getSubjectLearningEvidence('missing'));
+    db.getAllSync=()=>{throw Error('unavailable');};assert.throws(()=>r.getSubjectLearningEvidence('s'));
+  }));
+  await check('Subject Focus context exactly matches existing concluded-study predicate, never attention',()=>fixture((db,r)=>{
+    curriculum(db);
+    const focus=load('db/repositories/focusRepo.ts',{'../client':{getDB:()=>db}}).focusRepo;
+    for(const [duration,completed,cancelled,ended] of [[0,1,0,1],[29,0,1,30000],[30,0,1,30001],[1,1,0,2],[60,1,1,60001],[60,1,0,null]]) {
+      db.execSync('DELETE FROM focus_sessions');
+      db.runSync('INSERT INTO focus_sessions(id,topic_id,duration_sec,actual_duration_sec,completed,cancelled,started_at,ended_at) VALUES (?,?,?,?,?,?,?,?)',['f','t',60,duration,completed,cancelled,1,ended]);
+      const row=r.getSubjectLearningEvidence('s')[0];
+      assert.equal(row.studyRecorded===1,focus.hasTopicStudyActivity('t'));assert.equal(evidenceState(row),'insufficient');
+    }
+  }));
+  await check('Subject view uses truthful totals before filtering/paging and cleans focused refresh resources',()=>{
+    const ui=read('components/curriculum/SubjectLearningEvidence.tsx');
+    for(const text of ['summarizeSubjectEvidence(rows)','filterSubjectEvidence(rows, attentionOnly)','filtered.slice(0,visible)','useFocusEffect','AppState.addEventListener','clearTimeout(timer)','listener.remove()','deadline - Date.now()','encodeURIComponent(row.id)','accessibilityLabel'])assert.ok(ui.includes(text));
+    assert.match(read('app/subjects/[id].tsx'),/SubjectLearningEvidence/);
+    assert.doesNotMatch(ui,/setInterval|scheduleReview|examPlan|mastery|percentage|retention|useFocusStore/);
+    for(const lang of ['en','tr'])assert.ok(load('i18n/'+lang+'.ts').default.subjectEvidence.noneAttention);
+  });
   await check('Attention requires recorded topic reviews AND due linked cards; unknown is not weak',()=>{
     for(const dueCards of [0,1,8])assert.equal(evidenceState({linkedReviews:0,dueCards}),'insufficient');
     assert.equal(evidenceState({linkedReviews:2,dueCards:0}),'available');

@@ -3,6 +3,16 @@
 // Schema v5, study logic, hydration, and preference normalization are unchanged.
 
 const en = {
+  subjectEvidence: {
+    reviews: (n:number) => `Reviews recorded for this subject's topics: ${n}`,
+    topics: (n:number) => `Topics: ${n}`, studied: (n:number) => `Topics with recorded study activity: ${n}`,
+    attention: (n:number) => `Topics needing review attention: ${n}`,
+    all: 'All topics', filter: 'Needs review attention', selected: (s:string) => `${s} — selected`,
+    empty: 'No topics yet.', noneAttention: 'No topics currently meet the review-attention rule.', more: 'Show more topics',
+    row: (cards:number,reviews:number,due:number) => `Cards: ${cards} · Reviews: ${reviews} · Due: ${due}`,
+    open: (name:string) => `Open topic: ${name}`,
+    help: 'Totals cover every topic in this subject, regardless of the filter. Cards reflect current links; reviews keep their rating-time topic. Attention requires recorded topic reviews and a currently due linked card. Unscheduled cards are not due. Study activity is separate context, not a score.',
+  },
   topicEvidence: {
     title: 'Learning evidence', attention: 'Linked cards need review attention',
     available: 'Review evidence available', insufficient: 'Not enough linked review evidence',
