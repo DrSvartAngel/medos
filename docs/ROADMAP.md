@@ -1,6 +1,19 @@
 # MedOS — Development Roadmap
 
-## Current — Phase 6.4 Reward & Recovery Integration
+## Current — Phase 6.5 Motivation UI / Presentation Polish
+
+- Implementation COMPLETE; Phase 6 ACTIVE. Phase 6.1–6.5 phone/tablet physical QA PENDING. Prior user-confirmed QA unchanged; no device/emulator/ADB automation.
+- Only MiniVictory, MomentumCard and AdaptiveRecommendationCard presentation touched. Cards now use width 100% with the existing 620dp constrained-workspace pattern; no navigation/container/safe-area redesign.
+- MiniVictory: compact secondary body with clear spacing; quiet smaller dismiss control retains >=44dp target, bounded width and wrapping text. Reward triggers/dismissal state unchanged.
+- Momentum: subtle row separators, compact wrapping navigation controls, and a screen-reader text group combining each target with its factual recorded/pending state. Navigation button remains a separate accessible control; no checkbox or mastery-style progress bar.
+- Adaptive result: smaller tablet heading, higher-emphasis readable input context, wrapping primary/alternative/Lighter Plan buttons and flexible duration tiles. All nine outcomes, text, selected radio semantics and actions unchanged. Recovery's existing bounded/scrollable integration already fits; not modified.
+- Low-Stimulation retains identical copy/actions and existing neutral variants; no live announcements, blanket opacity reduction, animation or new mechanics.
+- Schema v10; dependencies, stores, persistence, Focus/SRS, Today’s 3, matrix, navigation, shared primitives and reward gating unchanged. No new files or translations.
+- Validation: TypeScript EXIT 0; dependency tree EXIT 0; Phase 2 21, Phase 3 85, Phase 4 43, Phase 5 29, Phase 6 30 PASS — 208 total. Visual byte-freeze checks replaced narrowly by unchanged pre-render state/callback/copy contracts and layout/accessibility assertions. These are static checks, not device layout QA.
+- Modified three cards, validate-phase6 and four project-memory docs. User QA: phone/tablet portrait/landscape, large EN/TR text, target/status reading order, dismiss and navigation buttons, Low-Stimulation, all duration options/Lighter Plan and safe area.
+- Local branch phase-6-5-motivation-ui-polish; commit only, no push/merge. Next: user presentation QA and review. Phase 6.6 NOT STARTED; PDF/Gemini and new motivation mechanics not implemented.
+
+## Historical — Phase 6.4 Reward & Recovery Integration
 
 - Implementation COMPLETE; Phase 6 ACTIVE. Phase 6.1–6.4 physical phone/tablet QA PENDING; no emulator/ADB/device automation. Earlier user-confirmed QA unchanged.
 - Recovery remains an optional route into existing entry Focus, bounded Memory or Calendar. Opening/selecting does not write completion, meet Momentum or show MiniVictory. No Recovery behavior changes.

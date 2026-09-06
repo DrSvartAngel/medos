@@ -115,8 +115,7 @@ check('Phase 5 scheduling, Memory store/repository, schema, preferences, Dashboa
     .replace("import { MomentumCard } from '@/components/dashboard/MomentumCard';\n", '')
     .replace(/^\s*<MomentumCard \/>\n/gm, '');
   assert.equal(dashboard, baseline('app/(tabs)/index.tsx'));
-  assert.equal(read('components/ui/MiniVictory.tsx').replace(/\r\n/g, '\n'),
-    execFileSync('git', ['show', 'c13c31e:components/ui/MiniVictory.tsx'], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n'));
+  // Phase 6.5 visual changes are checked separately against unchanged state/callbacks.
 });
 
 // Actual derived SQL on an in-memory evidence fixture. Full schema regressions run in Phases 2–5.
@@ -208,8 +207,8 @@ check('Adaptive Motivation reuses all nine Phase 3 outcomes, including four 15-m
 check('Adaptive Motivation changes no matrix, state, timer, Recovery, Momentum, reward or persistence behavior', () => {
   const baseline = file => execFileSync('git', ['show', '10a9291:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   for (const file of ['utils/studySupportRules.ts', 'store/useStudySupportStore.ts', 'store/useFocusStore.ts',
-    'store/useAppStore.ts', 'app/study-support/recovery.tsx', 'components/dashboard/MomentumCard.tsx',
-    'db/repositories/dashboardRepo.ts', 'components/ui/MiniVictory.tsx', 'app/(tabs)/focus.tsx',
+    'store/useAppStore.ts', 'app/study-support/recovery.tsx',
+    'db/repositories/dashboardRepo.ts', 'app/(tabs)/focus.tsx',
     'db/migrations.ts', 'package.json', 'package-lock.json']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file), file);
   }
@@ -288,13 +287,60 @@ check('Integration: Dashboard refresh executes on focus/foreground and removes i
 check('Integration: Recovery remains side-effect-free until explicit actions; quiet feedback and matrix unchanged', () => {
   const baseline = file => execFileSync('git', ['show', '45a130b:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   for (const file of ['app/study-support/recovery.tsx', 'app/study-support/check-in.tsx', 'utils/recoveryRules.ts',
-    'utils/studySupportRules.ts', 'components/ui/MiniVictory.tsx', 'components/dashboard/MomentumCard.tsx',
-    'components/study-support/AdaptiveRecommendationCard.tsx', 'hooks/useDashboardRefresh.ts']) {
+    'utils/studySupportRules.ts', 'hooks/useDashboardRefresh.ts']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file));
   }
   const recovery = read('app/study-support/recovery.tsx');
   assert.ok(recovery.includes('startEntrySession({ committeeId: verifiedCommitteeId })'));
   assert.ok(recovery.includes("params: { id: deck.id, mode: 'recovery' }"));
   assert.doesNotMatch(recovery, /MiniVictory|getMomentum|finishSession\(|insertReview\(/);
+});
+// Presentation changes may alter geometry/typography, never state, routes, copy or callbacks.
+function assertPresentationOnly(file) {
+  const before = execFileSync('git', ['show', '037072f:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
+  const after = read(file).replace(/\r\n/g, '\n');
+  assert.equal(after.slice(0, after.indexOf('  return (')), before.slice(0, before.indexOf('  return (')));
+  function callbacks(source) {
+    const tree = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+    const result = [];
+    function visit(node) {
+      if (ts.isJsxAttribute(node) && /^on[A-Z]/.test(node.name.getText(tree))) result.push(node.getText(tree));
+      ts.forEachChild(node, visit);
+    }
+    visit(tree); return result;
+  }
+  assert.deepEqual(callbacks(after), callbacks(before));
+  const copy = source => [...new Set(source.match(/\bt(?:\.[A-Za-z_]\w*)+/g))].sort();
+  assert.deepEqual(copy(after), copy(before));
+  assert.doesNotMatch(after, /numberOfLines|accessibilityLiveRegion|announceForAccessibility|\bopacity:/);
+}
+check('Polish: MiniVictory preserves content, dismissal and runtime state with bounded wrapping layout', () => {
+  assertPresentationOnly('components/ui/MiniVictory.tsx');
+  const source = read('components/ui/MiniVictory.tsx');
+  assert.ok(source.includes('maxWidth: 620')); assert.ok(source.includes('flexShrink: 1'));
+  assert.ok(source.includes('minHeight: 44')); assert.ok(source.includes('accessibilityLabel={t.reward.dismiss}'));
+});
+check('Polish: Momentum preserves targets/routes/refresh and groups factual state separately from buttons', () => {
+  assertPresentationOnly('components/dashboard/MomentumCard.tsx');
+  const source = read('components/dashboard/MomentumCard.tsx');
+  assert.ok(source.includes('maxWidth: 620')); assert.ok(source.includes('accessibilityRole="text"'));
+  assert.ok(source.includes('accessibilityLabel={`${row.label}. ${evidence[row.key] ? t.momentum.recorded : t.momentum.pending}`}'));
+  assert.ok(source.includes('</View>\n              <Button'));
+  assert.doesNotMatch(source, /progressbar|checkbox|switch/);
+});
+check('Polish: adaptive card retains all choices/actions with smaller tablet heading and wrapped labels', () => {
+  assertPresentationOnly('components/study-support/AdaptiveRecommendationCard.tsx');
+  const source = read('components/study-support/AdaptiveRecommendationCard.tsx');
+  assert.ok(source.includes('maxWidth: 620')); assert.ok(source.includes('minWidth: 0'));
+  assert.ok(source.includes('flexWrap: \'wrap\'')); assert.ok(source.includes('minHeight: 68'));
+  assert.ok(source.includes('variant="h2"')); assert.ok(source.includes('textStyle={{ flexShrink: 1'));
+});
+check('Polish: trigger routes, all persisted rules and shared primitives remain unchanged', () => {
+  for (const file of ['app/(tabs)/focus.tsx', 'app/decks/[id]/review.tsx', 'components/ui/Button.tsx',
+    'components/ui/Card.tsx', 'components/ui/Typography.tsx', 'components/layout/ScreenWrapper.tsx',
+    'theme/colors.ts', 'i18n/en.ts', 'i18n/tr.ts']) {
+    assert.equal(read(file).replace(/\r\n/g, '\n'), execFileSync('git', ['show', '037072f:' + file],
+      { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n'));
+  }
 });
 console.log(`Phase 6 validation: ${passed} PASS`);

@@ -38,25 +38,30 @@ export function MomentumCard() {
   const completed = evidence ? rows.filter(row => evidence[row.key]).length : 0;
   const summaries = [t.momentum.zero, t.momentum.one, t.momentum.two, t.momentum.three];
   return (
-    <Card style={{ gap: spacing.md }}>
+    <Card style={{ width: '100%', maxWidth: 620, alignSelf: 'center', gap: spacing.md }}>
       <AppText variant="h3">{t.momentum.title}</AppText>
       {evidence === null ? (
         <View style={{ gap: spacing.sm }}>
           <AppText>{failed ? t.momentum.unavailable : t.common.loading}</AppText>
-          {failed && <Button label={t.common.retry} variant="ghost" onPress={refresh} />}
+          {failed && <Button label={t.common.retry} variant="ghost" onPress={refresh}
+            textStyle={{ flexShrink: 1, textAlign: 'center' }} />}
         </View>
       ) : (
         <>
           <AppText>{t.momentum.completed(completed)}</AppText>
           <AppText color={colors.textSecondary}>{summaries[completed]}</AppText>
           {rows.map(row => (
-            <View key={row.key} style={{ gap: spacing.xs }}>
+            <View key={row.key} style={{ gap: spacing.xs, borderTopWidth: 1, borderTopColor: colors.border, paddingTop: spacing.sm }}>
+              <View accessible accessibilityRole="text"
+                accessibilityLabel={`${row.label}. ${evidence[row.key] ? t.momentum.recorded : t.momentum.pending}`}>
               <AppText>{row.label}</AppText>
               <AppText variant="bodySmall" color={evidence[row.key] && !lowStimulation ? colors.success : colors.textSecondary}>
                 {evidence[row.key] ? t.momentum.recorded : t.momentum.pending}
               </AppText>
+              </View>
               <Button label={row.action} accessibilityLabel={row.action} variant="ghost"
-                onPress={() => router.push(row.route as Href)} style={{ minHeight: 44 }} />
+                size="sm" textStyle={{ flexShrink: 1, textAlign: 'left' }}
+                onPress={() => router.push(row.route as Href)} style={{ minHeight: 44, alignSelf: 'flex-start', maxWidth: '100%' }} />
             </View>
           ))}
           <AppText variant="bodySmall" color={colors.textSecondary}>{t.momentum.help}</AppText>

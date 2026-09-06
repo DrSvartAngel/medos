@@ -56,15 +56,15 @@ export function AdaptiveRecommendationCard({
   const t = useTranslation();
 
   return (
-    <Card elevated={!lowStimulation} style={{ padding: isTablet ? spacing.lg : spacing.md }}>
+    <Card elevated={!lowStimulation} style={{ width: '100%', maxWidth: 620, alignSelf: 'center', padding: isTablet ? spacing.lg : spacing.md }}>
       <Badge label={t.adaptiveRec.recommended} variant={lowStimulation ? 'default' : 'primary'} />
-      <AppText variant={isTablet ? 'h1' : 'h2'} style={{ marginTop: spacing.md }}>
+      <AppText variant="h2" style={{ marginTop: spacing.md }}>
         {t.adaptiveRec.durationMin(recommendation.durationSec / 60)}
       </AppText>
       <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
         {translateStudySupportMessage(recommendation.reason, t)}
       </AppText>
-      <AppText variant="bodySmall" color={colors.textMuted} style={{ marginTop: spacing.sm }}>
+      <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.sm }}>
         {t.checkIn.summary(t.checkIn.energy[energy], t.checkIn.attention[attention])}
       </AppText>
       <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.sm }}>
@@ -208,6 +208,7 @@ export function AdaptiveRecommendationCard({
           ? t.recovery.startTwoMin
           : t.adaptiveRec.startFocus(selectedDurationSec / 60)}
         onPress={onStart}
+        textStyle={{ flexShrink: 1, textAlign: 'center' }}
         disabled={contextError !== null}
         size={isTablet ? 'lg' : 'md'}
         style={{ marginTop: spacing.lg }}
@@ -216,12 +217,14 @@ export function AdaptiveRecommendationCard({
         label={t.adaptiveRec.openFocusSetup}
         accessibilityLabel={t.adaptiveRec.openFocusSetup}
         onPress={onOpenFocusSetup}
+        textStyle={{ flexShrink: 1, textAlign: 'center' }}
         variant="secondary"
         style={{ marginTop: spacing.sm }}
       />
       <Button
         label={t.adaptiveRec.changeAnswers}
         onPress={onChangeAnswers}
+        textStyle={{ flexShrink: 1, textAlign: 'center' }}
         variant="ghost"
         size="sm"
         style={{ marginTop: spacing.xs }}
@@ -236,6 +239,7 @@ export function AdaptiveRecommendationCard({
           label={t.adaptiveRec.chooseLighterPlan}
           accessibilityLabel={t.adaptiveRec.chooseLighterPlan}
           onPress={onOpenRecovery}
+          textStyle={{ flexShrink: 1, textAlign: 'center' }}
           variant="ghost"
           size="sm"
         />
@@ -276,11 +280,12 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     justifyContent: 'center',
     minHeight: 68,
-    minWidth: 120,
+    minWidth: 0,
   },
   durationLabelRow: {
     alignItems: 'center',
     flexDirection: 'row',
+    flexWrap: 'wrap',
   },
   durationLabel: {
     flex: 1,

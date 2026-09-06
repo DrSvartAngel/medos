@@ -18,13 +18,14 @@ export function MiniVictory({ kind, lowStimulation = false }: {
   const title = kind === 'focus' ? t.reward.focusTitle : t.reward.reviewTitle;
   const body = kind === 'focus' ? t.reward.focusBody : t.reward.reviewBody;
   return (
-    <Card style={{ width: '100%', gap: spacing.sm, marginBottom: spacing.md }}>
+    <Card style={{ width: '100%', maxWidth: 620, alignSelf: 'center', gap: spacing.sm, marginBottom: spacing.md }}>
       <View accessible accessibilityRole="text" accessibilityLabel={`${title}. ${body}`}>
         <AppText variant="h3" color={lowStimulation ? colors.textPrimary : colors.success}>{title}</AppText>
-        <AppText color={colors.textSecondary}>{body}</AppText>
+        <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>{body}</AppText>
       </View>
       <Button label={t.reward.dismiss} accessibilityLabel={t.reward.dismiss}
-        variant="ghost" onPress={() => setDismissed(true)} style={{ minHeight: 44 }} />
+        variant="ghost" size="sm" textStyle={{ flexShrink: 1, textAlign: 'center' }}
+        onPress={() => setDismissed(true)} style={{ minHeight: 44, alignSelf: 'flex-start', maxWidth: '100%' }} />
     </Card>
   );
 }
