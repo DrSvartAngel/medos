@@ -156,7 +156,7 @@ export default function NewQBankSessionScreen() {
       style={styles.flex}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScreenWrapper>
+      <ScreenWrapper includeBottomSafeArea>
         {/* Header */}
         <View style={styles.headerRow}>
           <TouchableOpacity

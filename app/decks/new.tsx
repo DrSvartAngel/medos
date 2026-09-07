@@ -37,7 +37,7 @@ export default function NewDeckScreen() {
 
   if (!isDBReady) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
         <ActivityIndicator size="large" color={colors.accent} />
       </ScreenWrapper>
     );
@@ -45,7 +45,7 @@ export default function NewDeckScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScreenWrapper>
+      <ScreenWrapper includeBottomSafeArea>
         <View style={styles.headerRow}>
           <TouchableOpacity
             accessibilityLabel={t.sweep.back}

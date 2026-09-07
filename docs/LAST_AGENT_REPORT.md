@@ -1,6 +1,17 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 8 Step 2: Accessibility & Truthful Error States
+## Current — Phase 8 Step 3: Safe Area / Responsive Hardening
+
+- Phase 8 Step 3 implementation COMPLETE.
+- Delivered scope:
+  - Standalone stack form safe areas: Enabled `includeBottomSafeArea` on `<ScreenWrapper>` in `app/qbank/new.tsx`, `app/decks/new.tsx`, `app/decks/[id]/edit.tsx`, `app/committees/new.tsx`, `app/calendar/new.tsx`, and `app/calendar/[id]/edit.tsx` to prevent Save/Cancel action button overlap with gesture bars and 3-button navigation.
+  - Verified existing delegates: `SubjectEditor.tsx` (for `app/subjects/new.tsx`, `app/subjects/edit/[id].tsx`), `TopicEditor.tsx` (for `app/topics/new.tsx`, `app/topics/edit/[id].tsx`), and `app/committees/edit/[id].tsx` already safely opt into `includeBottomSafeArea`.
+  - Verified tab screen isolation: Tab screens in `app/(tabs)/` remain strictly unchanged; tab bar continues to manage its own bottom system inset.
+  - Layout & responsive invariants: Zero manual inset duplication, zero arbitrary fixed padding, keyboard avoidance (`KeyboardAvoidingView`) preserved, vertical scrolling and action button layouts intact, phone and tablet centered/max-width layouts preserved.
+- Validation: TypeScript EXIT 0; Phase 2 (21 PASS), Phase 3 (90 PASS), Phase 4 (43 PASS), Phase 5 (29 PASS), Phase 6 (33 PASS); Phase 8 Step 2 test suite PASS; Phase 8 Step 3 focused test suite (26 checks) PASS.
+- Remaining Phase 8 findings: None.
+
+## Historical — Phase 8 Step 2: Accessibility & Truthful Error States
 
 - Phase 8 Step 2 implementation COMPLETE.
 - Delivered scope:

@@ -43,7 +43,7 @@ export default function EditCalendarEventScreen() {
 
   if (!isDBReady || isLoadingEvent) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
         <ActivityIndicator size="large" color={colors.accent} />
       </ScreenWrapper>
     );
@@ -51,7 +51,7 @@ export default function EditCalendarEventScreen() {
 
   if (!event || event.id !== id) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
         <Feather name="alert-circle" size={36} color={colors.textMuted} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.sweep.eventMissing}</AppText>
         <Button
@@ -66,7 +66,7 @@ export default function EditCalendarEventScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScreenWrapper>
+      <ScreenWrapper includeBottomSafeArea>
         <View style={styles.headerRow}>
           <TouchableOpacity
             accessibilityLabel={t.sweep.back}

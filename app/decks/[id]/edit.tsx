@@ -47,7 +47,7 @@ export default function EditDeckScreen() {
 
   if (!isDBReady || !prepared) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
         <ActivityIndicator size="large" color={colors.accent} />
       </ScreenWrapper>
     );
@@ -55,7 +55,7 @@ export default function EditDeckScreen() {
 
   if (!deck) {
     return (
-      <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
+      <ScreenWrapper includeBottomSafeArea scrollable={false} contentStyle={styles.centered}>
         <Feather name="alert-circle" size={36} color={colors.textMuted} />
         <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.sweep.deckMissing}</AppText>
         <Button label={t.sweep.goBack} variant="secondary" onPress={() => (router.canGoBack() ? router.back() : router.replace('/(tabs)/memory' as Href))} style={{ marginTop: spacing.lg }} />
@@ -65,7 +65,7 @@ export default function EditDeckScreen() {
 
   return (
     <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScreenWrapper>
+      <ScreenWrapper includeBottomSafeArea>
         <View style={styles.headerRow}>
           <TouchableOpacity
             accessibilityLabel={t.sweep.back}

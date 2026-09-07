@@ -128,7 +128,7 @@ export default function NewCommitteeScreen() {
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScreenWrapper>
+      <ScreenWrapper includeBottomSafeArea>
         {/* ── Back + Title ─────────────────────────────────── */}
         <View style={styles.headerRow}>
           <TouchableOpacity
