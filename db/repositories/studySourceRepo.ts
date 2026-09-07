@@ -21,8 +21,20 @@ interface RawStudySourceRow {
 
 const VALID_SOURCE_TYPES: readonly StudySourceType[] = ['text', 'note', 'document'];
 
-function generateId(): string {
-  return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+let lastTimestamp = 0;
+
+function getMonotonicNow(): number {
+  const now = Date.now();
+  if (now <= lastTimestamp) {
+    lastTimestamp += 1;
+    return lastTimestamp;
+  }
+  lastTimestamp = now;
+  return now;
+}
+
+function generateId(timestamp: number): string {
+  return timestamp.toString(36) + Math.random().toString(36).slice(2, 8);
 }
 
 function rowToStudySource(row: RawStudySourceRow): StudySource {
@@ -71,8 +83,8 @@ export const studySourceRepo = {
       throw new Error('topic_not_found');
     }
 
-    const id = generateId();
-    const now = Date.now();
+    const now = getMonotonicNow();
+    const id = generateId(now);
 
     db.runSync(
       `INSERT INTO study_sources (id, topic_id, title, content, source_type, created_at, updated_at)

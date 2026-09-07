@@ -125,11 +125,18 @@ export default function TopicDetailScreen() {
       </Section>}
       <TopicReviewEvidence topicId={id} />
       <Section title={t.studySources.title}>
-        <Button
-          label={t.studySources.addSource}
-          variant="secondary"
-          onPress={() => router.push(`/topics/${encodeURIComponent(id)}/sources/new` as Href)}
-        />
+        <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+          <Button
+            label={t.studySources.addSource}
+            variant="secondary"
+            onPress={() => router.push(`/topics/${encodeURIComponent(id)}/sources/new` as Href)}
+          />
+          <Button
+            label={t.studyAi.assistant}
+            variant="secondary"
+            onPress={() => router.push(`/topics/${encodeURIComponent(id)}/assistant` as Href)}
+          />
+        </View>
         {sourcesError ? (
           <FeedbackState
             kind="error"

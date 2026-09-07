@@ -1,6 +1,69 @@
 # MedOS — compact handoff
 
-## Current — Phase 10 Step 4: First Real AI Provider Integration
+## Current — Phase 10 Step 5: Source-Grounded Study Assistant UI
+
+- Phase 10 Step 5 implementation: COMPLETE.
+- Phase 10 automated/static validation: PASS.
+- Phase 9 implementation + validation: COMPLETE.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: First source-grounded Study Assistant UI delivered using provider-neutral StudyAIService with mock-first runtime and ephemeral results.
+- Delivered scope:
+  - Provider-Neutral Service Access (`services/ai/studyAIClient.ts`):
+    - Factory providing `StudyAIService` to UI screens (`getStudyAIService()`, `setStudyAIProvider()`, `resetStudyAIClient()`).
+    - Uses deterministic `MockAIProvider` by default for zero-quota offline development.
+    - Zero vendor SDK or provider-specific imports leaked to UI components.
+  - Entry Point & Route:
+    - Topic detail (`app/topics/[id].tsx`) features a "Study Assistant" (`t.studyAi.assistant`) action.
+    - Dedicated task-oriented route (`app/topics/[id]/assistant.tsx`) built with `<ScreenWrapper includeBottomSafeArea>`.
+    - Implements safe back navigation (`router.canGoBack()` -> `router.back()`, fallback to topic detail) and Android `hardwareBackPress`.
+  - Source Selection & Truthful State:
+    - Lists topic-linked study sources displaying title and source type badge (entire source content is never dumped into selection cards).
+    - Auto-selects if exactly one source exists; supports selecting single source via accessible radiogroup.
+    - If topic has no study sources, shows calm empty state directing user to add one.
+    - Re-verifies source existence in DB before execution; displays localized truthful stale-source error (`sourceMissing`) if deleted.
+    - Changing selected source resets previous result state to avoid provenance confusion.
+  - Explain Workflow:
+    - Requires concept query input with clear validation (`conceptRequired`).
+    - Converts selected `StudySource` + `Topic` into `AISourceContext` via `toAISourceContext()`.
+    - Invokes `studyAIService.explainConcept()` with strict grounding.
+  - Summarize Workflow:
+    - Action generates concise source summary without requiring user query.
+    - Invokes `studyAIService.summarizeSource()`.
+  - Result Model & Ephemeral State:
+    - State machine: `idle` | `loading` | `success` | `error`.
+    - Ephemeral React state only; zero persistence in SQLite; zero conversation history.
+    - User can clear results at any time via `clearResult` button.
+  - Grounding Visibility & Medical Scope:
+    - Prominently displays source title provenance (`t.studyAi.basedOnSource(sourceTitle)`).
+    - Includes calm source-only grounding label (`"Based only on the selected study source."` / `"Yalnızca seçilen çalışma kaynağına dayanır."`).
+    - Subtle academic disclaimer (`"For study use. Verify important details against your course material."`).
+    - No claims of clinical diagnosis or treatment advice.
+  - Error Handling & Security:
+    - Domain errors mapped to safe localized copy without leaking raw HTTP, API keys, stack traces, or SQLite internals.
+  - Localization:
+    - Added `studyAi` namespace in `i18n/en.ts` and `i18n/tr.ts` with strict parity across all keys.
+  - Boundaries & Isolation:
+    - Zero schema changes (remains **v12**).
+    - Flashcard generation UI deferred to Step 6.
+    - Gemini adapter exists from Step 4 but credential settings and runtime activation remain deferred.
+- Dedicated Validation:
+  - `scripts/validate-phase10-step5.cjs`: 15 test suites covering entry point, route, service isolation, SQLite source selection, explain workflow, summarize workflow, ephemerality, grounding visibility, safe error mapping, EN/TR parity, accessibility semantics, and scope boundaries.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+  - Phase 10 Step 1 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 2 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 3 Suite: ALL PASS (9 checks)
+  - Phase 10 Step 4 Suite: ALL PASS (9 checks)
+  - Phase 10 Step 5 Suite: ALL PASS (15 checks)
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+- Next: Phase 10 Step 6 (AI-Assisted Flashcard Generation & Human Approval Flow).
+
+## Historical — Phase 10 Step 4: First Real AI Provider Integration
 
 - Phase 10 Step 4 implementation: COMPLETE.
 - Phase 10 automated/static validation: PASS.
