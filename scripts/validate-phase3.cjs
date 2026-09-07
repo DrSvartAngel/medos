@@ -697,6 +697,38 @@ check('Phase 3.2 copy is optional, transparent, and non-punitive', () => {
   );
 });
 
+function assertSemanticDependencies(packageJson, options = {}) {
+  assert.ok(packageJson && typeof packageJson === 'object', 'package.json must be an object');
+  const deps = packageJson.dependencies || {};
+  const devDeps = packageJson.devDependencies || {};
+  const requiredCore = [
+    'expo',
+    'expo-router',
+    'react',
+    'react-native',
+    'expo-sqlite',
+    'zustand',
+  ];
+  for (const dep of requiredCore) {
+    assert.ok(deps[dep], `Required core dependency missing: ${dep}`);
+  }
+  const requiredAdditions = [
+    'expo-secure-store',
+    'expo-document-picker',
+    'expo-file-system',
+  ];
+  for (const dep of requiredAdditions) {
+    assert.ok(deps[dep], `Required runtime addition missing: ${dep}`);
+  }
+  assert.equal(deps['expo-notifications'], undefined, 'expo-notifications must not be added to runtime');
+  if (options.checkTaskManager !== false) {
+    assert.equal(deps['expo-task-manager'], undefined, 'expo-task-manager must not be added to runtime');
+  }
+  for (const [name, version] of Object.entries({ ...deps, ...devDeps })) {
+    assert.doesNotMatch(version, /^(?:file:|link:|\.\/|\.\.\/|[A-Za-z]:\\|\/)/, `Dependency ${name} must not use local path/link`);
+  }
+}
+
 check('Phase 3.2 remains runtime-only with no schema, dependency, or version change', () => {
   const migrations = read('db/migrations.ts');
   const focusRepo = read('db/repositories/focusRepo.ts');
@@ -714,7 +746,7 @@ check('Phase 3.2 remains runtime-only with no schema, dependency, or version cha
   assert.equal(packageJson.dependencies['react-native'], '0.86.3');
   assert.equal(packageJson.dependencies['expo-router'], '~57.0.17');
   assert.equal(packageJson.dependencies['expo-sqlite'], '~57.0.2');
-  assert.equal(Object.keys(packageJson.dependencies).length, 13);
+  assertSemanticDependencies(packageJson);
 });
 
 check('Idle Lighter Plan builds one to three truthful actions in the approved order', () => {
@@ -1040,7 +1072,7 @@ check('Lighter Plan is route-local, migration-free, dependency-free, and non-cli
   assert.equal(fs.existsSync(path.join(root, 'db/repositories/recoveryRepo.ts')), false);
   const versionMatch = migrations.match(/const CURRENT_VERSION = (\d+);/);
   assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
-  assert.equal(Object.keys(packageJson.dependencies).length, 13);
+  assertSemanticDependencies(packageJson);
   assertCopy(route, "Lighter plan");
   assertCopy(route, "Choose one small useful thing.");
   assertCopy(route, "You can stop after that, or continue if it helps.");
@@ -1283,7 +1315,7 @@ check('Gentle Return remains scrollable, runtime-only, migration-free, and depen
   assert.doesNotMatch(focusRepo, /gentleBreak|distraction|break_/i);
   const versionMatch = migrations.match(/const CURRENT_VERSION = (\d+);/);
   assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
-  assert.equal(Object.keys(packageJson.dependencies).length, 13);
+  assertSemanticDependencies(packageJson);
 });
 
 check('Gentle Return adds no detection, alerts, history, analytics, or punitive copy', () => {
@@ -1494,8 +1526,7 @@ check('Phase 3.5 adds no notification, background, analytics, theme, schema, or 
   assert.doesNotMatch(read('theme/colors.ts'), /lowStimulation/);
   assert.doesNotMatch(read('components/ui/Card.tsx'), /lowStimulation/);
   assert.doesNotMatch(read('components/ui/Button.tsx'), /lowStimulation/);
-  assert.equal(packageJson.dependencies['expo-notifications'], undefined);
-  assert.equal(Object.keys(packageJson.dependencies).length, 13);
+  assertSemanticDependencies(packageJson);
   const versionMatch = migrations.match(/const CURRENT_VERSION = (\d+);/);
   assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
 });
@@ -1709,9 +1740,7 @@ check('Phase 3.6 adds no feature state, notification, analytics, schema, depende
   assert.doesNotMatch(stores, /phase36|phase3Closure|accessibilityHistory/i);
   const versionMatch = migrations.match(/const CURRENT_VERSION = (\d+);/);
   assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
-  assert.equal(Object.keys(packageJson.dependencies).length, 13);
-  assert.equal(packageJson.dependencies['expo-notifications'], undefined);
-  assert.equal(packageJson.dependencies['expo-task-manager'], undefined);
+  assertSemanticDependencies(packageJson, { checkTaskManager: true });
   assert.doesNotMatch(closureSource, /subjectId|topicId|spaced repetition|reward points|artificial intelligence/i);
   assert.equal(gentleReturnRules.GENTLE_BREAK_DURATION_SEC, 120);
   assert.doesNotMatch(read('components/focus/GentleReturnCard.tsx'), /setTimeout\([\s\S]*resumeTimer/);
@@ -2133,13 +2162,25 @@ check('System error localization follows active language without mutating diagno
 
 check('Localization preserves persisted stores, schema, SRS, evidence, recommendations and Exam Plan rules', () => {
   const { execFileSync } = require('node:child_process');
-  for (const file of ['package.json', 'package-lock.json', 'store/useAppStore.ts',
+  for (const file of ['store/useAppStore.ts',
     'store/useFocusStore.ts', 'store/useMemoryStore.ts', 'store/useStudySupportStore.ts',
     'utils/memoryScheduling.ts', 'utils/examPlanRules.ts', 'utils/studySupportRules.ts', 'utils/recoveryRules.ts',
     'utils/topicEvidenceRules.ts', 'utils/subjectEvidenceRules.ts', 'utils/committeeEvidenceRules.ts',
     'db/repositories/memoryRepo.ts']) {
     const before = execFileSync('git', ['show', `a119bc1:${file}`], { cwd: root, encoding: 'utf8' });
     assert.equal(read(file).replace(/\r\n/g, '\n'), before.replace(/\r\n/g, '\n'), file);
+  }
+  const currentPkg = JSON.parse(read('package.json'));
+  const currentLock = JSON.parse(read('package-lock.json'));
+  const baselinePkg = JSON.parse(execFileSync('git', ['show', 'a119bc1:package.json'], { cwd: root, encoding: 'utf8' }));
+  for (const [dep, ver] of Object.entries(baselinePkg.dependencies)) {
+    assert.equal(currentPkg.dependencies[dep], ver, `Baseline dependency ${dep} must be preserved`);
+  }
+  assertSemanticDependencies(currentPkg);
+  const lockDeps = currentLock.packages && currentLock.packages[''] && currentLock.packages[''].dependencies;
+  assert.ok(lockDeps, 'package-lock root dependencies must exist');
+  for (const dep of Object.keys(currentPkg.dependencies)) {
+    assert.equal(lockDeps[dep], currentPkg.dependencies[dep], `package-lock must match package.json for ${dep}`);
   }
   const beforeMigrations = execFileSync('git', ['show', 'a119bc1:db/migrations.ts'], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   const currentMigrations = read('db/migrations.ts').replace(/\r\n/g, '\n');

@@ -107,7 +107,7 @@ check('EN/TR contain the same small factual copy set', () => {
 check('Phase 5 scheduling, Memory store/repository, schema, preferences, Dashboard and dependency versions unchanged', () => {
   const baseline = file => execFileSync('git', ['show', '99fa648:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   for (const file of ['utils/memoryScheduling.ts', 'store/useMemoryStore.ts', 'db/repositories/memoryRepo.ts',
-    'store/useAppStore.ts', 'package-lock.json']) {
+    'store/useAppStore.ts']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file), file);
   }
   const beforeMigrations = baseline('db/migrations.ts');
@@ -121,7 +121,22 @@ check('Phase 5 scheduling, Memory store/repository, schema, preferences, Dashboa
   const versionMatch = currentMigrations.match(/const CURRENT_VERSION = (\d+);/);
   assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
   const before = JSON.parse(baseline('package.json')), after = JSON.parse(read('package.json'));
-  assert.deepEqual(after.dependencies, before.dependencies); assert.deepEqual(after.devDependencies, before.devDependencies);
+  for (const [dep, ver] of Object.entries(before.dependencies)) {
+    assert.equal(after.dependencies[dep], ver, `Baseline dependency ${dep} must be preserved`);
+  }
+  assert.deepEqual(after.devDependencies, before.devDependencies);
+  for (const dep of ['expo-secure-store', 'expo-document-picker', 'expo-file-system']) {
+    assert.ok(after.dependencies[dep], `Runtime dependency ${dep} must exist`);
+  }
+  const currentLock = JSON.parse(read('package-lock.json'));
+  const lockDeps = currentLock.packages && currentLock.packages[''] && currentLock.packages[''].dependencies;
+  assert.ok(lockDeps, 'package-lock root dependencies must exist');
+  for (const dep of Object.keys(after.dependencies)) {
+    assert.equal(lockDeps[dep], after.dependencies[dep], `package-lock must match package.json for ${dep}`);
+  }
+  for (const [dep, ver] of Object.entries({ ...after.dependencies, ...after.devDependencies })) {
+    assert.doesNotMatch(ver, /^(?:file:|link:|\.\/|\.\.\/)/, `Dependency ${dep} must not use local path/link`);
+  }
   // Dashboard memory_review QuickStart navigates to relevant deck review route with mode=due explicitly included
   const dashboard = read('app/(tabs)/index.tsx');
   assert.match(
@@ -220,9 +235,16 @@ check('Adaptive Motivation reuses all nine Phase 3 outcomes, including four 15-m
 check('Adaptive Motivation changes no matrix, state, timer, Recovery, Momentum, reward or persistence behavior', () => {
   const baseline = file => execFileSync('git', ['show', '10a9291:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   for (const file of ['utils/studySupportRules.ts', 'store/useStudySupportStore.ts', 'store/useFocusStore.ts',
-    'store/useAppStore.ts', 'app/study-support/recovery.tsx',
-    'package.json', 'package-lock.json']) {
+    'store/useAppStore.ts', 'app/study-support/recovery.tsx']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file), file);
+  }
+  const baselinePkg10 = JSON.parse(baseline('package.json'));
+  const currentPkg10 = JSON.parse(read('package.json'));
+  for (const [dep, ver] of Object.entries(baselinePkg10.dependencies)) {
+    assert.equal(currentPkg10.dependencies[dep], ver, `Baseline dependency ${dep} must be preserved`);
+  }
+  for (const dep of ['expo-secure-store', 'expo-document-picker', 'expo-file-system']) {
+    assert.ok(currentPkg10.dependencies[dep], `Runtime dependency ${dep} must exist`);
   }
   const beforeMigrations = baseline('db/migrations.ts');
   const currentMigrations = read('db/migrations.ts').replace(/\r\n/g, '\n');
