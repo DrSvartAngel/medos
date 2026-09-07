@@ -1,6 +1,35 @@
 # MedOS — Project Status
 
-## Current — Phase 9 Step 1: Learning Analytics Domain Models & Pure Rules
+## Current — Phase 9 Step 2: Analytics Repository & Batch Aggregation
+
+- Phase 9 Step 2 implementation COMPLETE. (Phase 8 implementation complete; Phase 8 physical regression QA remains DEFERRED).
+- Delivered scope:
+  - Analytics Repository (`db/repositories/analyticsRepo.ts`):
+    - `getTopicAnalytics(topicId, now?)`: Returns factual evidence across Q-Bank, Memory, and Focus with exact predicate reuse, delegating classification to pure deterministic rules (`analyticsRules.ts`).
+    - `getCommitteeTopicAnalytics(committeeId, now?)`: Batch single-pass CTE query joining `topics`, `subjects`, and `committees` with aggregated `qbank_sessions`, `flashcards`, `flashcard_reviews`, and `focus_sessions`. Eliminates per-topic N+1 loops while preserving unpracticed/zero-evidence topics.
+    - `getSubjectAnalytics(subjectId, now?)`: Fetches constituent topic evidence via batch CTE and summarizes using raw totals.
+    - `getCommitteeAnalytics(committeeId, now?)`: Constant 3 SQLite calls (existence check, subjects list, batch topic query) regardless of curriculum size. Computes aggregates from raw numerators/denominators; never averages topic percentages.
+  - Canonical MedOS Semantics Preserved:
+    - Focus: Exact concluded-study predicate (`actual_duration_sec > 0`, `ended_at >= started_at`, completed or cancelled >= 30s).
+    - Memory: Review success requires rating `good` or `easy` (excludes `again` and `hard`). Due cards require `schedule_state != 'unscheduled' AND next_review <= now`. Owning flashcards alone !== practice.
+    - Q-Bank: Raw sums of questions and correct count. Unlinked sessions (`topic_id IS NULL`) and cross-committee topics strictly excluded.
+  - Truthful Zero/Null Handling:
+    - Missing/deleted entity IDs return `null` (or `[]` for topic lists).
+    - Zero-evidence topic yields `accuracyPercent: null`, `retentionPercent: null`, `lastActiveAt: null`, `masteryStatus: 'unstudied'`, `neglectStatus: 'never_studied'`.
+    - Zero-practice subject/committee yields `coveragePercent: 0%` if topics exist; `coveragePercent: null` if 0 topics.
+- Performance & Index Audit:
+  - High-value existing indexes (`idx_qbank_sessions_topic_id`, `idx_flashcards_deck_id`, `idx_flashcard_reviews_reviewed_at`, `idx_focus_sessions_started_at`, `idx_topics_subject_order`, `idx_subjects_committee_order`) support queries efficiently without schema changes.
+  - Schema remains v11 unchanged (no schema v12 or migrations added).
+- Dedicated Validation:
+  - `scripts/validate-phase9-step2.cjs`: 5 test suites covering topic evidence, batch CTE N+1 prevention, raw aggregate percentages (e.g. 51/101 = 50%, not 75%), zero/null handling, and cards-only practice exclusion.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Step 1 & Step 2 validators: ALL PASS
+- Phase 8 physical regression QA remains DEFERRED; Phase 8 is not marked complete.
+- Next: Phase 9 Step 3 (learning analytics stores & reactive queries).
+
+## Historical — Phase 9 Step 1: Learning Analytics Domain Models & Pure Rules
 
 - Phase 9 Step 1 implementation COMPLETE. (Phase 8 implementation complete; Phase 8 physical regression QA remains DEFERRED).
 - Delivered scope:
