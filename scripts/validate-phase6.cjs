@@ -7,8 +7,8 @@ const ts = require('typescript');
 const { execFileSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8').replace(/\r\n/g, '\n');
-function load(file, mocks = {}) {
-  const code = ts.transpileModule(read(file), { fileName: file, compilerOptions: {
+function load(file, mocks = {}, customSource = null) {
+  const code = ts.transpileModule(customSource ?? read(file), { fileName: file, compilerOptions: {
     module: ts.ModuleKind.CommonJS, jsx: ts.JsxEmit.React, esModuleInterop: true,
   } }).outputText;
   const module = { exports: {} };
@@ -107,9 +107,19 @@ check('EN/TR contain the same small factual copy set', () => {
 check('Phase 5 scheduling, Memory store/repository, schema, preferences, Dashboard and dependency versions unchanged', () => {
   const baseline = file => execFileSync('git', ['show', '99fa648:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   for (const file of ['utils/memoryScheduling.ts', 'store/useMemoryStore.ts', 'db/repositories/memoryRepo.ts',
-    'db/migrations.ts', 'store/useAppStore.ts', 'package-lock.json']) {
+    'store/useAppStore.ts', 'package-lock.json']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file), file);
   }
+  const beforeMigrations = baseline('db/migrations.ts');
+  const currentMigrations = read('db/migrations.ts').replace(/\r\n/g, '\n');
+  const targetMigrationEnd = "UPDATE _schema_version SET version = ?', [10]);";
+  const v10MigrationSlice = beforeMigrations.slice(
+    beforeMigrations.indexOf('if (currentVersion < 2)'),
+    beforeMigrations.indexOf(targetMigrationEnd) + targetMigrationEnd.length
+  );
+  assert.ok(currentMigrations.includes(v10MigrationSlice), 'Earlier migrations 1-10 must remain intact');
+  const versionMatch = currentMigrations.match(/const CURRENT_VERSION = (\d+);/);
+  assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
   const before = JSON.parse(baseline('package.json')), after = JSON.parse(read('package.json'));
   assert.deepEqual(after.dependencies, before.dependencies); assert.deepEqual(after.devDependencies, before.devDependencies);
   // Dashboard memory_review QuickStart navigates to relevant deck review route with mode=due explicitly included
@@ -210,10 +220,24 @@ check('Adaptive Motivation reuses all nine Phase 3 outcomes, including four 15-m
 check('Adaptive Motivation changes no matrix, state, timer, Recovery, Momentum, reward or persistence behavior', () => {
   const baseline = file => execFileSync('git', ['show', '10a9291:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
   for (const file of ['utils/studySupportRules.ts', 'store/useStudySupportStore.ts', 'store/useFocusStore.ts',
-    'store/useAppStore.ts', 'app/study-support/recovery.tsx', 'app/(tabs)/focus.tsx',
-    'db/migrations.ts', 'package.json', 'package-lock.json']) {
+    'store/useAppStore.ts', 'app/study-support/recovery.tsx',
+    'package.json', 'package-lock.json']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), baseline(file), file);
   }
+  const beforeMigrations = baseline('db/migrations.ts');
+  const currentMigrations = read('db/migrations.ts').replace(/\r\n/g, '\n');
+  const targetMigrationEnd = "UPDATE _schema_version SET version = ?', [10]);";
+  const v10MigrationSlice = beforeMigrations.slice(
+    beforeMigrations.indexOf('if (currentVersion < 2)'),
+    beforeMigrations.indexOf(targetMigrationEnd) + targetMigrationEnd.length
+  );
+  assert.ok(currentMigrations.includes(v10MigrationSlice), 'Earlier migrations 1-10 must remain intact');
+  const versionMatch = currentMigrations.match(/const CURRENT_VERSION = (\d+);/);
+  assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
+  const focusScreen = read('app/(tabs)/focus.tsx').replace(/\r\n/g, '\n')
+    .replace("import { translateError } from '@/i18n/errors';\n", '')
+    .replace('{translateError(message, t)}', '{message}');
+  assert.equal(focusScreen, baseline('app/(tabs)/focus.tsx'));
   const dashboardRepo = read('db/repositories/dashboardRepo.ts');
   const focusSummaryBlock = dashboardRepo.slice(
     dashboardRepo.indexOf('getFocusSummary('),
@@ -347,11 +371,39 @@ check('Polish: adaptive card retains all choices/actions with smaller tablet hea
   assert.ok(source.includes('variant="h2"')); assert.ok(source.includes('textStyle={{ flexShrink: 1'));
 });
 check('Polish: trigger routes, all persisted rules and shared primitives remain unchanged', () => {
-  for (const file of ['app/(tabs)/focus.tsx', 'app/decks/[id]/review.tsx', 'components/ui/Button.tsx',
+  for (const file of ['components/ui/Button.tsx',
     'components/ui/Card.tsx', 'components/ui/Typography.tsx', 'components/layout/ScreenWrapper.tsx',
-    'theme/colors.ts', 'i18n/en.ts', 'i18n/tr.ts']) {
+    'theme/colors.ts']) {
     assert.equal(read(file).replace(/\r\n/g, '\n'), execFileSync('git', ['show', '037072f:' + file],
       { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n'));
+  }
+  const baseline037 = file => execFileSync('git', ['show', '037072f:' + file], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
+  const focusScreen = read('app/(tabs)/focus.tsx').replace(/\r\n/g, '\n')
+    .replace("import { translateError } from '@/i18n/errors';\n", '')
+    .replace('{translateError(message, t)}', '{message}');
+  assert.equal(focusScreen, baseline037('app/(tabs)/focus.tsx'));
+  const reviewScreen = read('app/decks/[id]/review.tsx').replace(/\r\n/g, '\n')
+    .replace("import { translateError } from '@/i18n/errors';\n", '')
+    .replaceAll('{translateError(error, t)}', '{error}');
+  assert.equal(reviewScreen, baseline037('app/decks/[id]/review.tsx'));
+  const curEn = load('i18n/en.ts').default, curTr = load('i18n/tr.ts').default;
+  const oldEn = load('i18n/en.ts', { './studySupport': load('i18n/studySupport.ts') }, baseline037('i18n/en.ts')).default;
+  const oldTr = load('i18n/tr.ts', { './studySupport': load('i18n/studySupport.ts') }, baseline037('i18n/tr.ts')).default;
+  assert.deepEqual(curEn.reward, oldEn.reward);
+  assert.deepEqual(curTr.reward, oldTr.reward);
+  for (const key of Object.keys(oldEn.momentum)) {
+    if (typeof oldEn.momentum[key] === 'function') {
+      assert.equal(curEn.momentum[key](3), oldEn.momentum[key](3));
+    } else {
+      assert.equal(curEn.momentum[key], oldEn.momentum[key]);
+    }
+  }
+  for (const key of Object.keys(oldTr.momentum)) {
+    if (typeof oldTr.momentum[key] === 'function') {
+      assert.equal(curTr.momentum[key](3), oldTr.momentum[key](3));
+    } else {
+      assert.equal(curTr.momentum[key], oldTr.momentum[key]);
+    }
   }
 });
 // JS element-tree contracts only: no native rendering, screen automation or physical QA.

@@ -106,7 +106,7 @@ async function main() {
       const ui=read(file);for(const text of ['useFocusEffect','listener.remove()','clearTimeout(timer)','t.common.retry'])assert.ok(ui.includes(text));
       assert.doesNotMatch(ui,/setInterval|masteryPercent|progressPercent|retentionPercent|scheduleReview/);
     }
-    assert.match(migrations,/const CURRENT_VERSION = 10/);assert.doesNotMatch(migrations,/currentVersion < 11/);
+    const vMatch = migrations.match(/const CURRENT_VERSION = (\d+);/); assert.ok(vMatch && parseInt(vMatch[1], 10) >= 10);
   });
   await check('Committee totals equal all Subject-derived evidence including empty Subjects and exact attention counts',()=>fixture((db,r)=>{
     curriculum(db);
@@ -146,7 +146,7 @@ async function main() {
     assert.match(read('app/committees/[id].tsx'),/CommitteeLearningEvidence/);
     assert.doesNotMatch(ui,/setInterval|scheduleReview|examPlan|mastery|percentage|retention|useFocusStore/);
     for(const lang of ['en','tr'])assert.ok(load('i18n/'+lang+'.ts').default.committeeEvidence.noneAttention);
-    assert.match(migrations,/const CURRENT_VERSION = 10/);assert.doesNotMatch(migrations,/currentVersion < 11/);
+    const vMatch = migrations.match(/const CURRENT_VERSION = (\d+);/); assert.ok(vMatch && parseInt(vMatch[1], 10) >= 10);
   });
   await check('Subject aggregates equal exact Topic facts, preserve order and filter only approved attention',()=>fixture((db,r)=>{
     curriculum(db);
@@ -246,7 +246,7 @@ async function main() {
       for(const key of ['title','attention','available','insufficient','help'])assert.ok(copy[key]);
       for(const key of ['cards','reviews','due'])assert.ok(copy[key](3).includes('3'));
     }
-    assert.match(migrations,/const CURRENT_VERSION = 10/);assert.doesNotMatch(migrations,/currentVersion < 11/);
+    const vMatch = migrations.match(/const CURRENT_VERSION = (\d+);/); assert.ok(vMatch && parseInt(vMatch[1], 10) >= 10);
   });
   await check('v9 to v10 preserves legacy cards/reviews, defaults null and rolls back both link columns', async()=>{
     const db=new Adapter();
@@ -262,7 +262,7 @@ async function main() {
         assert.deepEqual(db.getFirstSync('SELECT * FROM flashcard_reviews'),history);
       }
       db.fail=()=>false;await migrate(db);await migrate(db);
-      assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version,10);
+      assert.ok(db.getFirstSync('SELECT version FROM _schema_version').version >= 10);
       assert.deepEqual({...db.getFirstSync('SELECT * FROM flashcards')},{...before,topic_id:null});
       assert.deepEqual({...db.getFirstSync('SELECT * FROM flashcard_reviews')},{...history,topic_id:null});
       for(const table of ['flashcards','flashcard_reviews']) {
@@ -353,8 +353,8 @@ async function main() {
     }
     for(const file of ['store/useTopicStore.ts','store/useCurriculumStore.ts'])assert.equal(fs.existsSync(path.join(root,file)),false);
     assert.doesNotMatch(read('store/useMemoryStore.ts'),/mastery|weakTopic|retentionPercent/);
-    const v10=migrations.slice(migrations.indexOf('  if (currentVersion < 10)'));
-    assert.equal((v10.match(/ADD COLUMN/g)||[]).length,2);assert.doesNotMatch(v10,/CREATE TABLE|CREATE INDEX|DELETE FROM|currentVersion < 11/);
+    const v10=migrations.slice(migrations.indexOf('  if (currentVersion < 10)'), migrations.indexOf('  if (currentVersion < 11)'));
+    assert.equal((v10.match(/ADD COLUMN/g)||[]).length,2);assert.doesNotMatch(v10,/CREATE TABLE|CREATE INDEX|DELETE FROM/);
   });
   await check('v8 migration preserves historical values/content/reviews, rolls back and reruns',async()=>{
     const db=new Adapter();
@@ -368,7 +368,7 @@ async function main() {
         assert.deepEqual(db.getFirstSync('SELECT * FROM flashcards'),before);
       }
       db.fail=()=>false; await migrate(db); await migrate(db);
-      assert.equal(db.getFirstSync('SELECT version FROM _schema_version').version,10);
+      assert.ok(db.getFirstSync('SELECT version FROM _schema_version').version >= 10);
       assert.deepEqual({...db.getFirstSync('SELECT * FROM flashcards')},{...before,schedule_state:'unscheduled',topic_id:null});
       assert.deepEqual(db.getAllSync('SELECT * FROM flashcard_reviews').map(r=>({...r})),reviews.map(r=>({...r,topic_id:null})));
       assert.equal(repo(db).getCardById('c').schedule.state,'unscheduled');

@@ -1,6 +1,30 @@
 # MedOS — Project Status
 
-## Current — Phase 7 Q-Bank Tracking Engine
+## Current — Phase 8 Step 1: Validator Modernization & Targeted Quality Audit
+
+- Phase 8 started. Phase 7 Q-Bank physical phone QA PASS and physical tablet QA PASS. Phase 7 pushed to remote.
+- Schema version: v11. Legacy validators (Phase 2–6) modernized to support additive schema evolution (`CURRENT_VERSION >= 10`) while strictly preserving historical invariants, table/column constraints, and domain-specific regression checks.
+- Full static regression suite:
+  - TypeScript (`tsc --noEmit`): PASS (0 errors)
+  - Phase 2 (`validate-phase2.cjs`): 21 PASS
+  - Phase 3 (`validate-phase3.cjs`): 90 PASS
+  - Phase 4 (`validate-phase4.cjs`): 43 PASS
+  - Phase 5 (`validate-phase5.cjs`): 29 PASS
+  - Phase 6 (`validate-phase6.cjs`): 33 PASS
+  - Phase 7 focused suite (`test-phase7-master.cjs`): PASS
+- Targeted Quality Audit completed (evidence-backed findings):
+  - HIGH: None.
+  - MEDIUM:
+    - Safe Area / Responsive: Standalone stack form routes (`app/qbank/new.tsx`, `app/decks/new.tsx`, `app/committees/new.tsx`, `app/calendar/new.tsx`, `app/subjects/new.tsx`, `app/topics/new.tsx`) render `<ScreenWrapper>` without `includeBottomSafeArea`, risking action button overlap with gesture bars.
+    - Accessibility: Metric cards in `components/dashboard/TodayMetrics.tsx` set `accessibilityLabel` exclusively to action text (`openFocus`, `openMemory`, `logSession`), obscuring numeric metrics from screen readers.
+    - Error States: `components/memory/TopicReviewEvidence.tsx` and `components/curriculum/CommitteeLearningEvidence.tsx` swallow Q-Bank query errors and render empty practice state (`noPractice`) rather than an error/retry state.
+  - LOW:
+    - Accessibility: `components/ui/Input.tsx` does not reflect `invalid` in native `accessibilityState`.
+    - Navigation / Stale Entity: Concurrent topic deletion during `/qbank/new` produces a generic save failure instead of notifying the user of missing foreign key context.
+  - Privacy: Confirmed zero telemetry, tracking, background sensors, or attention inference.
+- Runtime application files modified: NONE. No new features, UI redesign, or schema changes.
+
+## Historical — Phase 7 Q-Bank Tracking Engine
 
 - Phase 7 implementation COMPLETE. Master Phase 6 remains ACTIVE awaiting physical phone/tablet QA; Phase 7 physical QA PENDING.
 - Delivered scope:

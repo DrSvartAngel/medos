@@ -703,8 +703,8 @@ check('Phase 3.2 remains runtime-only with no schema, dependency, or version cha
   const appStore = read('store/useAppStore.ts');
   const supportStore = read('store/useStudySupportStore.ts');
   const packageJson = JSON.parse(read('package.json'));
-  assert.match(migrations, /const CURRENT_VERSION = 10/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 11\)/m);
+  const versionMatch = migrations.match(/const CURRENT_VERSION = (\d+);/);
+  assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
   assert.doesNotMatch(migrations, /session_mode|entry_mode|check_in|study_check/);
   assert.doesNotMatch(focusRepo, /sessionMode|session_mode|entryMilestone|checkIn/);
   assert.doesNotMatch(appStore, /sessionMode|entryMilestone|CheckInEnergy|checkIn/);
@@ -1038,8 +1038,8 @@ check('Lighter Plan is route-local, migration-free, dependency-free, and non-cli
   assert.doesNotMatch(supportStore, /recoveryOpen|RecoveryAction|selectedRecoveryAction|microSteps/);
   assert.doesNotMatch(route, /AsyncStorage|persist\(|telemetry|analytics/);
   assert.equal(fs.existsSync(path.join(root, 'db/repositories/recoveryRepo.ts')), false);
-  assert.match(migrations, /const CURRENT_VERSION = 10/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 11\)/m);
+  const versionMatch = migrations.match(/const CURRENT_VERSION = (\d+);/);
+  assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
   assert.equal(Object.keys(packageJson.dependencies).length, 13);
   assertCopy(route, "Lighter plan");
   assertCopy(route, "Choose one small useful thing.");
@@ -1281,8 +1281,8 @@ check('Gentle Return remains scrollable, runtime-only, migration-free, and depen
   assert.doesNotMatch(component, /numberOfLines/);
   assert.doesNotMatch(focusStore, /persist\(|AsyncStorage/);
   assert.doesNotMatch(focusRepo, /gentleBreak|distraction|break_/i);
-  assert.match(migrations, /const CURRENT_VERSION = 10/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 11\)/m);
+  const versionMatch = migrations.match(/const CURRENT_VERSION = (\d+);/);
+  assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
   assert.equal(Object.keys(packageJson.dependencies).length, 13);
 });
 
@@ -1496,8 +1496,8 @@ check('Phase 3.5 adds no notification, background, analytics, theme, schema, or 
   assert.doesNotMatch(read('components/ui/Button.tsx'), /lowStimulation/);
   assert.equal(packageJson.dependencies['expo-notifications'], undefined);
   assert.equal(Object.keys(packageJson.dependencies).length, 13);
-  assert.match(migrations, /const CURRENT_VERSION = 10/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 11\)/m);
+  const versionMatch = migrations.match(/const CURRENT_VERSION = (\d+);/);
+  assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
 });
 
 check('Phase 3.5 Profile controls remain responsive, explicit, and large-text safe', () => {
@@ -1707,8 +1707,8 @@ check('Phase 3.6 adds no feature state, notification, analytics, schema, depende
     /expo-notifications|Notifications\.|TaskManager\.|BackgroundTask\.|analytics|telemetry|automatic distraction detection/i
   );
   assert.doesNotMatch(stores, /phase36|phase3Closure|accessibilityHistory/i);
-  assert.match(migrations, /const CURRENT_VERSION = 10/);
-  assert.doesNotMatch(migrations, /^\s*if \(currentVersion < 11\)/m);
+  const versionMatch = migrations.match(/const CURRENT_VERSION = (\d+);/);
+  assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
   assert.equal(Object.keys(packageJson.dependencies).length, 13);
   assert.equal(packageJson.dependencies['expo-notifications'], undefined);
   assert.equal(packageJson.dependencies['expo-task-manager'], undefined);
@@ -2133,7 +2133,7 @@ check('System error localization follows active language without mutating diagno
 
 check('Localization preserves persisted stores, schema, SRS, evidence, recommendations and Exam Plan rules', () => {
   const { execFileSync } = require('node:child_process');
-  for (const file of ['db/migrations.ts', 'package.json', 'package-lock.json', 'store/useAppStore.ts',
+  for (const file of ['package.json', 'package-lock.json', 'store/useAppStore.ts',
     'store/useFocusStore.ts', 'store/useMemoryStore.ts', 'store/useStudySupportStore.ts',
     'utils/memoryScheduling.ts', 'utils/examPlanRules.ts', 'utils/studySupportRules.ts', 'utils/recoveryRules.ts',
     'utils/topicEvidenceRules.ts', 'utils/subjectEvidenceRules.ts', 'utils/committeeEvidenceRules.ts',
@@ -2141,6 +2141,16 @@ check('Localization preserves persisted stores, schema, SRS, evidence, recommend
     const before = execFileSync('git', ['show', `a119bc1:${file}`], { cwd: root, encoding: 'utf8' });
     assert.equal(read(file).replace(/\r\n/g, '\n'), before.replace(/\r\n/g, '\n'), file);
   }
+  const beforeMigrations = execFileSync('git', ['show', 'a119bc1:db/migrations.ts'], { cwd: root, encoding: 'utf8' }).replace(/\r\n/g, '\n');
+  const currentMigrations = read('db/migrations.ts').replace(/\r\n/g, '\n');
+  const targetMigrationEnd = "UPDATE _schema_version SET version = ?', [10]);";
+  const v10MigrationSlice = beforeMigrations.slice(
+    beforeMigrations.indexOf('if (currentVersion < 2)'),
+    beforeMigrations.indexOf(targetMigrationEnd) + targetMigrationEnd.length
+  );
+  assert.ok(currentMigrations.includes(v10MigrationSlice), 'Earlier migrations 1-10 must remain intact');
+  const versionMatch = currentMigrations.match(/const CURRENT_VERSION = (\d+);/);
+  assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 10);
   // Semantic validation for dashboardRepo getFocusSummary invariant
   const dashboardRepo = read('db/repositories/dashboardRepo.ts');
   const focusSummaryBlock = dashboardRepo.slice(
