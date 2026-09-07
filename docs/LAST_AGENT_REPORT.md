@@ -1,6 +1,48 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 9 Step 3: Weak & Neglected Topic Engine
+## Current — Phase 9 Step 4: Committee Analytics UI Integration
+
+- Phase 9 Step 4 implementation COMPLETE. (Phase 8 implementation complete; Phase 8 physical regression QA remains DEFERRED).
+- Delivered scope:
+  - Analytics UI Components (`components/analytics/`):
+    - `CommitteeAnalyticsSummary`:
+      - Displays factual multi-signal exam evidence for current committee: curriculum coverage (`X / Y topics practiced · Z%`), Q-Bank practice (`X questions · Y% accuracy`), Memory reviews (`X% retention · Y due`), and topic state distribution (`needs attention`, `stale`, `never studied`).
+      - Strictly truthful null handling: unpracticed Q-Bank renders "No Q-Bank practice" (never fake 0%), unreviewed Memory renders "No Memory reviews" (never fake 0%), empty committee renders "No topics in committee" (never fake 0%).
+      - Section title: "Exam Evidence" (TR: "Sınav Kanıtı").
+      - No composite "Exam Readiness %", pass probability, or pseudo-scientific scores.
+    - `WeakTopicsList`:
+      - Displays top 5 prioritized topics needing attention from `getWeakTopics(...)`.
+      - Factual weakness reasons rendered with supporting metrics (`low_qbank_accuracy` -> "% · questions", `low_memory_retention` -> "% · reviews", `due_reviews` -> "cards due").
+      - No weakness score, danger styling, or alarmist copy.
+      - Actionable row navigation to canonical topic detail (`/topics/[id]`).
+      - Section title: "Needs Attention" (TR: "İlgi Gerektirenler").
+    - `NeglectedTopicsList`:
+      - Displays top 5 prioritized curriculum areas from `getNeglectedTopics(...)`.
+      - Factual status: "Not studied yet" (for `never_studied`) and "Last studied X days ago" (today / yesterday / X days ago for `stale`).
+      - Preserves orthogonal distinction from weak topics (no implication of failure/weakness for merely stale topics).
+      - Actionable row navigation to canonical topic detail (`/topics/[id]`).
+      - Section title: "Needs Revisit" (TR: "Tekrar Bakılması Gerekenler").
+  - Committee Detail Integration (`app/committees/[id].tsx`):
+    - Efficient batch data loading: calls `analyticsRepo.getCommitteeAnalytics(id)` and `analyticsRepo.getCommitteeTopicAnalytics(id)` once on screen focus.
+    - Derives priority lists in JS via pure deterministic rules (`getWeakTopics` and `getNeglectedTopics`).
+    - Zero per-topic SQLite queries (no N+1).
+    - Local screen state with calm loading, localized error handling, and retry action.
+    - Zero global analytics Zustand store introduced.
+  - Localization & Accessibility:
+    - Dedicated `analytics` namespace with 100% key parity and signature matching across `i18n/en.ts` and `i18n/tr.ts`.
+    - Meaningful `accessibilityRole` and descriptive `accessibilityLabel` on all interactive and metric elements.
+    - Zero color-only status communication; no fixed-height truncation.
+- Database: Schema v11 strictly unchanged.
+- Dedicated Validation:
+  - `scripts/validate-phase9-step4.cjs`: 10 test suites covering component contracts, batch data flow, lack of fake scores, truthful null handling, factual weak reasons, factual neglect status, localization parity, and accessibility.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Steps 1, 2, 3, and 4: ALL PASS
+- Phase 8 physical regression QA remains DEFERRED; Phase 8 is not marked complete.
+- Next: Phase 9 Step 5 (Subject / Topic analytics integration or dashboard polish).
+
+## Historical — Phase 9 Step 3: Weak & Neglected Topic Engine
 
 - Phase 9 Step 3 implementation COMPLETE. (Phase 8 implementation complete; Phase 8 physical regression QA remains DEFERRED).
 - Delivered scope:

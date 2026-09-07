@@ -858,6 +858,62 @@ quickStart: 'Hızlı başlangıç',
   },
 
 
+  // ── Öğrenme Analitiği ──────────────────────────────────────────────────────
+  analytics: {
+    examEvidenceTitle: 'Sınav Kanıtı',
+    needsAttentionTitle: 'İlgi Gerektirenler',
+    needsRevisitTitle: 'Tekrar Bakılması Gerekenler',
+    loading: 'Öğrenme analitiği yükleniyor…',
+    loadError: 'Öğrenme analitiği yüklenemedi.',
+    retry: 'Tekrar Dene',
+    coverageLabel: 'Müfredat kapsamı',
+    qbankLabel: 'Soru Bankası',
+    memoryLabel: 'Hafıza',
+    noTopics: 'Komitede henüz konu yok',
+    coverage: (practiced: number, total: number, pct: number) =>
+      `${practiced} / ${total} konu çalışıldı · %${pct}`,
+    coverageA11y: (practiced: number, total: number, pct: number) =>
+      `Müfredat kapsamı: ${total} konunun ${practiced} tanesi çalışıldı, yüzde ${pct}`,
+    noQBank: 'Soru bankası pratiği yok',
+    qbankStats: (questions: number, accuracy: number) =>
+      `${questions} soru · %${accuracy} doğruluk`,
+    qbankA11y: (questions: number, accuracy: number) =>
+      `Soru bankası: ${questions} soru, yüzde ${accuracy} doğruluk`,
+    noMemoryReviews: 'Tekrar kaydı yok',
+    memoryStats: (retention: number, due: number) =>
+      `%${retention} kalıcılık · ${due} bekleyen`,
+    memoryStatsA11y: (retention: number, due: number) =>
+      `Hafıza kalıcılığı: yüzde ${retention}, ${due} kart tekrar bekliyor`,
+    memoryDueOnly: (due: number) =>
+      `Henüz tekrar yok · ${due} bekleyen`,
+    needsAttentionCount: (n: number) =>
+      `${n} ilgi gerektiriyor`,
+    staleCount: (n: number) =>
+      `${n} güncelliğini yitirmiş`,
+    neverStudiedCount: (n: number) =>
+      `${n} hiç çalışılmadı`,
+    weakEmpty: 'Acil ilgi gerektiren konu yok',
+    reasons: {
+      low_qbank_accuracy: 'Düşük soru bankası doğruluğu',
+      low_memory_retention: 'Düşük akılda kalıcılık',
+      due_reviews: 'Geciken tekrarlar',
+    },
+    qbankReasonValue: (accuracy: number, questions: number) =>
+      `%${accuracy} · ${questions} soru`,
+    memoryReasonValue: (retention: number, reviews: number) =>
+      `%${retention} · ${reviews} tekrar`,
+    dueReasonValue: (due: number) =>
+      `${due} kart tekrar bekliyor`,
+    neglectedEmpty: 'İhmal edilmiş konu yok',
+    neverStudied: 'Henüz çalışılmadı',
+    daysAgo: (days: number) =>
+      `En son ${days} gün önce çalışıldı`,
+    studiedToday: 'En son bugün çalışıldı',
+    studiedYesterday: 'En son dün çalışıldı',
+    staleLabel: 'Tekrar gerekli',
+    openTopic: (name: string) => `${name} konusunu aç`,
+  },
+
   // ── Bulunamadı ────────────────────────────────────────────────────────────────
   notFound: {
     title: 'Bu sayfa mevcut değil.',

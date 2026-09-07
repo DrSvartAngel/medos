@@ -851,6 +851,62 @@ quickStart: 'Quick Start',
     },
   },
 
+  // ── Learning Analytics ──────────────────────────────────────────────────────
+  analytics: {
+    examEvidenceTitle: 'Exam Evidence',
+    needsAttentionTitle: 'Needs Attention',
+    needsRevisitTitle: 'Needs Revisit',
+    loading: 'Loading analytics…',
+    loadError: 'Learning analytics could not be loaded.',
+    retry: 'Retry',
+    coverageLabel: 'Curriculum coverage',
+    qbankLabel: 'Q-Bank',
+    memoryLabel: 'Memory',
+    noTopics: 'No topics in committee',
+    coverage: (practiced: number, total: number, pct: number) =>
+      `${practiced} / ${total} topics practiced · ${pct}%`,
+    coverageA11y: (practiced: number, total: number, pct: number) =>
+      `Curriculum coverage: ${practiced} of ${total} topics practiced, ${pct} percent`,
+    noQBank: 'No Q-Bank practice',
+    qbankStats: (questions: number, accuracy: number) =>
+      `${questions} questions · ${accuracy}% accuracy`,
+    qbankA11y: (questions: number, accuracy: number) =>
+      `Question bank: ${questions} questions, ${accuracy} percent accuracy`,
+    noMemoryReviews: 'No Memory reviews',
+    memoryStats: (retention: number, due: number) =>
+      `${retention}% retention · ${due} due`,
+    memoryStatsA11y: (retention: number, due: number) =>
+      `Memory retention: ${retention} percent, ${due} cards due`,
+    memoryDueOnly: (due: number) =>
+      `No reviews yet · ${due} due`,
+    needsAttentionCount: (n: number) =>
+      `${n} needs attention`,
+    staleCount: (n: number) =>
+      `${n} stale`,
+    neverStudiedCount: (n: number) =>
+      `${n} not studied`,
+    weakEmpty: 'No topics need immediate attention',
+    reasons: {
+      low_qbank_accuracy: 'Low Q-Bank accuracy',
+      low_memory_retention: 'Low retention',
+      due_reviews: 'Due reviews',
+    },
+    qbankReasonValue: (accuracy: number, questions: number) =>
+      `${accuracy}% · ${questions} questions`,
+    memoryReasonValue: (retention: number, reviews: number) =>
+      `${retention}% · ${reviews} reviews`,
+    dueReasonValue: (due: number) =>
+      `${due} cards due`,
+    neglectedEmpty: 'No neglected topics',
+    neverStudied: 'Not studied yet',
+    daysAgo: (days: number) =>
+      `Last studied ${days} days ago`,
+    studiedToday: 'Last studied today',
+    studiedYesterday: 'Last studied yesterday',
+    staleLabel: 'Needs review',
+    openTopic: (name: string) => `Open ${name}`,
+  },
+
   // ── Not found ─────────────────────────────────────────────────────────────────
   notFound: {
     title: "This page doesn't exist.",

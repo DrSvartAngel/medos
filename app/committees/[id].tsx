@@ -1,7 +1,17 @@
 import { SubjectList } from '@/components/curriculum/SubjectList';
 import { CommitteeLearningEvidence } from '@/components/curriculum/CommitteeLearningEvidence';
+import { CommitteeAnalyticsSummary } from '@/components/analytics/CommitteeAnalyticsSummary';
+import { WeakTopicsList } from '@/components/analytics/WeakTopicsList';
+import { NeglectedTopicsList } from '@/components/analytics/NeglectedTopicsList';
+import { analyticsRepo } from '@/db/repositories/analyticsRepo';
+import { getWeakTopics, getNeglectedTopics } from '@/utils/analyticsPriorityRules';
+import type {
+  CommitteeAnalyticsSummary as CommitteeAnalyticsSummaryData,
+  WeakTopicItem,
+  NeglectedTopicItem,
+} from '@/models/analytics';
 import { useTranslation } from '@/i18n';
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { ActivityIndicator, Alert, BackHandler, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import type { Href } from 'expo-router';
@@ -56,15 +66,45 @@ export default function CommitteeDetailScreen() {
   const deleteCommittee = useCommitteeStore((state) => state.deleteCommittee);
   const setError = useCommitteeStore((state) => state.setError);
 
+  const [analyticsSummary, setAnalyticsSummary] = useState<CommitteeAnalyticsSummaryData | null>(null);
+  const [weakTopics, setWeakTopics] = useState<WeakTopicItem[]>([]);
+  const [neglectedTopics, setNeglectedTopics] = useState<NeglectedTopicItem[]>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [analyticsError, setAnalyticsError] = useState(false);
+
+  const loadAnalytics = useCallback(() => {
+    if (!id) return;
+    setAnalyticsLoading(true);
+    setAnalyticsError(false);
+    try {
+      const summary = analyticsRepo.getCommitteeAnalytics(id);
+      const topicEvidences = analyticsRepo.getCommitteeTopicAnalytics(id);
+      setAnalyticsSummary(summary);
+      setWeakTopics(getWeakTopics(topicEvidences, 5));
+      setNeglectedTopics(getNeglectedTopics(topicEvidences, 5));
+    } catch {
+      setAnalyticsError(true);
+      setAnalyticsSummary(null);
+      setWeakTopics([]);
+      setNeglectedTopics([]);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, [id]);
+
   useFocusEffect(useCallback(() => {
     setError(null);
     if (id) loadCommittee(id);
+    if (id) loadAnalytics();
     const listener = BackHandler.addEventListener('hardwareBackPress', () => { back(); return true; });
     return () => listener.remove();
-  }, [id, loadCommittee, setError]));
+  }, [id, loadCommittee, setError, loadAnalytics]));
 
   const retry = () => {
-    if (id) loadCommittee(id);
+    if (id) {
+      loadCommittee(id);
+      loadAnalytics();
+    }
   };
   const requestMatches = committeeRequestId === id;
 
@@ -249,6 +289,14 @@ export default function CommitteeDetailScreen() {
       </Card>
 
       <SubjectList key={committee.id} committeeId={committee.id} />
+      <CommitteeAnalyticsSummary
+        summary={analyticsSummary}
+        loading={analyticsLoading}
+        error={analyticsError}
+        onRetry={loadAnalytics}
+      />
+      <WeakTopicsList topics={weakTopics} />
+      <NeglectedTopicsList topics={neglectedTopics} />
       <CommitteeLearningEvidence key={`evidence-${committee.id}`} committeeId={committee.id} />
       <Button label={t.examPlan.title} variant="secondary"
         onPress={() => router.push(`/committees/exam-plan/${encodeURIComponent(committee.id)}` as Href)} />
