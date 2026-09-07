@@ -77,8 +77,8 @@ export default function CommitteeDetailScreen() {
     setAnalyticsLoading(true);
     setAnalyticsError(false);
     try {
-      const summary = analyticsRepo.getCommitteeAnalytics(id);
       const topicEvidences = analyticsRepo.getCommitteeTopicAnalytics(id);
+      const summary = analyticsRepo.getCommitteeAnalytics(id, Date.now(), topicEvidences);
       setAnalyticsSummary(summary);
       setWeakTopics(getWeakTopics(topicEvidences, 5));
       setNeglectedTopics(getNeglectedTopics(topicEvidences, 5));

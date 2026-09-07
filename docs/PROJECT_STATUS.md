@@ -1,6 +1,41 @@
 # MedOS — Project Status
 
-## Current — Phase 9 Step 4: Committee Analytics UI Integration
+## Current — Phase 9 Step 5: Final Integrity + Dedicated Test Sweep + QA Prep
+
+- Phase 9 implementation: COMPLETE.
+- Phase 9 automated/static validation: PASS.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: Phase 9 implementation complete, awaiting physical device QA before release closure.
+- Delivered scope:
+  - Architecture Integrity: Verified strict linear pipeline: SQLite facts -> repository aggregation -> deterministic rules -> priority engine -> UI. Zero business logic recalculation in UI, zero hidden numerical scores, zero psychiatric/ADHD inference, zero AI/prediction.
+  - Query Integrity & CTE Optimization: Refactored `getCommitteeAnalytics` to accept optional preloaded topic evidences, eliminating the duplicate execution of the topic CTE query on committee screen load while strictly preserving existing contracts. Zero N+1 query loops.
+  - Dedicated Master Suite (`scripts/validate-phase9.cjs`):
+    - Real in-memory SQLite fixture with full migration to schema v11.
+    - End-to-end verification of Domain Rules, Repository SQL CTEs, Priority Engine, and UI Contracts.
+    - Explicit edge case coverage:
+      A. Empty committee (0 topics, coverage null, no fake 0% readiness).
+      B. Topic with cards but zero reviews (practiced = false, retention = null).
+      C. 1/1 Q-Bank (100% accuracy, but sample guard prevents Strong status).
+      D. Multi-topic aggregation: Topic A 1/1, Topic B 50/100 -> 51/101 = 50% (never averaged 75%).
+      E. Memory retention: 6/10 good/easy reviews = 60%.
+      F. Strong but stale: mastery 'strong', neglect 'stale' -> included in revisit list, excluded from weak list.
+      G. Missing/deleted topic/subject/committee yields truthful null/empty array without fabricated state.
+      H. DB error encapsulation: raw SQLite errors never reach analytics UI.
+  - Truthfulness: Confirmed absolute absence of `readinessPercent`, `confidenceScore`, `passProbability`, `weaknessScore`, `examProbability`, `attentionScore`, `adhdSeverity` across Phase 9 runtime files.
+  - Physical QA Preparation: Prepared combined Phase 8 + Phase 9 physical device QA checklist for Phone and Tablet.
+- Database: Schema v11 strictly unchanged.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Step 1–4 validators: ALL PASS (34 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+- Next: Combined Phase 8 + Phase 9 physical device QA.
+
+## Historical — Phase 9 Step 4: Committee Analytics UI Integration
 
 - Phase 9 Step 4 implementation COMPLETE. (Phase 8 implementation complete; Phase 8 physical regression QA remains DEFERRED).
 - Delivered scope:

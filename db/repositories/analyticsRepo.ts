@@ -270,7 +270,8 @@ export const analyticsRepo = {
    */
   getCommitteeAnalytics(
     committeeId: string,
-    now = Date.now()
+    now = Date.now(),
+    preloadedTopicEvidences?: TopicAnalyticsEvidence[]
   ): CommitteeAnalyticsSummary | null {
     if (typeof committeeId !== 'string' || !committeeId.trim()) return null;
     const db = getDB();
@@ -285,8 +286,9 @@ export const analyticsRepo = {
       [committee.id]
     );
 
-    // Batch query ALL topic evidences across the committee in 1 query
-    const allTopicEvidences = this.getCommitteeTopicAnalytics(committee.id, now);
+    // Batch query ALL topic evidences across the committee in 1 query (or reuse preloaded)
+    const allTopicEvidences =
+      preloadedTopicEvidences ?? this.getCommitteeTopicAnalytics(committee.id, now);
 
     // Group topic evidences by subjectId
     const topicsBySubject = new Map<string, TopicAnalyticsEvidence[]>();
