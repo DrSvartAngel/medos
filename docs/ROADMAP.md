@@ -1,6 +1,61 @@
 # MedOS — Development Roadmap
 
-## Current — Phase 10 Step 5: Source-Grounded Study Assistant UI
+## Current — Phase 10 Step 6: Source-Grounded Flashcard Draft Generator
+
+- Phase 10 Step 6 implementation: COMPLETE.
+- Phase 10 automated/static validation: PASS.
+- Phase 9 implementation + validation: COMPLETE.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: Source-grounded flashcard DRAFT generation delivered inside the Study Assistant; editable drafts, removal, regeneration, and strict ephemeral boundaries verified.
+- Delivered scope:
+  - Entry Point & UI Mode:
+    - Extended Study Assistant (`app/topics/[id]/assistant.tsx`) with a 3rd action tab: `Flashcards` (`t.studyAi.flashcardsTab`).
+    - Clean 3-tab segmented layout (Explain, Summarize, Flashcards) with responsive minimum widths.
+  - Draft Generation Workflow:
+    - Selected `StudySource` + `Topic` converted to `AISourceContext` via `toAISourceContext()`.
+    - Invokes `StudyAIService.generateFlashcardDrafts(context)` with strict verbatim source excerpt grounding.
+    - Respects `MAX_FLASHCARD_DRAFTS` (5-card batch ceiling).
+    - Provider-neutral runtime: uses `MockAIProvider` by default for zero-cost offline development.
+  - Draft Presentation & Scope:
+    - Displays drafts with explicit notice: `"Draft — review before saving"` / `"Taslak — kaydetmeden önce gözden geçir"`.
+    - Shows source provenance (`t.studyAi.basedOnSource(sourceTitle)`) and calm source-only note (`t.studyAi.sourceOnlyNote`).
+    - Shows verbatim `sourceExcerpt` for each draft in an accessible sub-container.
+    - Displays draft count badge (`t.studyAi.draftCount(drafts.length)`).
+  - Local Editing & Management:
+    - Users can edit front and back locally in React state (multiline, keyboard-safe, no fixed-height clipping).
+    - Edited cards are marked with an `Edited` (`t.studyAi.editedBadge`) badge.
+    - Editing does NOT alter the underlying Study Source or bypass generation grounding.
+    - Users can remove individual drafts (`t.studyAi.removeDraft`) or clear all drafts (`t.studyAi.clearDrafts`).
+    - Controlled regenerate action (`t.studyAi.regenerate`) replaces the current draft set without duplicate appends.
+  - Persistence Safety & Step 6 Boundaries:
+    - AI-generated drafts are strictly ephemeral React state.
+    - Zero DB writes: NO inserts into `flashcards`, `cards`, `decks`, or `reviews`.
+    - Memory/SRS evidence and Q-Bank evidence remain completely untouched.
+    - Zero Save / Add to Deck / Approve buttons in Step 6 (deferred to human approval flow in Step 7).
+    - Database schema remains **v12** unchanged.
+  - Error Handling & Grounding:
+    - Grounding failures, malformed outputs, and unavailable providers map safely to localized messages without leaking technical internals.
+  - Localization:
+    - Extended `studyAi` namespace in `i18n/en.ts` and `i18n/tr.ts` with 16 new keys (parity verified).
+- Dedicated Validation:
+  - `scripts/validate-phase10-step6.cjs`: 11 test suites covering entry point, service isolation, source selection, draft generation, grounding rejection, local editing, draft removal/clear/regenerate, persistence safety, scope labels, localization parity, accessibility, and zero credentials.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+  - Phase 10 Step 1 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 2 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 3 Suite: ALL PASS (9 checks)
+  - Phase 10 Step 4 Suite: ALL PASS (9 checks)
+  - Phase 10 Step 5 Suite: ALL PASS (15 checks)
+  - Phase 10 Step 6 Suite: ALL PASS (11 checks)
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+- Next: Phase 10 Step 7 (Human-in-the-Loop Flashcard Approval & Deck Import Flow).
+
+## Historical — Phase 10 Step 5: Source-Grounded Study Assistant UI
 
 - Phase 10 Step 5 implementation: COMPLETE.
 - Phase 10 automated/static validation: PASS.

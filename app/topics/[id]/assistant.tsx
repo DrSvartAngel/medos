@@ -5,7 +5,7 @@ import { topicRepo } from '@/db/repositories/topicRepo';
 import { studySourceRepo } from '@/db/repositories/studySourceRepo';
 import type { Topic } from '@/models/curriculum';
 import type { StudySource } from '@/models/studySource';
-import { AIServiceError } from '@/models/ai';
+import { type AIFlashcardDraft, AIServiceError } from '@/models/ai';
 import { getStudyAIService } from '@/services/ai/studyAIClient';
 import { toAISourceContext } from '@/services/ai/sourceContext';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
@@ -20,14 +20,14 @@ import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
 import { topicRouteId } from '@/utils/topicRoutes';
 
-type ActionMode = 'explain' | 'summarize';
+type ActionMode = 'explain' | 'summarize' | 'flashcards';
 
 type ResultState =
   | { status: 'idle' }
   | { status: 'loading'; kind: ActionMode }
   | {
       status: 'success';
-      kind: ActionMode;
+      kind: 'explain' | 'summarize';
       text: string;
       sourceId: string;
       sourceTitle: string;
@@ -45,6 +45,8 @@ function mapErrorToMessage(err: unknown, t: ReturnType<typeof useTranslation>): 
         return t.studyAi.sourceNotSupported;
       case 'grounding_failed':
         return t.studyAi.groundingFailed;
+      case 'generation_limit_exceeded':
+        return t.studyAi.generationFailed;
       default:
         return t.studyAi.genericError;
     }
@@ -68,6 +70,7 @@ export default function StudyAssistantScreen() {
   const [conceptQuery, setConceptQuery] = useState('');
   const [queryError, setQueryError] = useState<string | null>(null);
   const [resultState, setResultState] = useState<ResultState>({ status: 'idle' });
+  const [drafts, setDrafts] = useState<AIFlashcardDraft[]>([]);
 
   const loadData = useCallback(() => {
     setLoadingInitial(true);
@@ -127,8 +130,9 @@ export default function StudyAssistantScreen() {
   const handleSelectSource = (id: string) => {
     if (id !== selectedSourceId) {
       setSelectedSourceId(id);
-      // Changing source clears previous result to avoid provenance confusion
+      // Changing source clears previous result and drafts to avoid provenance confusion
       setResultState({ status: 'idle' });
+      setDrafts([]);
       setQueryError(null);
     }
   };
@@ -225,11 +229,60 @@ export default function StudyAssistantScreen() {
     }
   };
 
+  const handleGenerateDrafts = async () => {
+    if (!selectedSourceId) return;
+
+    setResultState({ status: 'loading', kind: 'flashcards' });
+
+    try {
+      // Truthful check: ensure source and topic still exist in DB
+      const freshSource = studySourceRepo.getById(selectedSourceId);
+      if (!freshSource) {
+        setResultState({ status: 'error', errorMessage: t.studyAi.sourceMissing });
+        return;
+      }
+      const freshTopic = topicRepo.getById(topicId);
+      if (!freshTopic) {
+        setResultState({ status: 'error', errorMessage: t.topics.missing });
+        return;
+      }
+
+      const service = getStudyAIService();
+      const context = toAISourceContext(freshSource, freshTopic);
+      const generated = await service.generateFlashcardDrafts(context);
+
+      setDrafts(generated);
+      setResultState({ status: 'idle' });
+    } catch (err: unknown) {
+      setResultState({
+        status: 'error',
+        errorMessage: mapErrorToMessage(err, t),
+      });
+    }
+  };
+
+  const handleEditDraft = (draftId: string, field: 'front' | 'back', value: string) => {
+    setDrafts((prev) =>
+      prev.map((d) => (d.id === draftId ? { ...d, [field]: value, edited: true } : d))
+    );
+  };
+
+  const handleRemoveDraft = (draftId: string) => {
+    setDrafts((prev) => prev.filter((d) => d.id !== draftId));
+  };
+
+  const handleClearDrafts = () => {
+    setDrafts([]);
+    setResultState({ status: 'idle' });
+  };
+
   const handleRetry = () => {
     if (activeMode === 'explain') {
       void handleExplain();
-    } else {
+    } else if (activeMode === 'summarize') {
       void handleSummarize();
+    } else {
+      void handleGenerateDrafts();
     }
   };
 
@@ -320,18 +373,27 @@ export default function StudyAssistantScreen() {
             {/* Action Tabs */}
             {selectedSource && (
               <Section>
-                <View style={{ flexDirection: 'row', gap: spacing.sm }}>
+                <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
                   <Button
                     label={t.studyAi.explainTab}
                     variant={activeMode === 'explain' ? 'primary' : 'secondary'}
+                    size="sm"
                     onPress={() => handleModeChange('explain')}
-                    style={{ flex: 1 }}
+                    style={{ flex: 1, minWidth: 95 }}
                   />
                   <Button
                     label={t.studyAi.summarizeTab}
                     variant={activeMode === 'summarize' ? 'primary' : 'secondary'}
+                    size="sm"
                     onPress={() => handleModeChange('summarize')}
-                    style={{ flex: 1 }}
+                    style={{ flex: 1, minWidth: 95 }}
+                  />
+                  <Button
+                    label={t.studyAi.flashcardsTab}
+                    variant={activeMode === 'flashcards' ? 'primary' : 'secondary'}
+                    size="sm"
+                    onPress={() => handleModeChange('flashcards')}
+                    style={{ flex: 1, minWidth: 95 }}
                   />
                 </View>
 
@@ -378,10 +440,188 @@ export default function StudyAssistantScreen() {
                     />
                   </View>
                 )}
+
+                {activeMode === 'flashcards' && (
+                  <View style={{ gap: spacing.md, marginTop: spacing.sm }}>
+                    {drafts.length === 0 ? (
+                      <Button
+                        label={t.studyAi.generateFlashcards}
+                        onPress={handleGenerateDrafts}
+                        loading={
+                          resultState.status === 'loading' && resultState.kind === 'flashcards'
+                        }
+                        disabled={resultState.status === 'loading'}
+                      />
+                    ) : (
+                      <Card elevated style={{ gap: spacing.md }}>
+                        {/* Header with Title, Count, Clear, Regenerate */}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: spacing.xs,
+                          }}
+                        >
+                          <View
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+                          >
+                            <AppText variant="h3">{t.studyAi.flashcardDrafts}</AppText>
+                            <Badge label={t.studyAi.draftCount(drafts.length)} variant="default" />
+                          </View>
+                          <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+                            <Button
+                              label={t.studyAi.regenerate}
+                              variant="ghost"
+                              size="sm"
+                              onPress={handleGenerateDrafts}
+                              loading={
+                                resultState.status === 'loading' &&
+                                resultState.kind === 'flashcards'
+                              }
+                              disabled={resultState.status === 'loading'}
+                            />
+                            <Button
+                              label={t.studyAi.clearDrafts}
+                              variant="ghost"
+                              size="sm"
+                              onPress={handleClearDrafts}
+                              disabled={resultState.status === 'loading'}
+                            />
+                          </View>
+                        </View>
+
+                        {/* Provenance Box */}
+                        <View
+                          style={{
+                            backgroundColor: colors.surface,
+                            borderColor: colors.border,
+                            borderWidth: 1,
+                            borderRadius: radius.sm,
+                            padding: spacing.sm,
+                            gap: 4,
+                          }}
+                        >
+                          <AppText variant="label" color={colors.primary}>
+                            {t.studyAi.basedOnSource(selectedSource.title)}
+                          </AppText>
+                          <AppText variant="caption" color={colors.textSecondary}>
+                            {t.studyAi.sourceOnlyNote}
+                          </AppText>
+                          <AppText variant="caption" color={colors.warning}>
+                            {t.studyAi.draftReviewNotice}
+                          </AppText>
+                        </View>
+
+                        {/* Draft Cards */}
+                        <View style={{ gap: spacing.md }}>
+                          {drafts.map((draft, index) => (
+                            <View
+                              key={draft.id}
+                              style={{
+                                borderWidth: 1,
+                                borderColor: colors.border,
+                                borderRadius: radius.md,
+                                padding: spacing.md,
+                                backgroundColor: colors.surface,
+                                gap: spacing.sm,
+                              }}
+                            >
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <View
+                                  style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: spacing.xs,
+                                  }}
+                                >
+                                  <AppText variant="label">#{index + 1}</AppText>
+                                  {draft.edited ? (
+                                    <Badge label={t.studyAi.editedBadge} variant="default" />
+                                  ) : null}
+                                </View>
+                                <Button
+                                  label={t.studyAi.removeDraft}
+                                  variant="ghost"
+                                  size="sm"
+                                  accessibilityLabel={t.studyAi.removeDraftNumbered(index + 1)}
+                                  onPress={() => handleRemoveDraft(draft.id)}
+                                />
+                              </View>
+
+                              {/* Front Input */}
+                              <View style={{ gap: spacing.xs }}>
+                                <AppText variant="caption" color={colors.textSecondary}>
+                                  {t.studyAi.front}
+                                </AppText>
+                                <Input
+                                  multiline
+                                  value={draft.front}
+                                  onChangeText={(text) => handleEditDraft(draft.id, 'front', text)}
+                                  accessibilityLabel={`${t.studyAi.front} ${index + 1}`}
+                                  style={{ minHeight: 60 }}
+                                />
+                              </View>
+
+                              {/* Back Input */}
+                              <View style={{ gap: spacing.xs }}>
+                                <AppText variant="caption" color={colors.textSecondary}>
+                                  {t.studyAi.back}
+                                </AppText>
+                                <Input
+                                  multiline
+                                  value={draft.back}
+                                  onChangeText={(text) => handleEditDraft(draft.id, 'back', text)}
+                                  accessibilityLabel={`${t.studyAi.back} ${index + 1}`}
+                                  style={{ minHeight: 60 }}
+                                />
+                              </View>
+
+                              {/* Source Excerpt */}
+                              {draft.sourceExcerpt ? (
+                                <View
+                                  style={{
+                                    backgroundColor: colors.surfaceElevated,
+                                    padding: spacing.xs,
+                                    borderRadius: radius.sm,
+                                  }}
+                                >
+                                  <AppText variant="caption" color={colors.textSecondary}>
+                                    {t.studyAi.sourceExcerpt}: “{draft.sourceExcerpt}”
+                                  </AppText>
+                                </View>
+                              ) : null}
+                            </View>
+                          ))}
+                        </View>
+
+                        {/* Academic Safety Note */}
+                        <View
+                          style={{
+                            borderTopWidth: 1,
+                            borderTopColor: colors.border,
+                            paddingTop: spacing.sm,
+                          }}
+                        >
+                          <AppText variant="caption" color={colors.textSecondary}>
+                            {t.studyAi.studyUseNote}
+                          </AppText>
+                        </View>
+                      </Card>
+                    )}
+                  </View>
+                )}
               </Section>
             )}
 
-            {/* Result Area */}
+            {/* Result Area (for Explain / Summarize) */}
             {resultState.status === 'loading' && (
               <Section>
                 <FeedbackState
@@ -389,7 +629,9 @@ export default function StudyAssistantScreen() {
                   message={
                     resultState.kind === 'explain'
                       ? t.studyAi.loadingExplain
-                      : t.studyAi.loadingSummarize
+                      : resultState.kind === 'summarize'
+                      ? t.studyAi.loadingSummarize
+                      : t.studyAi.generatingDrafts
                   }
                 />
               </Section>

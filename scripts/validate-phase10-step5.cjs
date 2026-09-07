@@ -557,11 +557,12 @@ async function main() {
       'Schema version must remain 12'
     );
 
-    // No flashcard generation UI exposed yet in assistant.tsx
+    // No flashcard persistence/approval flow in assistant.tsx (deferred to Step 7)
     assert.ok(
-      !assistantCode.includes('generateFlashcardDrafts') &&
-        !assistantCode.includes('flashcardDrafts'),
-      'Flashcard generation UI must NOT be exposed in Step 5 (deferred to Step 6)'
+      !assistantCode.includes('saveFlashcard') &&
+        !assistantCode.includes('approveFlashcard') &&
+        !assistantCode.includes('addToDeck'),
+      'Flashcard persistence / approval flow must NOT be exposed (deferred to Step 7)'
     );
 
     // No PDF handling or document pickers
