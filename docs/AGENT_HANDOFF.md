@@ -1,6 +1,26 @@
 # MedOS — compact handoff
 
-## Current — Phase 8 Step 3: Safe Area / Responsive Hardening
+## Current — Phase 9 Step 1: Learning Analytics Domain Models & Pure Rules
+
+- Phase 9 Step 1 implementation COMPLETE. (Phase 8 implementation complete; Phase 8 physical regression QA remains DEFERRED).
+- Delivered scope:
+  - Analytics domain models (`models/analytics.ts`):
+    - `TopicMasteryStatus`: `'unstudied' | 'needs_attention' | 'in_progress' | 'strong'`
+    - `TopicNeglectStatus`: `'never_studied' | 'recent' | 'stale'` (strictly separated from mastery)
+    - `TopicAnalyticsEvidence`, `SubjectAnalyticsSummary`, `CommitteeAnalyticsSummary`, `WeakTopicItem`, `NeglectedTopicItem`, `ExamEvidenceSummary`.
+    - Strictly avoids fake predictive composite scores, IRT claims, or pseudoscientific "Exam Readiness %".
+  - Pure deterministic analytics rules (`utils/analyticsRules.ts`):
+    - `calculateAccuracy`, `calculateRetention`, `calculateLastActiveAt`.
+    - `isPracticed`: requires actual Focus session, Memory review, or Q-Bank question (having flashcards alone !== practice).
+    - `classifyTopicMastery`: sample-size-gated heuristics (Q-Bank min 10 questions < 60% or Memory min 5 reviews < 70% or due cards > 0 => `needs_attention`; min 15 Q-Bank >= 75% AND min 10 reviews >= 80% AND 0 due cards => `strong`; Focus minutes represent investment, never correctness, so Focus alone never grants Strong). Thresholds documented as transparent product heuristics.
+    - `classifyTopicNeglect`: 14 local calendar days threshold via canonical civil day calculation (`differenceInLocalCalendarDays`).
+    - Raw aggregate calculations (`calculateCoverage`, `summarizeSubjectAnalytics`, `summarizeCommitteeAnalytics`): strictly preserves raw numerators/denominators; never averages topic percentages.
+    - `summarizeExamEvidence`: multi-signal factual summary.
+- Database: Schema v11 strictly unchanged (Schema v12 NOT REQUIRED).
+- Validation: TypeScript EXIT 0; Phase 2 (21 PASS), Phase 3 (90 PASS), Phase 4 (43 PASS), Phase 5 (29 PASS), Phase 6 (33 PASS); Phase 9 Step 1 focused test suite (9 test suites) PASS.
+- Next: Phase 9 Step 2 (analytics repository aggregations).
+
+## Historical — Phase 8 Step 3: Safe Area / Responsive Hardening
 
 - Phase 8 Step 3 implementation COMPLETE.
 - Delivered scope:
