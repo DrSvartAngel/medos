@@ -106,6 +106,63 @@ export interface AISummaryResult {
   sourceTitle: string;
 }
 
+export type AIStudyPlanAction = 'review' | 'memory' | 'qbank' | 'focus';
+
+/**
+ * Factual topic evidence snapshot supplied to the AI planning prompt.
+ * Contains purely factual analytics; missing metrics remain null.
+ */
+export interface AIStudyPlanningTopic {
+  topicId: string;
+  topicName: string;
+  subjectName?: string;
+  masteryStatus: string;
+  neglectStatus: string;
+
+  qbankQuestions: number | null;
+  qbankAccuracy: number | null;
+
+  memoryReviews: number | null;
+  memoryRetention: number | null;
+  dueCards: number | null;
+
+  lastStudiedAt: number | null;
+
+  weakReasons: string[];
+  neglectReasons: string[];
+}
+
+/**
+ * Planning context payload containing the committee scope and top candidate topics.
+ */
+export interface AIStudyPlanningContext {
+  committeeId: string;
+  committeeName: string;
+  daysUntilExam?: number | null;
+  topics: AIStudyPlanningTopic[];
+}
+
+/**
+ * Single actionable study plan item recommendation.
+ * Advisory only — not committed to calendar or study sessions.
+ */
+export interface AIStudyPlanItem {
+  id: string;
+  topicId: string;
+  topicName: string;
+  action: AIStudyPlanAction;
+  reason: string;
+  estimatedMinutes: number;
+}
+
+/**
+ * Full AI-generated study plan draft.
+ */
+export interface AIStudyPlanDraft {
+  summary: string;
+  items: AIStudyPlanItem[];
+}
+
 export type AIServiceErrorCode =
   | 'provider_unavailable'
   | 'invalid_response'

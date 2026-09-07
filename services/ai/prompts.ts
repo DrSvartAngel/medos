@@ -1,7 +1,7 @@
 // MedOS — Phase 10 Step 1: AI Prompt Builders & Grounding Validation
 // Pure, provider-independent functions for source-grounded medical study prompts.
 
-import { AISourceContext } from '@/models/ai';
+import { AISourceContext, AIStudyPlanningContext } from '@/models/ai';
 
 const BASE_SYSTEM_PROMPT = `You are a medical education study assistant in MedOS.
 Your role is to assist medical students with academic coursework, exam preparation, and active recall.
@@ -171,4 +171,78 @@ Return valid JSON conforming to the requested schema.`;
     schemaDescription,
   };
 }
+
+/**
+ * Builds system prompt, user prompt, and schema description for AI-assisted study planning.
+ */
+export function buildStudyPlanPrompt(
+  context: AIStudyPlanningContext
+): { systemPrompt: string; userPrompt: string; schemaDescription: string } {
+  const schemaDescription = `JSON Object with keys:
+- "summary": string (calm, factual 1-2 sentence overview of recommended focus areas based on the evidence)
+- "items": Array of objects with keys:
+  - "topicId": string (MUST match one of the supplied topic IDs exactly)
+  - "topicName": string (canonical name corresponding to topicId)
+  - "action": string (strictly one of: "review", "memory", "qbank", "focus")
+  - "reason": string (concise factual reason derived only from the provided metrics)
+  - "estimatedMinutes": integer (reasonable session duration between 10 and 90 minutes)`;
+
+  const topicsFormatted = context.topics
+    .map((t, idx) => {
+      const qbankInfo =
+        t.qbankAccuracy !== null
+          ? `${t.qbankQuestions} questions, ${t.qbankAccuracy}% accuracy`
+          : `${t.qbankQuestions} questions, no accuracy score`;
+      const memoryInfo =
+        t.memoryRetention !== null
+          ? `${t.memoryReviews} reviews, ${t.memoryRetention}% retention, ${t.dueCards} cards due`
+          : `${t.memoryReviews} reviews, ${t.dueCards} cards due`;
+      const weakStr =
+        t.weakReasons.length > 0
+          ? `Weakness triggers: [${t.weakReasons.join(', ')}]`
+          : 'No active weakness triggers';
+      const neglectStr =
+        t.neglectStatus !== 'recent' ? `Neglect status: ${t.neglectStatus}` : 'Recently studied';
+
+      return `${idx + 1}. TOPIC ID: "${t.topicId}"
+   NAME: "${t.topicName}" (Subject: "${t.subjectName || 'General'}")
+   MASTERY: ${t.masteryStatus}
+   Q-BANK: ${qbankInfo}
+   MEMORY (SRS): ${memoryInfo}
+   STATUS: ${weakStr}; ${neglectStr}`;
+    })
+    .join('\n\n');
+
+  const daysExamStr =
+    typeof context.daysUntilExam === 'number'
+      ? `DAYS UNTIL EXAM: ${context.daysUntilExam}`
+      : 'DAYS UNTIL EXAM: Not scheduled';
+
+  const userPrompt = `COMMITTEE: "${context.committeeName}"
+${daysExamStr}
+
+FACTUAL LEARNING EVIDENCE FOR CANDIDATE TOPICS:
+---
+${topicsFormatted}
+---
+
+TASK:
+Create a calm, focused, and realistic advisory study plan draft consisting of up to 5 prioritized study actions based ONLY on the evidence above.
+
+RULES:
+1. Grounding: Rely ONLY on the factual evidence provided above. Do NOT invent performance metrics, exam readiness, psychiatric states, or missing scores.
+2. ADHD-Friendly: Keep workload manageable (maximum 5 items). Each task must have a clear actionable step ("review", "memory", "qbank", or "focus") and realistic duration (10 to 90 minutes).
+3. Objective Reasons: Clearly cite the evidence trigger (e.g. "Low Q-Bank accuracy (45%)", "15 due flashcards", "Unstudied topic"). Avoid guilt-inducing or punitive language.
+4. Canonical IDs: You MUST only recommend topics listed in the candidates above, using their exact "topicId" and "topicName".
+5. No Clinical Advice: Do NOT generate clinical treatment recommendations or patient-care decisions.
+
+Return valid JSON conforming to the requested schema.`;
+
+  return {
+    systemPrompt: BASE_SYSTEM_PROMPT,
+    userPrompt,
+    schemaDescription,
+  };
+}
+
 

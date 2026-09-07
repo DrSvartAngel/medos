@@ -300,6 +300,12 @@ export default function CommitteeDetailScreen() {
       <CommitteeLearningEvidence key={`evidence-${committee.id}`} committeeId={committee.id} />
       <Button label={t.examPlan.title} variant="secondary"
         onPress={() => router.push(`/committees/exam-plan/${encodeURIComponent(committee.id)}` as Href)} />
+      <Button
+        label={t.studyPlan.studyPlanButton}
+        variant="secondary"
+        onPress={() => router.push(`/committees/${encodeURIComponent(committee.id)}/study-plan` as Href)}
+        style={{ marginTop: spacing.sm }}
+      />
 
       <Button
         label={t.sweep.removeCommittee}

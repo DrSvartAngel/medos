@@ -1,10 +1,68 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 10 Step 9: Source-Grounded Question Draft Generator
+## Current — Phase 10 Step 10: AI-Assisted Study Planning
 
+- Phase 10 Step 10 implementation: COMPLETE.
 - Phase 10 Step 9 implementation: COMPLETE.
 - Phase 10 Step 8 implementation: PARTIAL (Picker + pipeline foundation + plain text extraction + truthful PDF capability boundary + manual text import fallback; on-device PDF extraction unavailable in Expo Go/Hermes).
-- Phase 10 automated/static validation: PASS (all 10 Step 9 checks pass; all 16 project validation suites pass).
+- Phase 10 automated/static validation: PASS (all 10 Step 10 checks pass; all 17 project validation suites pass).
+- Phase 9 implementation + validation: COMPLETE.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: AI-assisted study planning engine delivered at Committee level (`app/committees/[id]/study-plan.tsx`). Converts existing factual MedOS Learning Analytics (weak topics, neglected curriculum areas, due memory reviews, and qualified Q-Bank accuracy) into an editable, non-authoritative study plan draft.
+- Critical Product Rule: AI planning is advisory only. Zero automated calendar events, zero timers/focus starts, zero mastery or completion changes, zero Q-Bank or Memory review mutations, zero analytics mutation, zero silent persistence.
+- Delivered scope:
+  - Domain Contracts & Models:
+    - `AIStudyPlanAction` (`'review' | 'memory' | 'qbank' | 'focus'`).
+    - `AIStudyPlanningTopic` in `models/ai.ts`: captures factual analytics (`topicId`, `topicName`, `subjectName`, `masteryStatus`, `neglectStatus`, `qbankQuestions`, `qbankAccuracy`, `memoryReviews`, `memoryRetention`, `dueCards`, `lastStudiedAt`, `weakReasons`, `neglectReasons`). Null evidence strictly preserved; unstudied topics never converted to 0%.
+    - `AIStudyPlanningContext`: captures committee scope (`committeeId`, `committeeName`, `daysUntilExam`, `topics`). NO composite readiness score or fake intelligence.
+    - `AIStudyPlanItem`: captures action recommendation (`id`, `topicId`, `topicName`, `action`, `reason`, `estimatedMinutes`).
+    - `AIStudyPlanDraft`: summary + items array.
+    - Batch limits: `MAX_PLAN_ITEMS = 5`, session duration bounded between 10 and 90 minutes.
+  - Deterministic Priority Context Builder:
+    - Pure builder `buildPlanningContext()` in `services/ai/planningContext.ts`.
+    - Selects top 10 factual candidate topics using existing priority rules: Weak topics (needs_attention) first, Neglected topics (never_studied/stale) second, followed by due memory review topics and remaining curriculum areas.
+    - Preserves nulls; zero scoring inference.
+  - Service & Prompt Design:
+    - `StudyAIService.generateStudyPlan()` in `services/ai/studyAIService.ts` validates that all recommended items strictly reference supplied topic IDs and canonical names, adhere to allowed action enum, and stay within duration limits (10..90 min).
+    - Prompt in `services/ai/prompts.ts` strictly forbids metric fabrication or readiness inference; enforces ADHD-friendly manageable workloads (<= 5 items) and objective reasons without guilt-inducing language.
+  - Mock Provider:
+    - `MockAIProvider` extended deterministically for planning: `normal`, `malformed`, `unknown_topic`, `invalid_action`, `invalid_duration`, `empty_result`, and `unavailable`.
+  - Committee UI & Local Draft State:
+    - Dedicated screen: `app/committees/[id]/study-plan.tsx` using `<ScreenWrapper includeBottomSafeArea>`.
+    - Committee detail entry button: "AI Study Plan" (`app/committees/[id].tsx`).
+    - Factual evidence snapshot card: renders counts of topics needing attention, neglected topics, due cards, and Q-Bank accuracy.
+    - Advisory notice banner: clearly indicates draft plan status.
+    - Local editing in React state: action selector pills, duration stepper (+/- 5 min), remove single item, clear plan, and regenerate plan.
+    - Zero persistence: plan draft exists only in local memory.
+  - Strict Isolation:
+    - ZERO calendar writes (`calendar_events`).
+    - ZERO focus session writes (`focus_sessions`).
+    - ZERO memory review writes (`flashcard_reviews`).
+    - ZERO Q-Bank session writes (`qbank_sessions`).
+    - ZERO topic mastery or completion mutations.
+  - Provider & Runtime Isolation:
+    - UI strictly uses `getStudyAIService()`; zero direct imports of Gemini SDK or `fetch`.
+    - Runtime provider remains Mock.
+  - Schema & Dependencies:
+    - Schema remains strictly **v12** unchanged.
+    - Zero `package.json` modifications.
+  - Localization & Accessibility:
+    - Full 1:1 EN/TR parity across all 24 keys in `studyPlan`.
+    - Proper accessibility roles (`accessibilityRole="button"`, `accessibilityRole="alert"`), descriptive accessibility labels on controls, and responsive layout.
+- Dedicated Validation:
+  - `scripts/validate-phase10-step10.cjs`: 10 comprehensive check suites covering contracts, factual context builder, prompt rules, mock modes, UI integration, local editing, strict automation isolation, provider isolation, schema v12 integrity, localization parity, and accessibility.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+  - Phase 10 Step 1–10 Suites: ALL PASS (103 checks)
+  - Total: 329 automated checks passing.
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+
+## Historical — Phase 10 Step 9: Source-Grounded Question Draft Generator
 - Phase 9 implementation + validation: COMPLETE.
 - Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
 - Phase 8 physical regression QA: PENDING (still deferred).

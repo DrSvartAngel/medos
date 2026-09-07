@@ -17,7 +17,10 @@ export type MockProviderMode =
   | 'unavailable'
   | 'invalid_correct_index'
   | 'empty_options'
-  | 'empty_result';
+  | 'empty_result'
+  | 'unknown_topic'
+  | 'invalid_action'
+  | 'invalid_duration';
 
 export class MockAIProvider implements AIProvider {
   readonly id: AIProviderId = 'mock';
@@ -71,6 +74,105 @@ export class MockAIProvider implements AIProvider {
 
     if (this.mode === 'empty_result') {
       return [] as unknown as T;
+    }
+
+    const isPlanRequest =
+      request.schemaDescription.includes('estimatedMinutes') ||
+      request.userPrompt.toLowerCase().includes('study plan draft') ||
+      request.userPrompt.toLowerCase().includes('create a calm, focused, and realistic study plan');
+
+    if (isPlanRequest) {
+      if (this.mode === 'unknown_topic') {
+        return {
+          summary: 'Study plan with unknown topic ID',
+          items: [
+            {
+              topicId: 'unknown-topic-id-99999',
+              topicName: 'Unknown Hallucinated Topic',
+              action: 'review',
+              reason: 'Hallucinated reason',
+              estimatedMinutes: 25,
+            },
+          ],
+        } as unknown as T;
+      }
+
+      // Extract candidate topic IDs and names from prompt
+      const matches = [
+        ...request.userPrompt.matchAll(
+          /TOPIC ID:\s*"([^"]+)"\s*\n\s*NAME:\s*"([^"]+)"/g
+        ),
+      ];
+      const candidateTopics = matches.map((m) => ({ id: m[1], name: m[2] }));
+      const firstTopic = candidateTopics[0] || { id: 'top-1', name: 'General Topic' };
+
+      if (this.mode === 'invalid_action') {
+        return {
+          summary: 'Study plan with invalid action',
+          items: [
+            {
+              topicId: firstTopic.id,
+              topicName: firstTopic.name,
+              action: 'invalid_action',
+              reason: 'Invalid action test',
+              estimatedMinutes: 30,
+            },
+          ],
+        } as unknown as T;
+      }
+
+      if (this.mode === 'invalid_duration') {
+        return {
+          summary: 'Study plan with invalid duration',
+          items: [
+            {
+              topicId: firstTopic.id,
+              topicName: firstTopic.name,
+              action: 'review',
+              reason: 'Invalid duration test',
+              estimatedMinutes: 999,
+            },
+          ],
+        } as unknown as T;
+      }
+
+      // Normal mode: produce up to 3 prioritized plan items from candidate topics
+      const actions: ('review' | 'memory' | 'qbank' | 'focus')[] = [
+        'review',
+        'memory',
+        'qbank',
+        'focus',
+      ];
+      const items = candidateTopics.slice(0, 3).map((t, idx) => ({
+        id: `mock-plan-${t.id}-${idx + 1}`,
+        topicId: t.id,
+        topicName: t.name,
+        action: actions[idx % actions.length],
+        reason:
+          idx === 0
+            ? 'High-priority area based on recorded learning weakness.'
+            : idx === 1
+            ? 'Reinforce memory retention and address pending cards.'
+            : 'Consolidate understanding through focused practice questions.',
+        estimatedMinutes: 20 + idx * 10,
+      }));
+
+      if (items.length === 0) {
+        items.push({
+          id: 'mock-plan-default-1',
+          topicId: firstTopic.id,
+          topicName: firstTopic.name,
+          action: 'review',
+          reason: 'Initial high-yield topic review.',
+          estimatedMinutes: 25,
+        });
+      }
+
+      return {
+        summary:
+          'Structured study plan prioritized by weakness indicators and review urgency.',
+        items,
+      } as unknown as T;
     }
 
     const source = request.sources?.[0];
