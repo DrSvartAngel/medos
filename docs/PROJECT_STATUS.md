@@ -1,68 +1,49 @@
 # MedOS — Project Status
 
-## Current — Phase 10 Step 11: Security / Provider Settings / Real Gemini Activation
+## Current — Phase 10: AI Study Engine (Step 12: Master QA / AI Integrity Gate)
 
+- Phase 10 — AI Study Engine: **COMPLETE WITH KNOWN DOCUMENT LIMITATION**
+  - Step 1 (AI Foundation & Contracts): PASS
+  - Step 2 (Study Sources Data Layer): PASS
+  - Step 3 (Topic Study Source Ingestion UI): PASS
+  - Step 4 (Gemini AI Provider REST Adapter): PASS
+  - Step 5 (Source-Grounded Study Assistant UI): PASS
+  - Step 6 (Source-Grounded Flashcard Draft Generator): PASS
+  - Step 7 (Flashcard Review & Memory Batch Import): PASS
+  - Step 8 (Document Ingestion & Capability Boundary): **PARTIAL**
+    - Document picker: PASS
+    - Text/Markdown extraction: PASS
+    - Manual fallback: PASS
+    - On-device PDF extraction: UNAVAILABLE in Expo Go/Hermes
+  - Step 9 (Source-Grounded Question Draft Generator): PASS
+  - Step 10 (AI-Assisted Study Planning): PASS
+  - Step 11 (Security, Provider Settings, Real Gemini Activation): PASS
+  - Step 12 (Master QA & AI Integrity Gate): PASS
+- Explicit Known Limitation:
+  - "Automated on-device PDF text extraction is not available in the current Expo Go/Hermes runtime. PDF selection and manual document-text fallback are supported."
+- Phase 8 physical regression QA: PENDING (deferred).
+- Phase 9 physical UI QA: PENDING (deferred).
+- Master Validator:
+  - `scripts/validate-phase10.cjs`: 17 master categories verifying AI architecture, provider isolation, Mock provider determinism, Gemini provider REST specifications with mocked fetch, credential security audit (zero SQLite/AsyncStorage storage, zero logged secrets, clean codebase scan), grounding rigor and provenance, flashcard safety (ephemeral drafts, explicit Memory batch import, zero fake review evidence), question draft safety (4 options, single answer, zero Q-Bank writes), study plan safety (truthful analytics metrics, null preservation, zero calendar/session automation), document ingestion boundary, offline core independence, centralized provider switching, 100% EN/TR localization parity across all 5 AI catalogs, accessibility semantics, Expo SDK 57 runtime dependencies, database schema v12 integrity, and Step 1-11 test orchestration.
+- Full Regression Status:
+  - TypeScript (`npx tsc --noEmit`): PASS (0 errors)
+  - Phase 2 static/in-memory: PASS (21 checks)
+  - Phase 3 + localization: PASS (90 checks)
+  - Phase 4 curriculum: PASS (43 checks)
+  - Phase 5 SRS & evidence: PASS (29 checks)
+  - Phase 6 momentum & polish: PASS (33 checks)
+  - Phase 9 analytics master suite: PASS (10 checks)
+  - Phase 10 Steps 1–11 suites: ALL PASS (114 checks)
+  - Phase 10 Master suite (`validate-phase10.cjs`): PASS (17 checks)
+  - Total automated checks passing: 357 checks.
+- Schema & Runtime Dependencies:
+  - Schema remains strictly **v12** unchanged.
+  - Dependencies: `expo-secure-store ~57.0.3`, `expo-document-picker ~57.0.1`, `expo-file-system ~57.0.6`. Zero vendor SDKs, zero node-only PDF parsers.
+
+## Historical — Phase 10 Step 11: Security / Provider Settings / Real Gemini Activation
 - Phase 10 Step 11 implementation: COMPLETE.
-- Phase 10 Step 10 implementation: COMPLETE.
-- Phase 10 Step 9 implementation: COMPLETE.
-- Phase 10 Step 8 implementation: PARTIAL (Picker + pipeline foundation + plain text extraction + truthful PDF capability boundary + manual text import fallback; on-device PDF extraction unavailable in Expo Go/Hermes).
-- Phase 10 automated/static validation: PASS (all 11 Step 11 checks pass; all 18 project validation suites pass).
-- Phase 9 implementation + validation: COMPLETE.
-- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
-- Phase 8 physical regression QA: PENDING (still deferred).
 - Status: Secure AI provider settings and runtime Gemini activation delivered. Users can select between deterministic offline Mock simulation and real Google Gemini generation. Credentials stored securely with hardware-backed encryption via `expo-secure-store`.
-- Critical Security & Privacy Rules:
-  - API key is NEVER stored in SQLite or plaintext AsyncStorage.
-  - API key is NEVER logged to console or diagnostics.
-  - API key is NEVER embedded in URLs or query strings (strictly transmitted via `x-goog-api-key` HTTP header).
-  - API key is NEVER echoed or prefilled in UI inputs (`secureTextEntry` enforced; displays "API key saved" status badge).
-  - Sensitive tokens in errors are redacted via `redactSecrets()`.
-- Delivered scope:
-  - Secure Credential Service (`services/ai/credentialStore.ts`):
-    - Dedicated store utilizing `expo-secure-store` with storage key `medos.ai.gemini.apiKey`.
-    - Input whitespace trimming and non-empty key validation.
-    - Safe error sanitization (`CredentialStoreError`).
-    - Pluggable test adapter (`setSecureStorageAdapter`).
-  - Provider Composition Root (`services/ai/studyAIClient.ts`):
-    - Provider-neutral composition layer.
-    - Exposes `getActiveAIProviderState()`: reports providerId ('mock' | 'gemini'), status ('mock' | 'configured' | 'missing_credential' | 'unavailable'), model, and `hasApiKey` boolean without leaking the raw key.
-    - `setActiveAIProvider(providerId, model)`: switches active provider and refreshes instance.
-    - `refreshStudyAIService()`: re-reads secure credentials and reconstructs provider.
-    - Deterministic fallback: switching to 'mock' restores offline deterministic simulation instantly.
-  - Verified Production Model Configuration:
-    - Default model updated to **`gemini-2.5-flash`** after official documentation verification (`gemini-1.5-flash` is legacy, `gemini-2.0-flash` deprecated and shut down June 1, 2026).
-    - Model remains configurable.
-  - Connection Test (`testAIProviderConnection()`):
-    - Explicit health check testing provider ping via minimal prompt.
-    - Zero study data writes (no curriculum, memory, focus, qbank, or analytics writes).
-    - Safe error classification: missing key, 401/403 auth, 429 rate limit, network failure, timeout.
-  - AI Settings Screen (`app/settings/ai.tsx`):
-    - Dedicated settings screen with `<ScreenWrapper includeBottomSafeArea>`.
-    - Provider selection radio controls (Mock vs Gemini) with informative descriptions.
-    - Masked password input for API key entry (never prefilled with existing key).
-    - Save Key and Remove Key actions with loading states.
-    - Test Connection button with visual success/error result alerts.
-    - Linked from Profile tab (`app/(tabs)/profile.tsx`).
-  - Offline Core Isolation:
-    - If no key is set or device is offline, MedOS offline core (Curriculum, Focus, Memory SRS, Q-Bank, Analytics, Calendar, Sources) remains 100% functional.
-    - Core features and repositories have zero dependencies on AI providers or credential storage.
-  - Schema & Dependencies:
-    - Schema remains strictly **v12** unchanged.
-    - `package.json` retains exact 13 original production dependencies.
-  - Localization & Accessibility:
-    - Complete 1:1 EN/TR parity across all 25 keys in `aiSettings` dictionary.
-    - Accessible radio roles, labeled buttons, and live alert regions for connection results.
-- Dedicated Validation:
-  - `scripts/validate-phase10-step11.cjs`: 11 comprehensive check suites covering credential store integrity, set/get/delete lifecycle, provider registry, runtime Gemini activation, official model verification, connection test modes, security hardening/redaction, offline core independence, UI/routing contracts, localization parity, and schema v12 integrity.
-- Full Regression Suite:
-  - TypeScript: PASS (0 errors)
-  - Phase 2–6 validators: ALL PASS (216 checks)
-  - Phase 9 Master Suite: ALL PASS (10 checks)
-  - Phase 10 Step 1–11 Suites: ALL PASS (114 checks)
-  - Total: 340 automated checks passing.
-- Physical QA Status:
-  - Phase 8: PENDING
-  - Phase 9: PENDING
+
 
 ## Historical — Phase 10 Step 9: Source-Grounded Question Draft Generator
 - Phase 9 implementation + validation: COMPLETE.
