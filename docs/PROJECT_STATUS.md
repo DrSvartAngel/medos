@@ -1,6 +1,60 @@
 # MedOS — Project Status
 
-## Current — Phase 10 Step 3: Study Source Ingestion + Management UI
+## Current — Phase 10 Step 4: First Real AI Provider Integration
+
+- Phase 10 Step 4 implementation: COMPLETE.
+- Phase 10 automated/static validation: PASS.
+- Phase 9 implementation + validation: COMPLETE.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: Google Gemini integrated as the first real AIProvider implementation behind the provider-neutral abstraction layer via raw fetch REST adapter.
+- Delivered scope:
+  - Gemini AI Provider (`services/ai/geminiProvider.ts`):
+    - Concrete implementation of `AIProvider` interface (`id = 'gemini'`, `name = 'Google Gemini'`).
+    - Raw fetch REST transport targeting Google Generative Language API endpoint (`/v1beta/models/{model}:generateContent`).
+    - Default model: `gemini-1.5-flash` isolated as a constant.
+    - Zero vendor SDK dependencies (no `@google/genai` or Node-specific packages), ensuring Hermes/Expo runtime stability.
+    - Zero vendor-specific types leaked outside the provider file.
+  - Authentication & Security:
+    - API key injected strictly via constructor/factory config (`createGeminiProvider({ apiKey, ... })`).
+    - Passed via `x-goog-api-key` header; never included in URL query strings to avoid proxy/history log exposure.
+    - Zero hardcoded keys; zero `process.env` direct reads in provider; zero secret leakage in error messages.
+    - Credentials are NOT persisted yet (SecureStore deferred to provider settings step).
+  - Request Construction:
+    - Accurately maps systemPrompt (`systemInstruction`), userPrompt, and grounding sources into standard Gemini contents hierarchy.
+    - Explicitly preserves sourceTitle, topicName, and source content blocks.
+    - Configures temperature and maxOutputTokens from optional `AIGenerateOptions`.
+  - Structured Output:
+    - Uses `generationConfig: { responseMimeType: 'application/json' }`.
+    - Parses JSON safely with automatic markdown code-fence stripping fallback.
+    - Rejects empty candidates, empty parts, and malformed JSON payloads.
+  - Error Mapping:
+    - Translates network failures, request timeouts, HTTP 401/403 (auth), HTTP 429 (rate limit), and HTTP 5xx (server) into safe `AIServiceError` instances.
+    - Redacts API keys from any provider error messages before exposure.
+  - StudyAIService Integration:
+    - Verified seamless orchestration with `createStudyAIService`: `explainConcept`, `summarizeSource`, and `generateFlashcardDrafts` with verbatim source grounding.
+  - Network Boundary & Offline Core:
+    - MedOS core (Curriculum, Focus, Memory, Q-Bank, Analytics, Study Sources CRUD) remains 100% offline.
+    - Only `GeminiAIProvider` executes outbound network requests when invoked.
+    - Automated test suite uses 100% mocked fetch; zero API quota consumed.
+    - AI UI routes and generation persistence remain deferred.
+    - Database schema remains **v12** unchanged.
+- Dedicated Validation:
+  - `scripts/validate-phase10-step4.cjs`: 9 test suites covering provider contract, text generation, structured JSON generation, malformed JSON rejection, StudyAIService orchestration, error mapping, security key sanitization, health check, and offline core isolation.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+  - Phase 10 Step 1 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 2 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 3 Suite: ALL PASS (9 checks)
+  - Phase 10 Step 4 Suite: ALL PASS (9 checks)
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+- Next: Phase 10 Step 5 (Provider Settings / Secure Key Storage & AI Active Recall UI).
+
+## Historical — Phase 10 Step 3: Study Source Ingestion + Management UI
 
 - Phase 10 Step 3 implementation: COMPLETE.
 - Phase 10 automated/static validation: PASS.
@@ -55,7 +109,7 @@
 - Physical QA Status:
   - Phase 8: PENDING
   - Phase 9: PENDING
-- Next: Phase 10 Step 4 (AI draft flashcard generation & human approval flow).
+- Next: Phase 10 Step 4 (First Real AI Provider Integration).
 
 ## Historical — Phase 10 Step 2: Study Sources Data Layer (Schema v12)
 
