@@ -1,7 +1,7 @@
 import { getDB } from './client';
 import { formatLocalDateKey } from '@/utils/calendarDate';
 
-const CURRENT_VERSION = 11;
+const CURRENT_VERSION = 12;
 
 interface TableInfoRow {
   name: string;
@@ -359,6 +359,29 @@ export async function runMigrations(): Promise<void> {
         CREATE INDEX idx_qbank_sessions_created_at ON qbank_sessions(created_at);
       `);
       db.runSync('UPDATE _schema_version SET version = ?', [11]);
+    });
+  }
+  if (currentVersion < 12) {
+    db.withTransactionSync(() => {
+      db.execSync(`
+        CREATE TABLE IF NOT EXISTS study_sources (
+          id TEXT PRIMARY KEY NOT NULL,
+          topic_id TEXT NOT NULL
+            REFERENCES topics(id) ON DELETE CASCADE,
+          title TEXT NOT NULL
+            CHECK(length(trim(title)) > 0),
+          content TEXT NOT NULL
+            CHECK(length(trim(content)) > 0),
+          source_type TEXT NOT NULL DEFAULT 'text'
+            CHECK(source_type IN ('text', 'note', 'document')),
+          created_at INTEGER NOT NULL,
+          updated_at INTEGER NOT NULL
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_study_sources_topic_created
+          ON study_sources(topic_id, created_at DESC);
+      `);
+      db.runSync('UPDATE _schema_version SET version = ?', [12]);
     });
   }
 }

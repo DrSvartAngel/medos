@@ -1,6 +1,54 @@
 # MedOS — compact handoff
 
-## Current — Phase 10 Step 1: Provider Contracts + Study AI Service Foundation
+## Current — Phase 10 Step 2: Study Sources Data Layer (Schema v12)
+
+- Phase 10 Step 2 implementation: COMPLETE.
+- Phase 10 automated/static validation: PASS.
+- Phase 9 implementation + validation: COMPLETE.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: Topic-linked study source data layer established with schema v12 migration, factual repository, cascade deletion, and AI context adapter.
+- Delivered scope:
+  - Database Schema (v12):
+    - Added `study_sources` table: `id`, `topic_id`, `title`, `content`, `source_type`, `created_at`, `updated_at`.
+    - Strict SQLite constraints: `source_type IN ('text', 'note', 'document')`, non-empty `title`, non-empty `content`, `FOREIGN KEY (topic_id) REFERENCES topics(id) ON DELETE CASCADE`.
+    - Index: `idx_study_sources_topic_created` on `study_sources(topic_id, created_at DESC)`.
+    - Schema version advanced to **v12**.
+  - Domain Model (`models/studySource.ts`):
+    - Defined `StudySourceType`, `StudySource`, `CreateStudySourceInput`, `UpdateStudySourceInput`.
+    - Zero AI-specific or vendor leakages (no embeddings, token counts, or provider fields).
+  - Repository Layer (`db/repositories/studySourceRepo.ts`):
+    - Implemented `insert`, `update`, `delete`, `getById`, `getByTopic`, `countByTopic`.
+    - Input validation: trims text, rejects empty/whitespace title/content, enforces allowed source types, validates topic existence before insert.
+    - Timestamp semantics: `createdAt` preserved across updates; `updatedAt` updates to current timestamp.
+    - Clean entity mapping: SQLite column names isolated within repository.
+  - AI Source Context Adapter (`services/ai/sourceContext.ts`):
+    - Pure adapter `toAISourceContext(source, topic)` converting persisted `StudySource` and `Topic` metadata into provider-neutral `AISourceContext`.
+    - Executes zero database queries and requires zero vendor SDKs.
+  - Cascade Deletion:
+    - Topic deletion cascades to attached study sources automatically.
+    - Committee hierarchy deletion cascades through subjects and topics down to study sources.
+  - Draft Non-Persistence:
+    - Zero persistence tables for AI drafts (`ai_drafts`, `ai_generations`, `generated_flashcards`).
+    - AI-generated drafts remain ephemeral in-memory until explicit human review and approval.
+  - Security & Isolation:
+    - Zero network calls (`fetch` unused).
+    - Zero API keys or secrets in codebase.
+    - Zero vendor SDKs installed.
+- Dedicated Validation:
+  - `scripts/validate-phase10-step2.cjs`: 8 test suites covering schema v12, table constraints, repository CRUD, ordering, input validation, cascade deletion, AI context adapter, draft non-persistence, and security scans.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+  - Phase 10 Step 1 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 2 Suite: ALL PASS (8 checks)
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+- Next: Phase 10 Step 3 (Study Source Ingestion & Topic Management UI).
+
+## Historical — Phase 10 Step 1: Provider Contracts + Study AI Service Foundation
 
 - Phase 10 Step 1 implementation: COMPLETE.
 - Phase 10 automated/static validation: PASS.
