@@ -1,6 +1,49 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 9 Step 5: Final Integrity + Dedicated Test Sweep + QA Prep
+## Current — Phase 10 Step 1: Provider Contracts + Study AI Service Foundation
+
+- Phase 10 Step 1 implementation: COMPLETE.
+- Phase 10 automated/static validation: PASS.
+- Phase 9 implementation + validation: COMPLETE.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: Phase 10 AI study engine foundation established with zero network, zero credentials, and offline deterministic mock provider.
+- Delivered scope:
+  - Domain Types (`models/ai.ts`):
+    - Provider-neutral contracts: `AIProvider`, `AIProviderId`, `AISourceContext`, `AIGenerateOptions`, `AIGenerateTextRequest`, `AIGenerateTextResult`, `AIGenerateStructuredRequest`, `AIProviderHealth`.
+    - Generated content models: `AIFlashcardDraft`, `AIExplanationResult`, `AISummaryResult`.
+    - Domain error model: `AIServiceError` with stable codes (`provider_unavailable`, `invalid_response`, `source_not_supported`, `grounding_failed`, `generation_limit_exceeded`).
+    - Zero subjective scores (no `confidenceScore`, `hallucinationScore`, `qualityScore`, or `readinessPercent`).
+  - Prompts & Grounding Contracts (`services/ai/prompts.ts`):
+    - Pure builders for explanation (`buildExplainPrompt`), summarization (`buildSummarizePrompt`), and draft active recall (`buildFlashcardDraftPrompt`).
+    - Core grounding directives: rely strictly on supplied study material; declare insufficient source if not covered; forbid fabricated citations, pages, or external medical facts.
+    - Medical education scope: academic coursework and exam preparation only; strictly forbids clinical advice, diagnosis, triage, or treatment recommendations.
+    - Excerpt grounding validator: `isExcerptGrounded()` validates verbatim source excerpts with whitespace normalization.
+  - Study AI Service (`services/ai/studyAIService.ts`):
+    - Provider-neutral orchestration service (`createStudyAIService`).
+    - Enforces batch limits (`MAX_FLASHCARD_DRAFTS = 5`).
+    - Validates source context and rejects malformed provider responses.
+    - Validates source provenance and verifies excerpt grounding on every candidate draft.
+    - Pure draft generation: never persists flashcards to database; human review remains mandatory.
+  - Deterministic Mock Provider (`services/ai/mockProvider.ts`):
+    - Offline, zero-network test provider supporting multiple deterministic modes (`normal`, `malformed`, `bad_grounding`, `unavailable`).
+  - Security & Isolation:
+    - Zero vendor SDKs installed (no `@google/genai`, no `openai`).
+    - Zero API keys or secrets in codebase; zero network calls (`fetch` unused).
+    - Database schema remains **v11** strictly unchanged.
+- Dedicated Validation:
+  - `scripts/validate-phase10-step1.cjs`: 8 test suites covering domain types, prompts, excerpt grounding, mock provider modes, service orchestration, batch limits, flashcard repo isolation, security scans, and network isolation.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+  - Phase 10 Step 1 Suite: ALL PASS (8 checks)
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+- Next: Phase 10 Step 2 (Study Sources Data Layer / Schema v12).
+
+## Historical — Phase 9 Step 5: Final Integrity + Dedicated Test Sweep + QA Prep
 
 - Phase 9 implementation: COMPLETE.
 - Phase 9 automated/static validation: PASS.
