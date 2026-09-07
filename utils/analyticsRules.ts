@@ -17,6 +17,7 @@ import type {
   SubjectAnalyticsSummary,
   CommitteeAnalyticsSummary,
   WeakTopicItem,
+  WeakTopicReason,
   NeglectedTopicItem,
   ExamEvidenceSummary,
 } from '@/models/analytics';
@@ -267,15 +268,15 @@ export function calculateAggregateRetention(
  */
 export function identifyWeakTopicReasons(
   topic: TopicAnalyticsEvidence
-): ('low_accuracy' | 'low_retention' | 'due_cards')[] {
-  const reasons: ('low_accuracy' | 'low_retention' | 'due_cards')[] = [];
+): WeakTopicReason[] {
+  const reasons: WeakTopicReason[] = [];
 
   if (
     topic.questionCount >= QBANK_ATTENTION_MIN_QUESTIONS &&
     topic.accuracyPercent !== null &&
     topic.accuracyPercent < QBANK_ATTENTION_ACCURACY
   ) {
-    reasons.push('low_accuracy');
+    reasons.push('low_qbank_accuracy');
   }
 
   if (
@@ -283,11 +284,11 @@ export function identifyWeakTopicReasons(
     topic.retentionPercent !== null &&
     topic.retentionPercent < MEMORY_ATTENTION_RETENTION
   ) {
-    reasons.push('low_retention');
+    reasons.push('low_memory_retention');
   }
 
   if (topic.dueCardCount > 0) {
-    reasons.push('due_cards');
+    reasons.push('due_reviews');
   }
 
   return reasons;

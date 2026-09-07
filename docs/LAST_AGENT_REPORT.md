@@ -1,6 +1,49 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 9 Step 2: Analytics Repository & Batch Aggregation
+## Current — Phase 9 Step 3: Weak & Neglected Topic Engine
+
+- Phase 9 Step 3 implementation COMPLETE. (Phase 8 implementation complete; Phase 8 physical regression QA remains DEFERRED).
+- Delivered scope:
+  - Domain types updated (`models/analytics.ts`):
+    - `WeakTopicReason`: `'low_qbank_accuracy' | 'low_memory_retention' | 'due_reviews'`
+    - `WeakTopicItem`: includes `topicId`, `subjectId`, `topicName`, `subjectName?`, `reasons`, `qbankAccuracyPercent`, `questionCount`, `memoryRetentionPercent`, `reviewCount`, `dueCardCount`, `lastActiveAt`.
+    - `NeglectedTopicItem`: includes `topicId`, `subjectId`, `topicName`, `subjectName?`, `neglectStatus`, `lastActiveAt`, `daysSinceActive`.
+    - Zero pseudo-scientific scores, confidence, or pass probability fields.
+  - Reason Identification (`utils/analyticsRules.ts`):
+    - `identifyWeakTopicReasons(topic)`: returns threshold-backed reasons (`low_qbank_accuracy`, `low_memory_retention`, `due_reviews`).
+  - Priority Engine (`utils/analyticsPriorityRules.ts`):
+    - `getWeakTopics(topics, limit?)`:
+      - Qualification: strictly `masteryStatus === 'needs_attention'`. (Unstudied, in-progress, and strong topics are excluded; no re-classification).
+      - Deterministic comparator hierarchy:
+        1. Multiple weakness reasons before single-reason topics
+        2. Due reviews present (immediate actionable SRS load)
+        3. Lower Q-Bank accuracy, when sample-size-qualified (min 10 questions)
+        4. Lower Memory retention, when sample-size-qualified (min 5 reviews)
+        5. Higher due card count (when both have due reviews)
+        6. Older `lastActiveAt` (least recently touched first; null = never active)
+        7. Canonical topic name / ID tie-break
+      - Null handling: unstudied / small samples are never treated as 0% accuracy or 0% retention.
+    - `getNeglectedTopics(topics, limit?, now?)`:
+      - Qualification: `neglectStatus === 'never_studied' || neglectStatus === 'stale'` (recent excluded).
+      - Orthogonality: neglect is strictly independent from mastery (a strong topic can be stale).
+      - Priority order: `never_studied` first, then stale topics oldest-activity first, then canonical tie-break.
+      - Factual `daysSinceActive`: derived via canonical local calendar days for stale topics; null for `never_studied`.
+    - Committee helpers: `getCommitteeWeakTopics` and `getCommitteeNeglectedTopics`.
+    - Immutability: source arrays are never mutated.
+- Performance & Invariants:
+  - Database schema remains v11 strictly unchanged.
+  - No SQL added; pure in-memory deterministic engine operating over `TopicAnalyticsEvidence[]`.
+  - No composite readiness or exam probability scores created.
+- Dedicated Validation:
+  - `scripts/validate-phase9-step3.cjs`: 10 test suites covering weak qualification, multi-reason priority, sample-size-qualified accuracy/retention comparisons, multi-tier sorting, neglect qualification/independence, calendar-day calculation, boundary/limit conditions, immutability, absence of fake scores, and committee helpers.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Steps 1, 2, and 3: ALL PASS
+- Phase 8 physical regression QA remains DEFERRED; Phase 8 is not marked complete.
+- Next: Phase 9 Step 4 (learning analytics stores / UI integration).
+
+## Historical — Phase 9 Step 2: Analytics Repository & Batch Aggregation
 
 - Phase 9 Step 2 implementation COMPLETE. (Phase 8 implementation complete; Phase 8 physical regression QA remains DEFERRED).
 - Delivered scope:

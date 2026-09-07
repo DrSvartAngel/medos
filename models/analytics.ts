@@ -127,20 +127,26 @@ export interface CommitteeAnalyticsSummary {
   neverStudiedTopicCount: number;
 }
 
+export type WeakTopicReason =
+  | 'low_qbank_accuracy'
+  | 'low_memory_retention'
+  | 'due_reviews';
+
 /**
  * Identified topic requiring review, with factual metrics explaining the attention trigger.
  */
 export interface WeakTopicItem {
   topicId: string;
-  topicName: string;
   subjectId: string;
-  subjectName: string;
+  topicName: string;
+  subjectName?: string;
+  reasons: WeakTopicReason[];
   qbankAccuracyPercent: number | null;
   questionCount: number;
   memoryRetentionPercent: number | null;
   reviewCount: number;
   dueCardCount: number;
-  reasons: ('low_accuracy' | 'low_retention' | 'due_cards')[];
+  lastActiveAt: number | null;
 }
 
 /**
@@ -148,12 +154,13 @@ export interface WeakTopicItem {
  */
 export interface NeglectedTopicItem {
   topicId: string;
-  topicName: string;
   subjectId: string;
-  subjectName: string;
+  topicName: string;
+  subjectName?: string;
+  neglectStatus: TopicNeglectStatus;
+  status: TopicNeglectStatus;
   lastActiveAt: number | null;
   daysSinceActive: number | null;
-  status: TopicNeglectStatus;
 }
 
 /**
