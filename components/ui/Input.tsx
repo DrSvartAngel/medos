@@ -4,6 +4,12 @@ import { useTheme } from '@/hooks/useTheme';
 import { Layout } from '@/theme/layout';
 import { Interaction } from '@/theme/interaction';
 
+declare module 'react-native' {
+  interface AccessibilityState {
+    invalid?: boolean | undefined;
+  }
+}
+
 export interface InputProps extends TextInputProps {
   invalid?: boolean;
 }
@@ -16,7 +22,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input({
   const { colors, spacing, radius, typography } = useTheme();
   const [focused, setFocused] = useState(false);
   return <TextInput {...props} ref={ref} multiline={multiline} editable={editable}
-    accessibilityState={{ ...accessibilityState, disabled: !editable || accessibilityState?.disabled }}
+    accessibilityState={{
+      ...accessibilityState,
+      disabled: !editable || accessibilityState?.disabled,
+      invalid: Boolean(invalid || accessibilityState?.invalid),
+    }}
     onFocus={event => { setFocused(true); onFocus?.(event); }}
     onBlur={event => { setFocused(false); onBlur?.(event); }}
     style={[{

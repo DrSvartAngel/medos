@@ -14,6 +14,7 @@ export function TopicReviewEvidence({ topicId }: { topicId: string }) {
   const t = useTranslation();
   const [evidence, setEvidence] = useState<ReturnType<typeof memoryRepo.getTopicLearningEvidence> | null | undefined>(undefined);
   const [qbankEvidence, setQBankEvidence] = useState<QBankEvidenceSummary | null>(null);
+  const [qbankError, setQBankError] = useState(false);
   const [attempt, setAttempt] = useState(0);
   useFocusEffect(useCallback(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -27,7 +28,11 @@ export function TopicReviewEvidence({ topicId }: { topicId: string }) {
       } catch { setEvidence(null); }
       try {
         setQBankEvidence(qbankRepo.getTopicEvidence(topicId));
-      } catch { setQBankEvidence(null); }
+        setQBankError(false);
+      } catch {
+        setQBankEvidence(null);
+        setQBankError(true);
+      }
     };
     refresh();
     const listener = AppState.addEventListener('change', state => { if (state === 'active') refresh(); });
@@ -42,7 +47,13 @@ export function TopicReviewEvidence({ topicId }: { topicId: string }) {
         <AppText>{t.topicEvidence.cards(evidence.linkedCards)}</AppText>
         <AppText>{t.topicEvidence.reviews(evidence.linkedReviews)}</AppText>
         <AppText>{t.topicEvidence.due(evidence.dueCards)}</AppText>
-        {qbankEvidence && qbankEvidence.totalQuestions > 0 ? (
+        {qbankError ? (
+          <FeedbackState
+            kind="error"
+            message={t.qbank.evidence.error}
+            action={{ label: t.common.retry, onPress: () => setAttempt(n => n + 1) }}
+          />
+        ) : qbankEvidence && qbankEvidence.totalQuestions > 0 ? (
           <>
             <AppText>{t.qbank.evidence.questions(qbankEvidence.totalQuestions)}</AppText>
             <AppText>{t.qbank.evidence.accuracy(qbankEvidence.accuracyPercent ?? 0)}</AppText>

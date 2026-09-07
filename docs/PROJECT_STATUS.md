@@ -1,6 +1,18 @@
 # MedOS — Project Status
 
-## Current — Phase 8 Step 1: Validator Modernization & Targeted Quality Audit
+## Current — Phase 8 Step 2: Accessibility & Truthful Error States
+
+- Phase 8 Step 2 implementation COMPLETE.
+- Delivered scope:
+  - Accessibility: `components/dashboard/TodayMetrics.tsx` composed meaningful localized `accessibilityLabel` for Focus, Memory, and Q-Bank metric cards including metric title, factual formatted values, and action hints while preserving visual UI and existing validator assertions.
+  - Evidence Error States: `components/memory/TopicReviewEvidence.tsx` and `components/curriculum/CommitteeLearningEvidence.tsx` distinguish query failure from zero-practice state, rendering localized error message and retry action via `FeedbackState` without raw SQLite errors or screen redesign.
+  - Input Accessibility: `components/ui/Input.tsx` merges `invalid: Boolean(invalid || accessibilityState?.invalid)` into `accessibilityState` without overriding caller properties.
+  - Stale Topic Handling: `db/repositories/qbankRepo.ts` detects foreign key constraint violations and maps to truthful localized stale-topic error; `app/qbank/new.tsx` translates error without raw SQLite text and prevents silent unlinked saving.
+  - Localization parity: Full EN/TR parity maintained in `i18n/en.ts` and `i18n/tr.ts`.
+- Validation: TypeScript EXIT 0; Phase 2 (21 PASS), Phase 3 (90 PASS), Phase 4 (43 PASS), Phase 5 (29 PASS), Phase 6 (33 PASS); Phase 7 master suite PASS; Phase 8 Step 2 focused test suite PASS.
+- Remaining Phase 8 debt: Safe Area / Responsive finding (standalone stack form routes bottom inset handling).
+
+## Historical — Phase 8 Step 1: Validator Modernization & Targeted Quality Audit
 
 - Phase 8 started. Phase 7 Q-Bank physical phone QA PASS and physical tablet QA PASS. Phase 7 pushed to remote.
 - Schema version: v11. Legacy validators (Phase 2–6) modernized to support additive schema evolution (`CURRENT_VERSION >= 10`) while strictly preserving historical invariants, table/column constraints, and domain-specific regression checks.

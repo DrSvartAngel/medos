@@ -39,6 +39,35 @@ export function TodayMetrics({
   const t = useTranslation();
   const attentionCount = memory ? memory.againCount + memory.hardCount : 0;
 
+  const focusValue =
+    focusError !== undefined || focus === null
+      ? t.dashboard.summaryUnavailable
+      : focus.completedSessions === 0
+      ? t.dashboard.noCompleted
+      : `${t.dashboard.duration(formatDashboardDuration(focus.totalSeconds))}, ${t.dashboard.completed(focus.completedSessions)}`;
+  const focusAction = focus?.completedSessions === 0 ? t.dashboard.startFocus : t.dashboard.openFocus;
+  const focusA11yLabel = `${t.focus.title}: ${focusValue}. ${focusAction}`;
+
+  const memoryValue =
+    memoryError !== undefined || memory === null
+      ? t.dashboard.summaryUnavailable
+      : memory.reviewCount === 0
+      ? t.dashboard.noReviews
+      : `${t.dashboard.reviews(memory.reviewCount)}, ${t.dashboard.reviewSummary(memory.decksReviewed, attentionCount)}`;
+  const memoryA11yLabel = `${t.memory.title}: ${memoryValue}. ${t.dashboard.openMemory}`;
+
+  const qbankValue =
+    qbankError !== undefined || qbank === null
+      ? t.dashboard.summaryUnavailable
+      : qbank?.totalQuestions === 0
+      ? t.dashboard.noQuestions
+      : `${qbank?.totalQuestions ?? 0} ${t.dashboard.questionsSolved}${
+          qbank?.accuracyPercent !== null && qbank?.accuracyPercent !== undefined
+            ? `, ${t.dashboard.qbankAccuracy(qbank.accuracyPercent)}`
+            : ''
+        }`;
+  const qbankA11yLabel = `${t.qbank.title}: ${qbankValue}. ${t.qbank.logSession}`;
+
   return (
     <View>
       <AppText variant="label" color={colors.textMuted} style={{ marginBottom: spacing.sm }}>
@@ -47,7 +76,7 @@ export function TodayMetrics({
       <View style={[styles.metrics, { gap: spacing.sm }]}>
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t.dashboard.openFocus}
+          accessibilityLabel={focusA11yLabel}
           onPress={onOpenFocus}
           style={({ pressed }) => [styles.metricWrap, { opacity: pressed ? 0.75 : 1 }]}
         >
@@ -79,13 +108,16 @@ export function TodayMetrics({
                 </AppText>
               </>
             )}
-            <MetricFooter label={focus?.completedSessions === 0 ? t.dashboard.startFocus : t.dashboard.openFocus} />
+            <MetricFooter
+              label={focusAction}
+              accessibilityLabel={t.dashboard.openFocus}
+            />
           </Card>
         </Pressable>
 
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={t.dashboard.openMemory}
+          accessibilityLabel={memoryA11yLabel}
           onPress={onOpenMemory}
           style={({ pressed }) => [styles.metricWrap, { opacity: pressed ? 0.75 : 1 }]}
         >
@@ -117,14 +149,17 @@ export function TodayMetrics({
                 </AppText>
               </>
             )}
-            <MetricFooter label={t.dashboard.openMemory} />
+            <MetricFooter
+              label={t.dashboard.openMemory}
+              accessibilityLabel={t.dashboard.openMemory}
+            />
           </Card>
         </Pressable>
 
         {qbank !== undefined && (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel={t.qbank.logSession}
+            accessibilityLabel={qbankA11yLabel}
             onPress={onOpenQBank}
             style={({ pressed }) => [styles.metricWrap, { opacity: pressed ? 0.75 : 1 }]}
           >
@@ -158,7 +193,10 @@ export function TodayMetrics({
                   </AppText>
                 </>
               )}
-              <MetricFooter label={t.qbank.logSession} />
+              <MetricFooter
+                label={t.qbank.logSession}
+                accessibilityLabel={t.qbank.logSession}
+              />
             </Card>
           </Pressable>
         )}
@@ -166,9 +204,12 @@ export function TodayMetrics({
     </View>
   );
 
-  function MetricFooter({ label }: { label: string }) {
+  function MetricFooter({ label, accessibilityLabel }: { label: string; accessibilityLabel?: string }) {
     return (
-      <View style={[styles.footer, { marginTop: spacing.md }]}>
+      <View
+        style={[styles.footer, { marginTop: spacing.md }]}
+        accessibilityLabel={accessibilityLabel ?? label}
+      >
         <AppText variant="caption" color={colors.textMuted} style={styles.footerText}>{label}</AppText>
         <Feather name="chevron-right" size={16} color={colors.textMuted} />
       </View>

@@ -85,20 +85,28 @@ export const qbankRepo = {
   insert(input: CreateQBankSessionInput): QBankSession {
     const session = validateSessionInput(input);
     const db = getDB();
-    db.runSync(
-      `INSERT INTO qbank_sessions
-         (id, topic_id, total_questions, correct_count, duration_sec, source_name, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [
-        session.id,
-        session.topicId,
-        session.totalQuestions,
-        session.correctCount,
-        session.durationSec,
-        session.sourceName,
-        session.createdAt,
-      ]
-    );
+    try {
+      db.runSync(
+        `INSERT INTO qbank_sessions
+           (id, topic_id, total_questions, correct_count, duration_sec, source_name, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        [
+          session.id,
+          session.topicId,
+          session.totalQuestions,
+          session.correctCount,
+          session.durationSec,
+          session.sourceName,
+          session.createdAt,
+        ]
+      );
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (session.topicId && /FOREIGN KEY/i.test(msg)) {
+        throw new Error('The selected topic is no longer available. Choose another topic or continue without one.');
+      }
+      throw err;
+    }
     return session;
   },
 

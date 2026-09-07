@@ -6,6 +6,7 @@ import type { Strings } from './en';
 
 const tr: Strings = {
   systemErrors: {
+    "The selected topic is no longer available. Choose another topic or continue without one.": "Seçilen konu artık mevcut değil. Başka bir konu seçin veya konu bağlantısı olmadan devam edin.",
     "Could not load your decks.": "Desteler yüklenemedi.",
     "Could not create this deck.": "Deste oluşturulamadı.",
     "Could not load this deck.": "Deste yüklenemedi.",
@@ -846,11 +847,13 @@ quickStart: 'Hızlı başlangıç',
       correctNonNegative: 'Doğru sayısı 0 veya daha büyük olmalıdır.',
       correctExceedsTotal: 'Doğru sayısı toplam soru sayısını aşamaz.',
       durationNonNegative: 'Süre 0 veya daha büyük olmalıdır.',
+      staleTopic: 'Seçilen konu artık mevcut değil. Başka bir konu seçin veya konu bağlantısı olmadan devam edin.',
     },
     evidence: {
       questions: (n: number) => `Çözülen sorular: ${n}`,
       accuracy: (pct: number) => `Doğruluk oranı: %${pct}`,
       noPractice: 'Henüz kayıtlı soru bankası pratiği yok',
+      error: 'Soru bankası pratiği yüklenemedi.',
     },
   },
 

@@ -15,6 +15,7 @@ export function CommitteeLearningEvidence({ committeeId }: { committeeId: string
   const t = useTranslation();
   const [rows, setRows] = useState<CommitteeSubjectEvidence[] | null | undefined>(undefined);
   const [qbankEvidence, setQBankEvidence] = useState<QBankEvidenceSummary | null>(null);
+  const [qbankError, setQBankError] = useState(false);
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [visible, setVisible] = useState(50);
   const [attempt, setAttempt] = useState(0);
@@ -31,7 +32,11 @@ export function CommitteeLearningEvidence({ committeeId }: { committeeId: string
       } catch { setRows(null); }
       try {
         setQBankEvidence(qbankRepo.getCommitteeEvidence(committeeId));
-      } catch { setQBankEvidence(null); }
+        setQBankError(false);
+      } catch {
+        setQBankEvidence(null);
+        setQBankError(true);
+      }
     };
     refresh();
     const listener = AppState.addEventListener('change', state => { if (state === 'active') refresh(); });
@@ -52,7 +57,13 @@ export function CommitteeLearningEvidence({ committeeId }: { committeeId: string
         <AppText>{t.topicEvidence.due(totals.dueCards)}</AppText>
         <AppText>{t.subjectEvidence.attention(totals.attentionTopics)}</AppText>
         <AppText>{t.committeeEvidence.attentionSubjects(totals.attentionSubjects)}</AppText>
-        {qbankEvidence && qbankEvidence.totalQuestions > 0 ? (
+        {qbankError ? (
+          <FeedbackState
+            kind="error"
+            message={t.qbank.evidence.error}
+            action={{ label: t.common.retry, onPress: () => setAttempt(n => n + 1) }}
+          />
+        ) : qbankEvidence && qbankEvidence.totalQuestions > 0 ? (
           <>
             <AppText>{t.qbank.evidence.questions(qbankEvidence.totalQuestions)}</AppText>
             <AppText>{t.qbank.evidence.accuracy(qbankEvidence.accuracyPercent ?? 0)}</AppText>

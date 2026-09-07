@@ -17,6 +17,7 @@ import { TopicLinkPicker } from '@/components/memory/TopicLinkPicker';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
+import { translateError } from '@/i18n/errors';
 import { useQBankStore } from '@/store/useQBankStore';
 
 export default function NewQBankSessionScreen() {
@@ -134,11 +135,19 @@ export default function NewQBankSessionScreen() {
       if (session) {
         handleBack();
       } else {
-        setFormError(t.qbank.saveFailed);
+        const storeError = useQBankStore.getState().error;
+        if (storeError) {
+          const translated = translateError(storeError, t);
+          setFormError(translated === t.sweep.operationError ? t.qbank.saveFailed : translated);
+        } else {
+          setFormError(t.qbank.saveFailed);
+        }
       }
-    } catch {
+    } catch (err: unknown) {
       setSaving(false);
-      setFormError(t.qbank.saveFailed);
+      const msg = err instanceof Error ? err.message : String(err);
+      const translated = translateError(msg, t);
+      setFormError(translated === t.sweep.operationError ? t.qbank.saveFailed : translated);
     }
   }
 

@@ -4,6 +4,7 @@
 
 const en = {
   systemErrors: {
+    "The selected topic is no longer available. Choose another topic or continue without one.": "The selected topic is no longer available. Choose another topic or continue without one.",
     "Could not load your decks.": "Could not load your decks.",
     "Could not create this deck.": "Could not create this deck.",
     "Could not load this deck.": "Could not load this deck.",
@@ -840,11 +841,13 @@ quickStart: 'Quick Start',
       correctNonNegative: 'Correct answers must be 0 or greater.',
       correctExceedsTotal: 'Correct answers cannot exceed total questions.',
       durationNonNegative: 'Duration must be 0 or greater.',
+      staleTopic: 'The selected topic is no longer available. Choose another topic or continue without one.',
     },
     evidence: {
       questions: (n: number) => `Questions solved: ${n}`,
       accuracy: (pct: number) => `Accuracy: ${pct}%`,
       noPractice: 'No question bank practice recorded yet',
+      error: 'Question bank practice could not be loaded.',
     },
   },
 
