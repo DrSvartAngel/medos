@@ -1,6 +1,71 @@
 # MedOS — Project Status
 
-## Current — Phase 10 Step 6: Source-Grounded Flashcard Draft Generator
+## Current — Phase 10 Step 7: Flashcard Draft Review → Memory Import
+
+- Phase 10 Step 7 implementation: COMPLETE.
+- Phase 10 automated/static validation: PASS.
+- Phase 9 implementation + validation: COMPLETE.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: Flashcard draft review, selection, and explicit import to Memory complete; canonical persistence path reused, batch transaction safety guaranteed, zero auto-persistence, zero fake study evidence.
+- Delivered scope:
+  - Import UX & Selection:
+    - Extended flashcards area in Study Assistant (`app/topics/[id]/assistant.tsx`).
+    - All valid drafts default to selected upon generation.
+    - Accessible individual toggle checkbox (`accessibilityRole="checkbox"`, `accessibilityState={{ checked }}`).
+    - Batch selection controls: "Select all" (`t.studyAi.selectAll`) and "Deselect all" (`t.studyAi.deselectAll`).
+    - Dynamic selection counter: `t.studyAi.selectedCount(selectedCount, totalCount)`.
+    - Explicit CTA: `"Review & Add to Memory"` / `"Gözden Geçir ve Memory'ye Ekle"` (with dynamic count).
+    - Front and back inputs remain editable prior to import; individual removal supported.
+  - Destination Deck Selection:
+    - User selects destination deck from existing decks (`memoryRepo.getAllDecks()`).
+    - Auto-selects if exactly one deck exists.
+    - Calm empty state when no decks exist with action to create a deck (`/decks/new`).
+    - Available decks refreshed on screen focus (`useFocusEffect`).
+    - Stale or deleted decks rejected safely before persistence.
+  - Review & Batch Validation:
+    - Validates destination deck is selected and exists in database.
+    - Validates source and topic remain present in DB.
+    - Validates at least one draft is selected.
+    - Validates every selected draft has non-empty trimmed `front` and `back`.
+    - Entire selected set validated before any write; atomic batch execution via `getDB().withTransactionSync`.
+    - Duplicate submission blocked during saving via `isImporting` state.
+  - Canonical Memory Persistence & SRS Defaults:
+    - Persists approved cards directly to `flashcards` table via canonical `memoryRepo.insertCard`.
+    - Preserves topic linkage (`topic_id` linked to current topic).
+    - Initialized with canonical unscheduled defaults (`interval: 1`, `ease: 2.5`, `schedule_state: 'unscheduled'`, `next_review: created_at`).
+    - Zero rows created in `flashcard_reviews` (creation != study evidence).
+    - Zero writes to Q-Bank or analytics tables.
+  - Post-Import Feedback & Failure Behavior:
+    - Success feedback with imported count (`t.studyAi.importSuccess(count)`).
+    - Clears imported drafts from state; unselected drafts remain for review.
+    - Offers action to view destination deck (`/decks/[id]`) or remain in assistant.
+    - On failure, keeps all drafts intact for user retry; does not wipe edits or leak SQLite internals.
+  - Provider Isolation:
+    - Import flow is 100% local SQLite persistence.
+    - Zero AI provider calls, zero network calls, zero Gemini imports during import.
+  - Schema:
+    - Strictly unchanged at **v12**.
+  - Localization:
+    - Extended `studyAi` namespace in `i18n/en.ts` and `i18n/tr.ts` with complete parity.
+- Dedicated Validation:
+  - `scripts/validate-phase10-step7.cjs`: 11 test suites covering selection defaults/toggles, deck selection/empty state, atomic validation, canonical persistence, scheduling defaults, zero review history, transaction rollback, post-import draft lifecycle, provider isolation, EN/TR parity, and accessibility.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+  - Phase 10 Step 1 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 2 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 3 Suite: ALL PASS (9 checks)
+  - Phase 10 Step 4 Suite: ALL PASS (9 checks)
+  - Phase 10 Step 5 Suite: ALL PASS (15 checks)
+  - Phase 10 Step 6 Suite: ALL PASS (11 checks)
+  - Phase 10 Step 7 Suite: ALL PASS (11 checks)
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+
+## Historical — Phase 10 Step 6: Source-Grounded Flashcard Draft Generator
 
 - Phase 10 Step 6 implementation: COMPLETE.
 - Phase 10 automated/static validation: PASS.

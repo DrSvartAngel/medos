@@ -1,8 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { BackHandler, TouchableOpacity, View } from 'react-native';
 import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
+import { getDB } from '@/db/client';
 import { topicRepo } from '@/db/repositories/topicRepo';
 import { studySourceRepo } from '@/db/repositories/studySourceRepo';
+import { memoryRepo } from '@/db/repositories/memoryRepo';
+import { useMemoryStore, type Deck, type Flashcard } from '@/store/useMemoryStore';
 import type { Topic } from '@/models/curriculum';
 import type { StudySource } from '@/models/studySource';
 import { type AIFlashcardDraft, AIServiceError } from '@/models/ai';
@@ -71,6 +75,12 @@ export default function StudyAssistantScreen() {
   const [queryError, setQueryError] = useState<string | null>(null);
   const [resultState, setResultState] = useState<ResultState>({ status: 'idle' });
   const [drafts, setDrafts] = useState<AIFlashcardDraft[]>([]);
+  const [selectedDraftIds, setSelectedDraftIds] = useState<Set<string>>(new Set());
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
+  const [isImporting, setIsImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const [importSuccess, setImportSuccess] = useState<{ count: number; deckId: string } | null>(null);
 
   const loadData = useCallback(() => {
     setLoadingInitial(true);
@@ -127,12 +137,35 @@ export default function StudyAssistantScreen() {
     }, [handleBack])
   );
 
+  const loadDecks = useCallback(() => {
+    try {
+      const items = memoryRepo.getAllDecks();
+      setDecks(items);
+      setSelectedDeckId((prev) => {
+        if (prev && items.some((d) => d.id === prev)) return prev;
+        if (items.length === 1) return items[0].id;
+        return null;
+      });
+    } catch {
+      setDecks([]);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadDecks();
+    }, [loadDecks])
+  );
+
   const handleSelectSource = (id: string) => {
     if (id !== selectedSourceId) {
       setSelectedSourceId(id);
       // Changing source clears previous result and drafts to avoid provenance confusion
       setResultState({ status: 'idle' });
       setDrafts([]);
+      setSelectedDraftIds(new Set());
+      setImportError(null);
+      setImportSuccess(null);
       setQueryError(null);
     }
   };
@@ -252,6 +285,9 @@ export default function StudyAssistantScreen() {
       const generated = await service.generateFlashcardDrafts(context);
 
       setDrafts(generated);
+      setSelectedDraftIds(new Set(generated.map((d) => d.id)));
+      setImportError(null);
+      setImportSuccess(null);
       setResultState({ status: 'idle' });
     } catch (err: unknown) {
       setResultState({
@@ -261,19 +297,144 @@ export default function StudyAssistantScreen() {
     }
   };
 
+  const handleToggleDraft = (draftId: string) => {
+    setSelectedDraftIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(draftId)) {
+        next.delete(draftId);
+      } else {
+        next.add(draftId);
+      }
+      return next;
+    });
+    if (importError) setImportError(null);
+  };
+
+  const handleSelectAll = () => {
+    setSelectedDraftIds(new Set(drafts.map((d) => d.id)));
+    if (importError) setImportError(null);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedDraftIds(new Set());
+    if (importError) setImportError(null);
+  };
+
   const handleEditDraft = (draftId: string, field: 'front' | 'back', value: string) => {
     setDrafts((prev) =>
       prev.map((d) => (d.id === draftId ? { ...d, [field]: value, edited: true } : d))
     );
+    if (importError) setImportError(null);
   };
 
   const handleRemoveDraft = (draftId: string) => {
     setDrafts((prev) => prev.filter((d) => d.id !== draftId));
+    setSelectedDraftIds((prev) => {
+      const next = new Set(prev);
+      next.delete(draftId);
+      return next;
+    });
+    if (importError) setImportError(null);
   };
 
   const handleClearDrafts = () => {
     setDrafts([]);
+    setSelectedDraftIds(new Set());
+    setImportError(null);
+    setImportSuccess(null);
     setResultState({ status: 'idle' });
+  };
+
+  const handleImport = () => {
+    if (isImporting) return;
+    setImportError(null);
+    setImportSuccess(null);
+
+    // 1. Deck check
+    if (!selectedDeckId) {
+      setImportError(t.studyAi.deckMissing);
+      return;
+    }
+    const targetDeck = memoryRepo.getDeckById(selectedDeckId);
+    if (!targetDeck) {
+      setImportError(t.studyAi.deckMissing);
+      return;
+    }
+
+    // 2. Source and Topic check (prevent stale/deleted ambiguity)
+    if (!selectedSourceId) return;
+    const freshSource = studySourceRepo.getById(selectedSourceId);
+    if (!freshSource) {
+      setImportError(t.studyAi.sourceMissing);
+      return;
+    }
+    const freshTopic = topicRepo.getById(topicId);
+    if (!freshTopic) {
+      setImportError(t.topics.missing);
+      return;
+    }
+
+    // 3. Selection check
+    const selectedDrafts = drafts.filter((d) => selectedDraftIds.has(d.id));
+    if (selectedDrafts.length === 0) {
+      setImportError(t.studyAi.noDraftsSelected);
+      return;
+    }
+
+    // 4. Validate each selected draft content
+    for (const draft of selectedDrafts) {
+      if (!draft.front.trim() || !draft.back.trim()) {
+        setImportError(t.studyAi.invalidDraft);
+        return;
+      }
+    }
+
+    // 5. Batch import atomically via canonical Memory repository in a SQLite transaction
+    setIsImporting(true);
+    try {
+      getDB().withTransactionSync(() => {
+        const now = Date.now();
+        for (let i = 0; i < selectedDrafts.length; i++) {
+          const d = selectedDrafts[i];
+          const card: Flashcard = {
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 8) + i.toString(36),
+            deckId: selectedDeckId,
+            topicId: freshTopic.id,
+            front: d.front.trim(),
+            back: d.back.trim(),
+            createdAt: now,
+            updatedAt: now,
+          };
+          memoryRepo.insertCard(card);
+        }
+      });
+
+      const importedCount = selectedDrafts.length;
+      const importedIds = new Set(selectedDrafts.map((d) => d.id));
+
+      // Clear imported drafts; keep any unselected drafts
+      setDrafts((prev) => prev.filter((d) => !importedIds.has(d.id)));
+      setSelectedDraftIds((prev) => {
+        const next = new Set(prev);
+        for (const id of importedIds) {
+          next.delete(id);
+        }
+        return next;
+      });
+
+      setImportSuccess({
+        count: importedCount,
+        deckId: selectedDeckId,
+      });
+
+      // Refresh deck list to show updated card count
+      loadDecks();
+      useMemoryStore.getState().loadDecks();
+    } catch {
+      setImportError(t.studyAi.importFailed);
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handleRetry = () => {
@@ -444,14 +605,48 @@ export default function StudyAssistantScreen() {
                 {activeMode === 'flashcards' && (
                   <View style={{ gap: spacing.md, marginTop: spacing.sm }}>
                     {drafts.length === 0 ? (
-                      <Button
-                        label={t.studyAi.generateFlashcards}
-                        onPress={handleGenerateDrafts}
-                        loading={
-                          resultState.status === 'loading' && resultState.kind === 'flashcards'
-                        }
-                        disabled={resultState.status === 'loading'}
-                      />
+                      <View style={{ gap: spacing.md }}>
+                        {importSuccess && (
+                          <View
+                            style={{
+                              padding: spacing.md,
+                              borderRadius: radius.md,
+                              backgroundColor: colors.surface,
+                              borderWidth: 1,
+                              borderColor: colors.success,
+                              gap: spacing.xs,
+                            }}
+                          >
+                            <View
+                              style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+                            >
+                              <Feather name="check" size={18} color={colors.success} />
+                              <AppText variant="label" color={colors.success}>
+                                {t.studyAi.importSuccess(importSuccess.count)}
+                              </AppText>
+                            </View>
+                            <Button
+                              label={t.studyAi.viewDeck}
+                              variant="secondary"
+                              size="sm"
+                              onPress={() =>
+                                router.push(
+                                  `/decks/${encodeURIComponent(importSuccess.deckId)}` as Href
+                                )
+                              }
+                              style={{ alignSelf: 'flex-start', marginTop: spacing.xs }}
+                            />
+                          </View>
+                        )}
+                        <Button
+                          label={t.studyAi.generateFlashcards}
+                          onPress={handleGenerateDrafts}
+                          loading={
+                            resultState.status === 'loading' && resultState.kind === 'flashcards'
+                          }
+                          disabled={resultState.status === 'loading'}
+                        />
+                      </View>
                     ) : (
                       <Card elevated style={{ gap: spacing.md }}>
                         {/* Header with Title, Count, Clear, Regenerate */}
@@ -514,93 +709,296 @@ export default function StudyAssistantScreen() {
                           </AppText>
                         </View>
 
+                        {/* Selection Toolbar */}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: spacing.xs,
+                            paddingVertical: spacing.xs,
+                            borderBottomWidth: 1,
+                            borderBottomColor: colors.border,
+                          }}
+                        >
+                          <AppText variant="caption" color={colors.textSecondary}>
+                            {t.studyAi.selectedCount(selectedDraftIds.size, drafts.length)}
+                          </AppText>
+                          <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+                            <Button
+                              label={t.studyAi.selectAll}
+                              variant="ghost"
+                              size="sm"
+                              onPress={handleSelectAll}
+                              disabled={drafts.length === 0 || selectedDraftIds.size === drafts.length}
+                            />
+                            <Button
+                              label={t.studyAi.deselectAll}
+                              variant="ghost"
+                              size="sm"
+                              onPress={handleDeselectAll}
+                              disabled={selectedDraftIds.size === 0}
+                            />
+                          </View>
+                        </View>
+
                         {/* Draft Cards */}
                         <View style={{ gap: spacing.md }}>
-                          {drafts.map((draft, index) => (
-                            <View
-                              key={draft.id}
-                              style={{
-                                borderWidth: 1,
-                                borderColor: colors.border,
-                                borderRadius: radius.md,
-                                padding: spacing.md,
-                                backgroundColor: colors.surface,
-                                gap: spacing.sm,
-                              }}
-                            >
+                          {drafts.map((draft, index) => {
+                            const isSelected = selectedDraftIds.has(draft.id);
+                            return (
                               <View
+                                key={draft.id}
                                 style={{
-                                  flexDirection: 'row',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'center',
+                                  borderWidth: 1,
+                                  borderColor: isSelected ? colors.primary : colors.border,
+                                  borderRadius: radius.md,
+                                  padding: spacing.md,
+                                  backgroundColor: colors.surface,
+                                  gap: spacing.sm,
                                 }}
                               >
                                 <View
                                   style={{
                                     flexDirection: 'row',
+                                    justifyContent: 'space-between',
                                     alignItems: 'center',
-                                    gap: spacing.xs,
                                   }}
                                 >
-                                  <AppText variant="label">#{index + 1}</AppText>
-                                  {draft.edited ? (
-                                    <Badge label={t.studyAi.editedBadge} variant="default" />
-                                  ) : null}
+                                  <TouchableOpacity
+                                    accessibilityRole="checkbox"
+                                    accessibilityState={{ checked: isSelected }}
+                                    accessibilityLabel={`${t.studyAi.selected} #${index + 1}`}
+                                    onPress={() => handleToggleDraft(draft.id)}
+                                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                    style={{
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      gap: spacing.xs,
+                                    }}
+                                  >
+                                    <Feather
+                                      name={isSelected ? 'check-square' : 'square'}
+                                      size={20}
+                                      color={isSelected ? colors.primary : colors.textSecondary}
+                                    />
+                                    <AppText variant="label">#{index + 1}</AppText>
+                                    {draft.edited ? (
+                                      <Badge label={t.studyAi.editedBadge} variant="default" />
+                                    ) : null}
+                                  </TouchableOpacity>
+                                  <Button
+                                    label={t.studyAi.removeDraft}
+                                    variant="ghost"
+                                    size="sm"
+                                    accessibilityLabel={t.studyAi.removeDraftNumbered(index + 1)}
+                                    onPress={() => handleRemoveDraft(draft.id)}
+                                  />
                                 </View>
-                                <Button
-                                  label={t.studyAi.removeDraft}
-                                  variant="ghost"
-                                  size="sm"
-                                  accessibilityLabel={t.studyAi.removeDraftNumbered(index + 1)}
-                                  onPress={() => handleRemoveDraft(draft.id)}
-                                />
-                              </View>
 
-                              {/* Front Input */}
-                              <View style={{ gap: spacing.xs }}>
-                                <AppText variant="caption" color={colors.textSecondary}>
-                                  {t.studyAi.front}
-                                </AppText>
-                                <Input
-                                  multiline
-                                  value={draft.front}
-                                  onChangeText={(text) => handleEditDraft(draft.id, 'front', text)}
-                                  accessibilityLabel={`${t.studyAi.front} ${index + 1}`}
-                                  style={{ minHeight: 60 }}
-                                />
-                              </View>
-
-                              {/* Back Input */}
-                              <View style={{ gap: spacing.xs }}>
-                                <AppText variant="caption" color={colors.textSecondary}>
-                                  {t.studyAi.back}
-                                </AppText>
-                                <Input
-                                  multiline
-                                  value={draft.back}
-                                  onChangeText={(text) => handleEditDraft(draft.id, 'back', text)}
-                                  accessibilityLabel={`${t.studyAi.back} ${index + 1}`}
-                                  style={{ minHeight: 60 }}
-                                />
-                              </View>
-
-                              {/* Source Excerpt */}
-                              {draft.sourceExcerpt ? (
-                                <View
-                                  style={{
-                                    backgroundColor: colors.surfaceElevated,
-                                    padding: spacing.xs,
-                                    borderRadius: radius.sm,
-                                  }}
-                                >
+                                {/* Front Input */}
+                                <View style={{ gap: spacing.xs }}>
                                   <AppText variant="caption" color={colors.textSecondary}>
-                                    {t.studyAi.sourceExcerpt}: “{draft.sourceExcerpt}”
+                                    {t.studyAi.front}
                                   </AppText>
+                                  <Input
+                                    multiline
+                                    value={draft.front}
+                                    onChangeText={(text) =>
+                                      handleEditDraft(draft.id, 'front', text)
+                                    }
+                                    accessibilityLabel={`${t.studyAi.front} ${index + 1}`}
+                                    style={{ minHeight: 60 }}
+                                  />
                                 </View>
-                              ) : null}
-                            </View>
-                          ))}
+
+                                {/* Back Input */}
+                                <View style={{ gap: spacing.xs }}>
+                                  <AppText variant="caption" color={colors.textSecondary}>
+                                    {t.studyAi.back}
+                                  </AppText>
+                                  <Input
+                                    multiline
+                                    value={draft.back}
+                                    onChangeText={(text) =>
+                                      handleEditDraft(draft.id, 'back', text)
+                                    }
+                                    accessibilityLabel={`${t.studyAi.back} ${index + 1}`}
+                                    style={{ minHeight: 60 }}
+                                  />
+                                </View>
+
+                                {/* Source Excerpt */}
+                                {draft.sourceExcerpt ? (
+                                  <View
+                                    style={{
+                                      backgroundColor: colors.surfaceElevated,
+                                      padding: spacing.xs,
+                                      borderRadius: radius.sm,
+                                    }}
+                                  >
+                                    <AppText variant="caption" color={colors.textSecondary}>
+                                      {t.studyAi.sourceExcerpt}: “{draft.sourceExcerpt}”
+                                    </AppText>
+                                  </View>
+                                ) : null}
+                              </View>
+                            );
+                          })}
                         </View>
+
+                        {/* Destination Deck Selection */}
+                        <View style={{ gap: spacing.xs, marginTop: spacing.sm }}>
+                          <AppText variant="label">{t.studyAi.chooseDeck}</AppText>
+                          {decks.length === 0 ? (
+                            <View
+                              style={{
+                                padding: spacing.md,
+                                borderRadius: radius.md,
+                                backgroundColor: colors.surface,
+                                borderWidth: 1,
+                                borderColor: colors.border,
+                                alignItems: 'center',
+                                gap: spacing.sm,
+                              }}
+                            >
+                              <AppText
+                                variant="body"
+                                color={colors.textSecondary}
+                                style={{ textAlign: 'center' }}
+                              >
+                                {t.studyAi.noDecks}
+                              </AppText>
+                              <Button
+                                label={t.studyAi.createDeck}
+                                variant="secondary"
+                                size="sm"
+                                onPress={() => router.push('/decks/new' as Href)}
+                              />
+                            </View>
+                          ) : (
+                            <View style={{ gap: spacing.xs }} accessibilityRole="radiogroup">
+                              {decks.map((deck) => {
+                                const isDeckSelected = deck.id === selectedDeckId;
+                                return (
+                                  <TouchableOpacity
+                                    key={deck.id}
+                                    accessibilityRole="radio"
+                                    accessibilityState={{ selected: isDeckSelected }}
+                                    accessibilityLabel={`${deck.name} (${deck.cardCount})`}
+                                    onPress={() => {
+                                      setSelectedDeckId(deck.id);
+                                      if (importError) setImportError(null);
+                                    }}
+                                    style={{
+                                      flexDirection: 'row',
+                                      alignItems: 'center',
+                                      justifyContent: 'space-between',
+                                      padding: spacing.sm,
+                                      borderRadius: radius.sm,
+                                      borderWidth: 1,
+                                      borderColor: isDeckSelected ? colors.primary : colors.border,
+                                      backgroundColor: isDeckSelected
+                                        ? colors.surfaceElevated
+                                        : colors.surface,
+                                    }}
+                                  >
+                                    <View
+                                      style={{
+                                        flexDirection: 'row',
+                                        alignItems: 'center',
+                                        gap: spacing.sm,
+                                        flex: 1,
+                                      }}
+                                    >
+                                      <Feather
+                                        name={isDeckSelected ? 'check-circle' : 'circle'}
+                                        size={18}
+                                        color={
+                                          isDeckSelected ? colors.primary : colors.textSecondary
+                                        }
+                                      />
+                                      <AppText
+                                        variant="body"
+                                        numberOfLines={1}
+                                        style={{ flex: 1 }}
+                                      >
+                                        {deck.name}
+                                      </AppText>
+                                    </View>
+                                    <Badge label={`${deck.cardCount}`} variant="default" />
+                                  </TouchableOpacity>
+                                );
+                              })}
+                            </View>
+                          )}
+                        </View>
+
+                        {/* Import Error Banner */}
+                        {importError && (
+                          <FeedbackState kind="error" message={importError} />
+                        )}
+
+                        {/* Import Success Banner */}
+                        {importSuccess && (
+                          <View
+                            style={{
+                              padding: spacing.md,
+                              borderRadius: radius.md,
+                              backgroundColor: colors.surface,
+                              borderWidth: 1,
+                              borderColor: colors.success,
+                              gap: spacing.xs,
+                            }}
+                          >
+                            <View
+                              style={{
+                                flexDirection: 'row',
+                                alignItems: 'center',
+                                gap: spacing.xs,
+                              }}
+                            >
+                              <Feather name="check" size={18} color={colors.success} />
+                              <AppText variant="label" color={colors.success}>
+                                {t.studyAi.importSuccess(importSuccess.count)}
+                              </AppText>
+                            </View>
+                            <Button
+                              label={t.studyAi.viewDeck}
+                              variant="secondary"
+                              size="sm"
+                              onPress={() =>
+                                router.push(
+                                  `/decks/${encodeURIComponent(importSuccess.deckId)}` as Href
+                                )
+                              }
+                              style={{ alignSelf: 'flex-start', marginTop: spacing.xs }}
+                            />
+                          </View>
+                        )}
+
+                        {/* Import Action CTA */}
+                        <Button
+                          label={
+                            selectedDraftIds.size > 0
+                              ? t.studyAi.reviewAndAddToMemoryCount(selectedDraftIds.size)
+                              : t.studyAi.reviewAndAddToMemory
+                          }
+                          onPress={handleImport}
+                          loading={isImporting}
+                          disabled={
+                            selectedDraftIds.size === 0 ||
+                            !selectedDeckId ||
+                            isImporting ||
+                            decks.length === 0
+                          }
+                          accessibilityLabel={
+                            selectedDraftIds.size > 0
+                              ? t.studyAi.reviewAndAddToMemoryCount(selectedDraftIds.size)
+                              : t.studyAi.reviewAndAddToMemory
+                          }
+                        />
 
                         {/* Academic Safety Note */}
                         <View
