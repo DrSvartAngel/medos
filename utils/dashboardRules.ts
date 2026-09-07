@@ -3,6 +3,7 @@ import type {
   DashboardCommitteeSource,
   DashboardFocusSource,
   DashboardMemorySource,
+  DashboardQBankSource,
   DashboardWeakDeckSource,
 } from '@/db/repositories/dashboardRepo';
 import type { CommitteeTimelineSource } from '@/db/repositories/timelineRepo';
@@ -30,6 +31,7 @@ export interface DashboardCommittee {
 
 export type DashboardFocusSummary = DashboardFocusSource;
 export type DashboardMemorySummary = DashboardMemorySource;
+export type DashboardQBankSummary = DashboardQBankSource;
 export type DashboardWeakDeck = DashboardWeakDeckSource;
 
 export interface DashboardAgendaItem {
@@ -93,6 +95,7 @@ export interface DashboardSnapshot {
   committee: DashboardCommittee | null;
   focus: DashboardFocusSummary | null;
   memory: DashboardMemorySummary | null;
+  qbank: DashboardQBankSummary | null;
   weakDeck: DashboardWeakDeck | null;
   agenda: DashboardAgendaItem[];
   agendaTotal: number;

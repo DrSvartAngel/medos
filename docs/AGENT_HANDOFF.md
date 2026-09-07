@@ -1,6 +1,20 @@
 # MedOS — compact handoff
 
-## Current — Full EN/TR Localization Sweep
+## Current — Phase 7 Q-Bank Tracking Engine
+
+- Phase 7 implementation COMPLETE. Master Phase 6 remains ACTIVE awaiting physical phone/tablet QA; Phase 7 physical QA PENDING.
+- Delivered scope:
+  - Schema v11: additive `qbank_sessions` table with constraints (`total_questions > 0`, `0 <= correct_count <= total_questions`, `duration_sec >= 0`), nullable foreign key `topic_id REFERENCES topics(id) ON DELETE SET NULL`, and indexes on `topic_id` and `created_at`.
+  - Canonical models & repository: `models/qbank.ts` (`QBankSession`, `CreateQBankSessionInput`, `QBankEvidenceSummary`) and `db/repositories/qbankRepo.ts` implementing `insert`, `delete`, `getRecent`, `getByTopic`, `getById`, `getTopicEvidence`, `getCommitteeEvidence`.
+  - Store: `useQBankStore` (`loadRecentSessions`, `addSession`, `deleteSession`, `clearError`) integrated into barrel export `store/index.ts`.
+  - Manual practice logging UI: `app/qbank/new.tsx` with numeric validation, minutes-to-seconds conversion, optional topic link picker, optional source name, safe back navigation fallback, and entry button on Memory tab.
+  - Learning evidence integration: topic detail (`TopicReviewEvidence.tsx`) and committee detail (`CommitteeLearningEvidence.tsx`) show questions solved and accuracy %, strictly excluding unlinked sessions from curriculum-scoped evidence.
+  - Daily dashboard integration: `dashboardRepo.getQBankSummary`, `useDashboardStore`, and `TodayMetrics.tsx` displaying today's total questions solved and accuracy % using local day boundaries on `created_at`; unlinked sessions included globally; supplementary action opening `/qbank/new` without altering adaptive `QuickStartCard` logic.
+  - Bilingual localization: full EN/TR parity in `i18n/en.ts` and `i18n/tr.ts` with zero hardcoded user-visible text.
+- Explicitly deferred: advanced analytics, exam-readiness prediction, AI question generation, PDF ingestion, third-party Q-Bank sync.
+- Validation: TypeScript EXIT 0; focused Phase 7 master test (schema, repo, UI, evidence, dashboard, i18n parity) EXIT 0; existing legacy validators exhibit expected exact baseline schema v10 assertions.
+
+## Historical — Full EN/TR Localization Sweep
 
 - Full user-facing EN/TR sweep COMPLETE; existing i18n/useAppStore language architecture retained. This explicitly supersedes the earlier localization deferral. Physical localization and combined Phase 6 QA remain PENDING, user-owned; no emulator/ADB/device automation.
 - Audited all app/component surfaces: tabs, Dashboard, curriculum/evidence/Exam Plan, Focus/support/breaks, Memory/SRS, Calendar, Profile and motivation. Filled Committee/Deck/Card/Event CRUD, confirmation, empty/error/fallback, count, badge, placeholder and accessibility gaps; already-localized surfaces kept intact.

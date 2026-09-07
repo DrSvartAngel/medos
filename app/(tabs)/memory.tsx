@@ -118,6 +118,17 @@ export default function MemoryScreen() {
         </Card>
       </View>
 
+      <View style={{ marginTop: spacing.sm }}>
+        <Button
+          label={t.qbank.logSession}
+          accessibilityLabel={t.qbank.logSession}
+          variant="secondary"
+          size="sm"
+          onPress={() => router.push('/qbank/new' as Href)}
+        />
+      </View>
+
+
       {error !== null && (
         <View style={[styles.error, { borderColor: colors.error, marginTop: spacing.md, padding: spacing.md }]}> 
           <Feather name="alert-circle" size={18} color={colors.error} />

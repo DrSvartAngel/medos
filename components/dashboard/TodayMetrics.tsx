@@ -6,24 +6,34 @@ import { AppText } from '@/components/ui/Typography';
 import { Card } from '@/components/ui/Card';
 import { useTheme } from '@/hooks/useTheme';
 import { formatDashboardDuration } from '@/utils/dashboardRules';
-import type { DashboardFocusSummary, DashboardMemorySummary } from '@/utils/dashboardRules';
+import type {
+  DashboardFocusSummary,
+  DashboardMemorySummary,
+  DashboardQBankSummary,
+} from '@/utils/dashboardRules';
 
 interface TodayMetricsProps {
   focus: DashboardFocusSummary | null;
   memory: DashboardMemorySummary | null;
+  qbank?: DashboardQBankSummary | null;
   focusError?: string;
   memoryError?: string;
+  qbankError?: string;
   onOpenFocus: () => void;
   onOpenMemory: () => void;
+  onOpenQBank?: () => void;
 }
 
 export function TodayMetrics({
   focus,
   memory,
+  qbank,
   focusError,
   memoryError,
+  qbankError,
   onOpenFocus,
   onOpenMemory,
+  onOpenQBank,
 }: TodayMetricsProps) {
   const { colors, spacing, radius } = useTheme();
   const t = useTranslation();
@@ -110,6 +120,48 @@ export function TodayMetrics({
             <MetricFooter label={t.dashboard.openMemory} />
           </Card>
         </Pressable>
+
+        {qbank !== undefined && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.qbank.logSession}
+            onPress={onOpenQBank}
+            style={({ pressed }) => [styles.metricWrap, { opacity: pressed ? 0.75 : 1 }]}
+          >
+            <Card style={styles.metricCard}>
+              <View style={styles.metricHeader}>
+                <View style={[styles.icon, { backgroundColor: colors.surfaceElevated, borderRadius: radius.sm }]}>
+                  <Feather name="help-circle" size={18} color={colors.info} />
+                </View>
+                <AppText variant="label" style={{ marginLeft: spacing.sm, flex: 1 }}>{t.qbank.title}</AppText>
+              </View>
+              {qbankError !== undefined || qbank === null ? (
+                <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.md }}>
+                  {t.dashboard.summaryUnavailable}
+                </AppText>
+              ) : qbank.totalQuestions === 0 ? (
+                <>
+                  <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.dashboard.ready}</AppText>
+                  <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
+                    {t.dashboard.noQuestions}
+                  </AppText>
+                </>
+              ) : (
+                <>
+                  <AppText variant="h2" color={colors.info} style={{ marginTop: spacing.md }}>
+                    {qbank.totalQuestions}
+                  </AppText>
+                  <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
+                    {qbank.accuracyPercent !== null
+                      ? `${t.dashboard.questionsSolved} · ${t.dashboard.qbankAccuracy(qbank.accuracyPercent)}`
+                      : t.dashboard.questionsSolved}
+                  </AppText>
+                </>
+              )}
+              <MetricFooter label={t.qbank.logSession} />
+            </Card>
+          </Pressable>
+        )}
       </View>
     </View>
   );

@@ -59,3 +59,12 @@ export type {
   DashboardSnapshot,
   DashboardWeakDeck,
 } from '@/utils/dashboardRules';
+export { useQBankStore } from './useQBankStore';
+export type {
+  QBankSession,
+  CreateQBankSessionInput,
+  QBankEvidenceSummary,
+} from '@/models/qbank';
+
+
+

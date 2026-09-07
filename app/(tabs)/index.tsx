@@ -161,10 +161,13 @@ export default function DashboardScreen() {
     <TodayMetrics
       focus={snapshot.focus}
       memory={snapshot.memory}
+      qbank={snapshot.qbank}
       focusError={sectionErrors.focus}
       memoryError={sectionErrors.memory}
+      qbankError={sectionErrors.qbank}
       onOpenFocus={() => router.push('/(tabs)/focus' as Href)}
       onOpenMemory={() => router.push('/(tabs)/memory' as Href)}
+      onOpenQBank={() => router.push('/qbank/new' as Href)}
     />
   );
   const agenda = (

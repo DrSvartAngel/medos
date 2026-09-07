@@ -2,6 +2,8 @@ import React, { useCallback, useState } from 'react';
 import { AppState } from 'react-native';
 import { router, type Href, useFocusEffect } from 'expo-router';
 import { memoryRepo } from '@/db/repositories/memoryRepo';
+import { qbankRepo } from '@/db/repositories/qbankRepo';
+import type { QBankEvidenceSummary } from '@/models/qbank';
 import { filterCommitteeEvidence, summarizeCommitteeEvidence, type CommitteeSubjectEvidence } from '@/utils/committeeEvidenceRules';
 import { useTranslation } from '@/i18n';
 import { Section } from '@/components/ui/Section';
@@ -12,6 +14,7 @@ import { FeedbackState } from '@/components/ui/FeedbackState';
 export function CommitteeLearningEvidence({ committeeId }: { committeeId: string }) {
   const t = useTranslation();
   const [rows, setRows] = useState<CommitteeSubjectEvidence[] | null | undefined>(undefined);
+  const [qbankEvidence, setQBankEvidence] = useState<QBankEvidenceSummary | null>(null);
   const [attentionOnly, setAttentionOnly] = useState(false);
   const [visible, setVisible] = useState(50);
   const [attempt, setAttempt] = useState(0);
@@ -26,6 +29,9 @@ export function CommitteeLearningEvidence({ committeeId }: { committeeId: string
         const deadline = summarizeCommitteeEvidence(next).nextReviewAt;
         if (deadline !== null) timer = setTimeout(refresh, Math.max(1, Math.min(2147483647, deadline - Date.now())));
       } catch { setRows(null); }
+      try {
+        setQBankEvidence(qbankRepo.getCommitteeEvidence(committeeId));
+      } catch { setQBankEvidence(null); }
     };
     refresh();
     const listener = AppState.addEventListener('change', state => { if (state === 'active') refresh(); });
@@ -46,7 +52,16 @@ export function CommitteeLearningEvidence({ committeeId }: { committeeId: string
         <AppText>{t.topicEvidence.due(totals.dueCards)}</AppText>
         <AppText>{t.subjectEvidence.attention(totals.attentionTopics)}</AppText>
         <AppText>{t.committeeEvidence.attentionSubjects(totals.attentionSubjects)}</AppText>
+        {qbankEvidence && qbankEvidence.totalQuestions > 0 ? (
+          <>
+            <AppText>{t.qbank.evidence.questions(qbankEvidence.totalQuestions)}</AppText>
+            <AppText>{t.qbank.evidence.accuracy(qbankEvidence.accuracyPercent ?? 0)}</AppText>
+          </>
+        ) : (
+          <AppText>{t.qbank.evidence.noPractice}</AppText>
+        )}
         <AppText>{t.committeeEvidence.help}</AppText>
+
         <Button label={attentionOnly ? t.committeeEvidence.all : t.subjectEvidence.selected(t.committeeEvidence.all)} variant="secondary"
           onPress={()=>{setAttentionOnly(false);setVisible(50);}} />
         <Button label={attentionOnly ? t.subjectEvidence.selected(t.subjectEvidence.filter) : t.subjectEvidence.filter} variant="secondary"

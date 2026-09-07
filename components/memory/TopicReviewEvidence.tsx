@@ -2,6 +2,8 @@ import React, { useCallback, useState } from 'react';
 import { AppState } from 'react-native';
 import { useFocusEffect } from 'expo-router';
 import { memoryRepo } from '@/db/repositories/memoryRepo';
+import { qbankRepo } from '@/db/repositories/qbankRepo';
+import type { QBankEvidenceSummary } from '@/models/qbank';
 import { useTranslation } from '@/i18n';
 import { topicReviewEvidenceState } from '@/utils/topicEvidenceRules';
 import { Section } from '@/components/ui/Section';
@@ -11,6 +13,7 @@ import { FeedbackState } from '@/components/ui/FeedbackState';
 export function TopicReviewEvidence({ topicId }: { topicId: string }) {
   const t = useTranslation();
   const [evidence, setEvidence] = useState<ReturnType<typeof memoryRepo.getTopicLearningEvidence> | null | undefined>(undefined);
+  const [qbankEvidence, setQBankEvidence] = useState<QBankEvidenceSummary | null>(null);
   const [attempt, setAttempt] = useState(0);
   useFocusEffect(useCallback(() => {
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -22,6 +25,9 @@ export function TopicReviewEvidence({ topicId }: { topicId: string }) {
         if (next.nextReviewAt !== null) timer = setTimeout(refresh,
           Math.max(1, Math.min(2147483647, next.nextReviewAt - Date.now())));
       } catch { setEvidence(null); }
+      try {
+        setQBankEvidence(qbankRepo.getTopicEvidence(topicId));
+      } catch { setQBankEvidence(null); }
     };
     refresh();
     const listener = AppState.addEventListener('change', state => { if (state === 'active') refresh(); });
@@ -36,7 +42,16 @@ export function TopicReviewEvidence({ topicId }: { topicId: string }) {
         <AppText>{t.topicEvidence.cards(evidence.linkedCards)}</AppText>
         <AppText>{t.topicEvidence.reviews(evidence.linkedReviews)}</AppText>
         <AppText>{t.topicEvidence.due(evidence.dueCards)}</AppText>
+        {qbankEvidence && qbankEvidence.totalQuestions > 0 ? (
+          <>
+            <AppText>{t.qbank.evidence.questions(qbankEvidence.totalQuestions)}</AppText>
+            <AppText>{t.qbank.evidence.accuracy(qbankEvidence.accuracyPercent ?? 0)}</AppText>
+          </>
+        ) : (
+          <AppText>{t.qbank.evidence.noPractice}</AppText>
+        )}
       </>}
     <AppText>{t.topicEvidence.help}</AppText>
   </Section>;
 }
+

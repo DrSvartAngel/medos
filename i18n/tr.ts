@@ -425,6 +425,9 @@ quickStart: 'Hızlı başlangıç',
     noReviews: 'Bugün henüz tekrar yapılmadı',
     reviews: (count: number) => `${count} tekrar`,
     reviewSummary: (decks: number, count: number) => `${decks} deste · ${count} Tekrar/Zor`,
+    questionsSolved: 'Çözülen sorular',
+    qbankAccuracy: (pct: number) => `%${pct} doğruluk`,
+    noQuestions: 'Bugün henüz soru çözülmedi',
     todayPlan: 'Bugünün planı',
     viewCalendar: 'Takvimi aç',
     agendaError: 'Planların bir kısmı şu an görüntülenemiyor.',
@@ -819,6 +822,38 @@ quickStart: 'Hızlı başlangıç',
       focused: 'odaklanmış dikkat',
     },
   },
+
+  // ── Q-Bank pratiği ──────────────────────────────────────────────────────────
+  qbank: {
+    title: 'Soru Bankası',
+    logSession: 'Soru Bankası Kaydet',
+    newTitle: 'Soru Bankası Oturumu Kaydet',
+    newSubtitle: 'Çözülen soruları, doğruları ve çalışma sürenizi kaydedin.',
+    totalQuestions: 'Toplam Soru',
+    totalQuestionsPlaceholder: 'örn. 40',
+    correctCount: 'Doğru Sayısı',
+    correctCountPlaceholder: 'örn. 32',
+    durationMinutes: 'Süre (dakika)',
+    durationMinutesPlaceholder: 'İsteğe bağlı, örn. 45',
+    sourceName: 'Soru Bankası / Kaynak',
+    sourceNamePlaceholder: 'İsteğe bağlı, örn. UWorld, TUSDATA',
+    saveSession: 'Oturumu Kaydet',
+    saveFailed: 'Soru bankası oturumu kaydedilemedi. Lütfen bilgilerinizi kontrol edin.',
+    errors: {
+      totalRequired: 'Toplam soru sayısı gereklidir.',
+      totalPositive: 'Toplam soru sayısı 0\'dan büyük olmalıdır.',
+      correctRequired: 'Doğru sayısı gereklidir.',
+      correctNonNegative: 'Doğru sayısı 0 veya daha büyük olmalıdır.',
+      correctExceedsTotal: 'Doğru sayısı toplam soru sayısını aşamaz.',
+      durationNonNegative: 'Süre 0 veya daha büyük olmalıdır.',
+    },
+    evidence: {
+      questions: (n: number) => `Çözülen sorular: ${n}`,
+      accuracy: (pct: number) => `Doğruluk oranı: %${pct}`,
+      noPractice: 'Henüz kayıtlı soru bankası pratiği yok',
+    },
+  },
+
 
   // ── Bulunamadı ────────────────────────────────────────────────────────────────
   notFound: {

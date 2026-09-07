@@ -11,6 +11,7 @@ import {
   type DashboardCommittee,
   type DashboardFocusSummary,
   type DashboardMemorySummary,
+  type DashboardQBankSummary,
   type DashboardSnapshot,
   type DashboardWeakDeck,
 } from '@/utils/dashboardRules';
@@ -19,6 +20,7 @@ export type DashboardSection =
   | 'committee'
   | 'focus'
   | 'memory'
+  | 'qbank'
   | 'agenda'
   | 'recommendation';
 
@@ -81,6 +83,13 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
       errors.memory = errorMessage(error, 'Memory summary is unavailable.');
     }
 
+    let qbank: DashboardQBankSummary | null = null;
+    try {
+      qbank = dashboardRepo.getQBankSummary(window.dayStartMs, window.dayEndMs);
+    } catch (error) {
+      errors.qbank = errorMessage(error, 'Q-Bank summary is unavailable.');
+    }
+
     let weakDeck: DashboardWeakDeck | null = null;
     try {
       weakDeck = dashboardRepo.getWeakDeck(window.attentionStartMs, window.dayEndMs);
@@ -111,6 +120,7 @@ export const useDashboardStore = create<DashboardState>()((set, get) => ({
       committee,
       focus,
       memory,
+      qbank,
       weakDeck,
       agenda: agenda.items,
       agendaTotal: agenda.total,

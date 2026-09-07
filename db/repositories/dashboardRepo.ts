@@ -27,6 +27,12 @@ export interface DashboardWeakDeckSource {
   lastAttentionAt: number;
 }
 
+export interface DashboardQBankSource {
+  totalQuestions: number;
+  correctCount: number;
+  accuracyPercent: number | null;
+}
+
 interface CommitteeRow {
   id: string;
   name: string;
@@ -52,6 +58,11 @@ interface WeakDeckRow {
   deck_name: string;
   attention_count: number;
   last_attention_at: number;
+}
+
+interface QBankSummaryRow {
+  total_questions: number;
+  correct_count: number;
 }
 
 export const dashboardRepo = {
@@ -181,5 +192,27 @@ export const dashboardRepo = {
           lastAttentionAt: row.last_attention_at,
         }
       : null;
+  },
+
+  getQBankSummary(dayStartMs: number, dayEndMs: number): DashboardQBankSource {
+    const db = getDB();
+    const row = db.getFirstSync<QBankSummaryRow>(
+      `SELECT COALESCE(SUM(total_questions), 0) AS total_questions,
+              COALESCE(SUM(correct_count), 0) AS correct_count
+       FROM qbank_sessions
+       WHERE created_at >= ? AND created_at < ?`,
+      [dayStartMs, dayEndMs]
+    );
+
+    const totalQuestions = row?.total_questions ?? 0;
+    const correctCount = row?.correct_count ?? 0;
+    const accuracyPercent =
+      totalQuestions > 0 ? Math.round((correctCount / totalQuestions) * 100) : null;
+
+    return {
+      totalQuestions,
+      correctCount,
+      accuracyPercent,
+    };
   },
 };

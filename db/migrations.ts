@@ -1,7 +1,7 @@
 import { getDB } from './client';
 import { formatLocalDateKey } from '@/utils/calendarDate';
 
-const CURRENT_VERSION = 10;
+const CURRENT_VERSION = 11;
 
 interface TableInfoRow {
   name: string;
@@ -341,6 +341,24 @@ export async function runMigrations(): Promise<void> {
       // Snapshot at rating time: relinking a card must never reattribute old reviews.
       db.execSync('ALTER TABLE flashcard_reviews ADD COLUMN topic_id TEXT REFERENCES topics(id) ON DELETE SET NULL');
       db.runSync('UPDATE _schema_version SET version = ?', [10]);
+    });
+  }
+  if (currentVersion < 11) {
+    db.withTransactionSync(() => {
+      db.execSync(`
+        CREATE TABLE qbank_sessions (
+          id TEXT PRIMARY KEY NOT NULL,
+          topic_id TEXT REFERENCES topics(id) ON DELETE SET NULL,
+          total_questions INTEGER NOT NULL CHECK(total_questions > 0),
+          correct_count INTEGER NOT NULL CHECK(correct_count >= 0 AND correct_count <= total_questions),
+          duration_sec INTEGER CHECK(duration_sec IS NULL OR duration_sec >= 0),
+          source_name TEXT,
+          created_at INTEGER NOT NULL
+        );
+        CREATE INDEX idx_qbank_sessions_topic_id ON qbank_sessions(topic_id);
+        CREATE INDEX idx_qbank_sessions_created_at ON qbank_sessions(created_at);
+      `);
+      db.runSync('UPDATE _schema_version SET version = ?', [11]);
     });
   }
 }
