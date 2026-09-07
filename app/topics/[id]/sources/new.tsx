@@ -78,7 +78,14 @@ export default function NewStudySourceScreen() {
     <ScreenWrapper includeBottomSafeArea>
       <Section>
         <Button label={t.common.back} variant="ghost" onPress={handleBack} />
-        <AppText variant="h2">{t.studySources.addSource}</AppText>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+          <AppText variant="h2">{t.studySources.addSource}</AppText>
+          <Button
+            label={t.documentImport.importDocument}
+            variant="secondary"
+            onPress={() => router.replace(`/topics/${encodeURIComponent(topicId)}/sources/import-document` as Href)}
+          />
+        </View>
         <StudySourceEditor
           onSave={handleSave}
           onCancel={handleBack}

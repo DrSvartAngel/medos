@@ -1,63 +1,51 @@
 # MedOS — compact handoff
 
-## Current — Phase 10 Step 7: Flashcard Draft Review → Memory Import
+## Current — Phase 10 Step 8: PDF / Document Ingestion Pipeline
 
-- Phase 10 Step 7 implementation: COMPLETE.
-- Phase 10 automated/static validation: PASS.
+- Phase 10 Step 8 implementation: PARTIAL (Picker + pipeline foundation + plain text extraction + truthful PDF capability boundary + manual text import fallback).
+- Phase 10 automated/static validation: PASS (all 11 Step 8 checks pass).
 - Phase 9 implementation + validation: COMPLETE.
 - Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
 - Phase 8 physical regression QA: PENDING (still deferred).
-- Status: Flashcard draft review, selection, and explicit import to Memory complete; canonical persistence path reused, batch transaction safety guaranteed, zero auto-persistence, zero fake study evidence.
+- Status: Safe document ingestion pipeline foundation established. User can pick local documents (PDF, plain text), inspect file metadata, extract readable text where supported on-device (plain text/markdown), receive truthful capability reporting for PDF extraction in the current Expo/Hermes runtime, use manual text fallback, preview content, and explicitly persist as StudySource with `source_type = 'document'`.
 - Delivered scope:
-  - Import UX & Selection:
-    - Extended flashcards area in Study Assistant (`app/topics/[id]/assistant.tsx`).
-    - All valid drafts default to selected upon generation.
-    - Accessible individual toggle checkbox (`accessibilityRole="checkbox"`, `accessibilityState={{ checked }}`).
-    - Batch selection controls: "Select all" (`t.studyAi.selectAll`) and "Deselect all" (`t.studyAi.deselectAll`).
-    - Dynamic selection counter: `t.studyAi.selectedCount(selectedCount, totalCount)`.
-    - Explicit CTA: `"Review & Add to Memory"` / `"Gözden Geçir ve Memory'ye Ekle"` (with dynamic count).
-    - Front and back inputs remain editable prior to import; individual removal supported.
-  - Destination Deck Selection:
-    - User selects destination deck from existing decks (`memoryRepo.getAllDecks()`).
-    - Auto-selects if exactly one deck exists.
-    - Calm empty state when no decks exist with action to create a deck (`/decks/new`).
-    - Available decks refreshed on screen focus (`useFocusEffect`).
-    - Stale or deleted decks rejected safely before persistence.
-  - Review & Batch Validation:
-    - Validates destination deck is selected and exists in database.
-    - Validates source and topic remain present in DB.
-    - Validates at least one draft is selected.
-    - Validates every selected draft has non-empty trimmed `front` and `back`.
-    - Entire selected set validated before any write; atomic batch execution via `getDB().withTransactionSync`.
-    - Duplicate submission blocked during saving via `isImporting` state.
-  - Canonical Memory Persistence & SRS Defaults:
-    - Persists approved cards directly to `flashcards` table via canonical `memoryRepo.insertCard`.
-    - Preserves topic linkage (`topic_id` linked to current topic).
-    - Initialized with canonical unscheduled defaults (`interval: 1`, `ease: 2.5`, `schedule_state: 'unscheduled'`, `next_review: created_at`).
-    - Zero rows created in `flashcard_reviews` (creation != study evidence).
-    - Zero writes to Q-Bank or analytics tables.
-  - Post-Import Feedback & Failure Behavior:
-    - Success feedback with imported count (`t.studyAi.importSuccess(count)`).
-    - Clears imported drafts from state; unselected drafts remain for review.
-    - Offers action to view destination deck (`/decks/[id]`) or remain in assistant.
-    - On failure, keeps all drafts intact for user retry; does not wipe edits or leak SQLite internals.
-  - Provider Isolation:
-    - Import flow is 100% local SQLite persistence.
-    - Zero AI provider calls, zero network calls, zero Gemini imports during import.
-  - Schema:
-    - Strictly unchanged at **v12**.
-  - Localization:
-    - Extended `studyAi` namespace in `i18n/en.ts` and `i18n/tr.ts` with complete parity.
+  - Document Picker:
+    - Expo-compatible local document selection via `expo-document-picker`.
+    - Supported types: `application/pdf`, `text/plain`, `text/markdown`.
+    - Cancel-safe; unsupported formats safely rejected.
+  - Extraction Architecture:
+    - Provider-neutral `DocumentExtractor` interface in `services/documents/documentExtractor.ts`.
+    - Domain limits: max file size 5 MB (`MAX_DOCUMENT_FILE_SIZE_BYTES`), max text length 100,000 chars (`MAX_DOCUMENT_TEXT_LENGTH`).
+    - `TextExtractor`: local text extraction for plain text and markdown with whitespace normalization and empty-content rejection.
+    - `PdfExtractor`: truthful capability boundary for current Expo/Hermes managed runtime. Declares extraction unavailable without custom native builds/OCR; zero fake extraction; zero cloud upload; zero OCR.
+    - `CompositeDocumentExtractor`: delegates based on MIME type and file extension.
+  - Ingestion UI & Invariants:
+    - Dedicated screen: `app/topics/[id]/sources/import-document.tsx`.
+    - Uses `<ScreenWrapper includeBottomSafeArea>` with responsive keyboard-avoiding scroll.
+    - Metadata display: file name, formatted size, detected MIME type.
+    - Informational banner for unavailable on-device extraction with manual text import fallback.
+    - Pre-persistence validation (topic verification, title trimmed non-empty, content trimmed non-empty, limits enforced).
+    - Explicit confirmation CTA ("Save as Study Source" / "Çalışma Kaynağı Olarak Kaydet").
+    - No automatic persistence; original file bytes/binaries/URIs are NOT stored in SQLite.
+  - Canonical Study Source Persistence:
+    - Reuses `studySourceRepo.insert({ topicId, title, content, sourceType: 'document' })`.
+    - Foreign key cascade preserved on topic deletion.
+    - Schema remains strictly **v12** unchanged.
+  - Isolation:
+    - Zero AI provider calls or network uploads during ingestion.
+    - StudyAIService does not parse documents; Gemini provider does not receive file bytes.
+    - Zero writes to Memory (`flashcards`, `flashcard_reviews`), Q-Bank (`qbank_sessions`), or Analytics (`focus_sessions`).
+  - Localization & Accessibility:
+    - Complete 1:1 EN/TR parity across 27 keys in `documentImport` and `studySources.importDocument`.
+    - Meaningful accessibility roles, labels, and state indicators.
 - Dedicated Validation:
-  - `scripts/validate-phase10-step7.cjs`: 11 test suites covering selection defaults/toggles, deck selection/empty state, atomic validation, canonical persistence, scheduling defaults, zero review history, transaction rollback, post-import draft lifecycle, provider isolation, EN/TR parity, and accessibility.
+  - `scripts/validate-phase10-step8.cjs`: 11 test suites covering architecture isolation, extractor limits/utilities, truthful PDF capability boundary, text extractor functionality, canonical persistence, cascade deletion, database isolation, UI safeguards, localization parity, and accessibility.
 - Full Regression Suite:
   - TypeScript: PASS (0 errors)
   - Phase 2–6 validators: ALL PASS (216 checks)
   - Phase 9 Master Suite: ALL PASS (10 checks)
-  - Phase 10 Step 1 Suite: ALL PASS (8 checks)
-  - Phase 10 Step 2 Suite: ALL PASS (8 checks)
-  - Phase 10 Step 3 Suite: ALL PASS (9 checks)
-  - Phase 10 Step 4 Suite: ALL PASS (9 checks)
+  - Phase 10 Step 1–8 Suites: ALL PASS (83 checks)
+  - Total: 309 automated checks passing.
   - Phase 10 Step 5 Suite: ALL PASS (15 checks)
   - Phase 10 Step 6 Suite: ALL PASS (11 checks)
   - Phase 10 Step 7 Suite: ALL PASS (11 checks)

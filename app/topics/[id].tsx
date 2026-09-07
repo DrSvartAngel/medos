@@ -132,6 +132,11 @@ export default function TopicDetailScreen() {
             onPress={() => router.push(`/topics/${encodeURIComponent(id)}/sources/new` as Href)}
           />
           <Button
+            label={t.studySources.importDocument}
+            variant="secondary"
+            onPress={() => router.push(`/topics/${encodeURIComponent(id)}/sources/import-document` as Href)}
+          />
+          <Button
             label={t.studyAi.assistant}
             variant="secondary"
             onPress={() => router.push(`/topics/${encodeURIComponent(id)}/assistant` as Href)}
