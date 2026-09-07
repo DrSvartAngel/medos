@@ -1,63 +1,65 @@
 # MedOS — Project Status
 
-## Current — Phase 10 Step 10: AI-Assisted Study Planning
+## Current — Phase 10 Step 11: Security / Provider Settings / Real Gemini Activation
 
+- Phase 10 Step 11 implementation: COMPLETE.
 - Phase 10 Step 10 implementation: COMPLETE.
 - Phase 10 Step 9 implementation: COMPLETE.
 - Phase 10 Step 8 implementation: PARTIAL (Picker + pipeline foundation + plain text extraction + truthful PDF capability boundary + manual text import fallback; on-device PDF extraction unavailable in Expo Go/Hermes).
-- Phase 10 automated/static validation: PASS (all 10 Step 10 checks pass; all 17 project validation suites pass).
+- Phase 10 automated/static validation: PASS (all 11 Step 11 checks pass; all 18 project validation suites pass).
 - Phase 9 implementation + validation: COMPLETE.
 - Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
 - Phase 8 physical regression QA: PENDING (still deferred).
-- Status: AI-assisted study planning engine delivered at Committee level (`app/committees/[id]/study-plan.tsx`). Converts existing factual MedOS Learning Analytics (weak topics, neglected curriculum areas, due memory reviews, and qualified Q-Bank accuracy) into an editable, non-authoritative study plan draft.
-- Critical Product Rule: AI planning is advisory only. Zero automated calendar events, zero timers/focus starts, zero mastery or completion changes, zero Q-Bank or Memory review mutations, zero analytics mutation, zero silent persistence.
+- Status: Secure AI provider settings and runtime Gemini activation delivered. Users can select between deterministic offline Mock simulation and real Google Gemini generation. Credentials stored securely with hardware-backed encryption via `expo-secure-store`.
+- Critical Security & Privacy Rules:
+  - API key is NEVER stored in SQLite or plaintext AsyncStorage.
+  - API key is NEVER logged to console or diagnostics.
+  - API key is NEVER embedded in URLs or query strings (strictly transmitted via `x-goog-api-key` HTTP header).
+  - API key is NEVER echoed or prefilled in UI inputs (`secureTextEntry` enforced; displays "API key saved" status badge).
+  - Sensitive tokens in errors are redacted via `redactSecrets()`.
 - Delivered scope:
-  - Domain Contracts & Models:
-    - `AIStudyPlanAction` (`'review' | 'memory' | 'qbank' | 'focus'`).
-    - `AIStudyPlanningTopic` in `models/ai.ts`: captures factual analytics (`topicId`, `topicName`, `subjectName`, `masteryStatus`, `neglectStatus`, `qbankQuestions`, `qbankAccuracy`, `memoryReviews`, `memoryRetention`, `dueCards`, `lastStudiedAt`, `weakReasons`, `neglectReasons`). Null evidence strictly preserved; unstudied topics never converted to 0%.
-    - `AIStudyPlanningContext`: captures committee scope (`committeeId`, `committeeName`, `daysUntilExam`, `topics`). NO composite readiness score or fake intelligence.
-    - `AIStudyPlanItem`: captures action recommendation (`id`, `topicId`, `topicName`, `action`, `reason`, `estimatedMinutes`).
-    - `AIStudyPlanDraft`: summary + items array.
-    - Batch limits: `MAX_PLAN_ITEMS = 5`, session duration bounded between 10 and 90 minutes.
-  - Deterministic Priority Context Builder:
-    - Pure builder `buildPlanningContext()` in `services/ai/planningContext.ts`.
-    - Selects top 10 factual candidate topics using existing priority rules: Weak topics (needs_attention) first, Neglected topics (never_studied/stale) second, followed by due memory review topics and remaining curriculum areas.
-    - Preserves nulls; zero scoring inference.
-  - Service & Prompt Design:
-    - `StudyAIService.generateStudyPlan()` in `services/ai/studyAIService.ts` validates that all recommended items strictly reference supplied topic IDs and canonical names, adhere to allowed action enum, and stay within duration limits (10..90 min).
-    - Prompt in `services/ai/prompts.ts` strictly forbids metric fabrication or readiness inference; enforces ADHD-friendly manageable workloads (<= 5 items) and objective reasons without guilt-inducing language.
-  - Mock Provider:
-    - `MockAIProvider` extended deterministically for planning: `normal`, `malformed`, `unknown_topic`, `invalid_action`, `invalid_duration`, `empty_result`, and `unavailable`.
-  - Committee UI & Local Draft State:
-    - Dedicated screen: `app/committees/[id]/study-plan.tsx` using `<ScreenWrapper includeBottomSafeArea>`.
-    - Committee detail entry button: "AI Study Plan" (`app/committees/[id].tsx`).
-    - Factual evidence snapshot card: renders counts of topics needing attention, neglected topics, due cards, and Q-Bank accuracy.
-    - Advisory notice banner: clearly indicates draft plan status.
-    - Local editing in React state: action selector pills, duration stepper (+/- 5 min), remove single item, clear plan, and regenerate plan.
-    - Zero persistence: plan draft exists only in local memory.
-  - Strict Isolation:
-    - ZERO calendar writes (`calendar_events`).
-    - ZERO focus session writes (`focus_sessions`).
-    - ZERO memory review writes (`flashcard_reviews`).
-    - ZERO Q-Bank session writes (`qbank_sessions`).
-    - ZERO topic mastery or completion mutations.
-  - Provider & Runtime Isolation:
-    - UI strictly uses `getStudyAIService()`; zero direct imports of Gemini SDK or `fetch`.
-    - Runtime provider remains Mock.
+  - Secure Credential Service (`services/ai/credentialStore.ts`):
+    - Dedicated store utilizing `expo-secure-store` with storage key `medos.ai.gemini.apiKey`.
+    - Input whitespace trimming and non-empty key validation.
+    - Safe error sanitization (`CredentialStoreError`).
+    - Pluggable test adapter (`setSecureStorageAdapter`).
+  - Provider Composition Root (`services/ai/studyAIClient.ts`):
+    - Provider-neutral composition layer.
+    - Exposes `getActiveAIProviderState()`: reports providerId ('mock' | 'gemini'), status ('mock' | 'configured' | 'missing_credential' | 'unavailable'), model, and `hasApiKey` boolean without leaking the raw key.
+    - `setActiveAIProvider(providerId, model)`: switches active provider and refreshes instance.
+    - `refreshStudyAIService()`: re-reads secure credentials and reconstructs provider.
+    - Deterministic fallback: switching to 'mock' restores offline deterministic simulation instantly.
+  - Verified Production Model Configuration:
+    - Default model updated to **`gemini-2.5-flash`** after official documentation verification (`gemini-1.5-flash` is legacy, `gemini-2.0-flash` deprecated and shut down June 1, 2026).
+    - Model remains configurable.
+  - Connection Test (`testAIProviderConnection()`):
+    - Explicit health check testing provider ping via minimal prompt.
+    - Zero study data writes (no curriculum, memory, focus, qbank, or analytics writes).
+    - Safe error classification: missing key, 401/403 auth, 429 rate limit, network failure, timeout.
+  - AI Settings Screen (`app/settings/ai.tsx`):
+    - Dedicated settings screen with `<ScreenWrapper includeBottomSafeArea>`.
+    - Provider selection radio controls (Mock vs Gemini) with informative descriptions.
+    - Masked password input for API key entry (never prefilled with existing key).
+    - Save Key and Remove Key actions with loading states.
+    - Test Connection button with visual success/error result alerts.
+    - Linked from Profile tab (`app/(tabs)/profile.tsx`).
+  - Offline Core Isolation:
+    - If no key is set or device is offline, MedOS offline core (Curriculum, Focus, Memory SRS, Q-Bank, Analytics, Calendar, Sources) remains 100% functional.
+    - Core features and repositories have zero dependencies on AI providers or credential storage.
   - Schema & Dependencies:
     - Schema remains strictly **v12** unchanged.
-    - Zero `package.json` modifications.
+    - `package.json` retains exact 13 original production dependencies.
   - Localization & Accessibility:
-    - Full 1:1 EN/TR parity across all 24 keys in `studyPlan`.
-    - Proper accessibility roles (`accessibilityRole="button"`, `accessibilityRole="alert"`), descriptive accessibility labels on controls, and responsive layout.
+    - Complete 1:1 EN/TR parity across all 25 keys in `aiSettings` dictionary.
+    - Accessible radio roles, labeled buttons, and live alert regions for connection results.
 - Dedicated Validation:
-  - `scripts/validate-phase10-step10.cjs`: 10 comprehensive check suites covering contracts, factual context builder, prompt rules, mock modes, UI integration, local editing, strict automation isolation, provider isolation, schema v12 integrity, localization parity, and accessibility.
+  - `scripts/validate-phase10-step11.cjs`: 11 comprehensive check suites covering credential store integrity, set/get/delete lifecycle, provider registry, runtime Gemini activation, official model verification, connection test modes, security hardening/redaction, offline core independence, UI/routing contracts, localization parity, and schema v12 integrity.
 - Full Regression Suite:
   - TypeScript: PASS (0 errors)
   - Phase 2–6 validators: ALL PASS (216 checks)
   - Phase 9 Master Suite: ALL PASS (10 checks)
-  - Phase 10 Step 1–10 Suites: ALL PASS (103 checks)
-  - Total: 329 automated checks passing.
+  - Phase 10 Step 1–11 Suites: ALL PASS (114 checks)
+  - Total: 340 automated checks passing.
 - Physical QA Status:
   - Phase 8: PENDING
   - Phase 9: PENDING

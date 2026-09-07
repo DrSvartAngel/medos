@@ -12,9 +12,22 @@ import {
   AISourceContext,
 } from '@/models/ai';
 
-export const DEFAULT_GEMINI_MODEL = 'gemini-1.5-flash';
+export const DEFAULT_GEMINI_MODEL = 'gemini-2.5-flash';
 export const DEFAULT_GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com/v1beta';
 export const DEFAULT_TIMEOUT_MS = 30000;
+
+/**
+ * Sanitizes any secret strings (like API keys) from text or error output.
+ */
+export function redactSecrets(text: string, secrets: (string | null | undefined)[]): string {
+  let result = text;
+  for (const s of secrets) {
+    if (s && typeof s === 'string' && s.trim().length > 3) {
+      result = result.split(s).join('[REDACTED]');
+    }
+  }
+  return result;
+}
 
 export interface GeminiProviderConfig {
   apiKey: string;
@@ -393,3 +406,5 @@ export class GeminiAIProvider implements AIProvider {
 export function createGeminiProvider(config: GeminiProviderConfig): AIProvider {
   return new GeminiAIProvider(config);
 }
+
+export { GeminiAIProvider as GeminiProvider };

@@ -1,6 +1,7 @@
 import { translateError } from '@/i18n/errors';
 import React from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
+import { router, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { PreferenceToggleRow } from '@/components/profile/PreferenceToggleRow';
@@ -250,6 +251,25 @@ export default function ProfileScreen() {
             onPress={() => setLanguage('en')}
           />
         </View>
+      </Card>
+
+      <Card style={{ marginTop: spacing.lg }}>
+        <View style={styles.sectionHeading}>
+          <View style={[styles.iconWrap, { backgroundColor: colors.surfaceElevated }]}>
+            <Feather name="cpu" size={20} color={colors.primary} />
+          </View>
+          <View style={styles.headingText}>
+            <AppText variant="label">{t.aiSettings.title}</AppText>
+            <AppText variant="bodySmall" color={colors.textMuted}>
+              {t.aiSettings.settingsLinkDesc}
+            </AppText>
+          </View>
+        </View>
+        <Button
+          label={t.aiSettings.settingsLink}
+          variant="secondary"
+          onPress={() => router.push('/settings/ai' as Href)}
+        />
       </Card>
 
       <Card style={{ marginTop: spacing.lg }}>
