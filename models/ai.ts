@@ -76,6 +76,24 @@ export interface AIFlashcardDraft {
   edited?: boolean;
 }
 
+/**
+ * Candidate practice question draft generated from study material.
+ * Stored ephemerally in React state for review and local editing.
+ * Strictly authoring only — does NOT create Q-Bank attempts, sessions, or mastery evidence.
+ */
+export interface AIQuestionDraft {
+  id: string;
+  question: string;
+  options: string[];
+  correctOptionIndex: number;
+  explanation: string;
+  sourceExcerpt: string;
+  sourceId: string;
+  sourceTitle: string;
+  topicId: string;
+  edited?: boolean;
+}
+
 export interface AIExplanationResult {
   text: string;
   sourceId: string;

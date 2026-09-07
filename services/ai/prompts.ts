@@ -131,3 +131,44 @@ Return valid JSON conforming to the requested schema.`;
     schemaDescription,
   };
 }
+
+/**
+ * Builds prompts and schema description for generating source-grounded practice question drafts.
+ */
+export function buildQuestionDraftPrompt(
+  source: AISourceContext,
+  count: number
+): { systemPrompt: string; userPrompt: string; schemaDescription: string } {
+  const schemaDescription = `JSON Array of objects with keys:
+- "question": string (single-best-answer medical multiple choice question)
+- "options": array of exactly 4 strings (plausible answer choices)
+- "correctOptionIndex": integer (0, 1, 2, or 3, indicating the index of the single correct option in "options")
+- "explanation": string (clear explanation grounded in the study material)
+- "sourceExcerpt": string (an exact 1-2 sentence verbatim excerpt from the study material that proves the correct answer)`;
+
+  const userPrompt = `TOPIC: ${source.topicName}
+SOURCE TITLE: ${source.sourceTitle}
+
+STUDY MATERIAL:
+---
+${source.content.trim()}
+---
+
+TASK:
+Generate up to ${count} single-best-answer practice question drafts (MCQs) based ONLY on the study material above.
+For each question:
+1. "question": Single-best-answer medical education question addressing concepts directly explained in the text.
+2. "options": Exactly 4 plausible options. Exactly ONE option must be unambiguously correct.
+3. "correctOptionIndex": 0, 1, 2, or 3 matching the correct option.
+4. "explanation": Explain why the correct option is right based directly on the text.
+5. "sourceExcerpt": You MUST copy a verbatim 1-2 sentence excerpt directly from the study material that verifies the correct answer. Do NOT paraphrase the excerpt.
+
+Return valid JSON conforming to the requested schema.`;
+
+  return {
+    systemPrompt: BASE_SYSTEM_PROMPT,
+    userPrompt,
+    schemaDescription,
+  };
+}
+

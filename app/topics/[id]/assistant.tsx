@@ -9,7 +9,7 @@ import { memoryRepo } from '@/db/repositories/memoryRepo';
 import { useMemoryStore, type Deck, type Flashcard } from '@/store/useMemoryStore';
 import type { Topic } from '@/models/curriculum';
 import type { StudySource } from '@/models/studySource';
-import { type AIFlashcardDraft, AIServiceError } from '@/models/ai';
+import { type AIFlashcardDraft, type AIQuestionDraft, AIServiceError } from '@/models/ai';
 import { getStudyAIService } from '@/services/ai/studyAIClient';
 import { toAISourceContext } from '@/services/ai/sourceContext';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
@@ -24,7 +24,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
 import { topicRouteId } from '@/utils/topicRoutes';
 
-type ActionMode = 'explain' | 'summarize' | 'flashcards';
+type ActionMode = 'explain' | 'summarize' | 'flashcards' | 'questions';
 
 type ResultState =
   | { status: 'idle' }
@@ -76,6 +76,7 @@ export default function StudyAssistantScreen() {
   const [resultState, setResultState] = useState<ResultState>({ status: 'idle' });
   const [drafts, setDrafts] = useState<AIFlashcardDraft[]>([]);
   const [selectedDraftIds, setSelectedDraftIds] = useState<Set<string>>(new Set());
+  const [questionDrafts, setQuestionDrafts] = useState<AIQuestionDraft[]>([]);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
   const [isImporting, setIsImporting] = useState(false);
@@ -164,6 +165,7 @@ export default function StudyAssistantScreen() {
       setResultState({ status: 'idle' });
       setDrafts([]);
       setSelectedDraftIds(new Set());
+      setQuestionDrafts([]);
       setImportError(null);
       setImportSuccess(null);
       setQueryError(null);
@@ -437,13 +439,84 @@ export default function StudyAssistantScreen() {
     }
   };
 
+  const handleGenerateQuestionDrafts = async () => {
+    if (!selectedSourceId) return;
+
+    setResultState({ status: 'loading', kind: 'questions' });
+
+    try {
+      const freshSource = studySourceRepo.getById(selectedSourceId);
+      if (!freshSource) {
+        setResultState({ status: 'error', errorMessage: t.studyAi.sourceMissing });
+        return;
+      }
+      const freshTopic = topicRepo.getById(topicId);
+      if (!freshTopic) {
+        setResultState({ status: 'error', errorMessage: t.topics.missing });
+        return;
+      }
+
+      const service = getStudyAIService();
+      const context = toAISourceContext(freshSource, freshTopic);
+      const generated = await service.generateQuestionDrafts(context);
+
+      setQuestionDrafts(generated);
+      setResultState({ status: 'idle' });
+    } catch (err: unknown) {
+      setResultState({
+        status: 'error',
+        errorMessage: mapErrorToMessage(err, t),
+      });
+    }
+  };
+
+  const handleEditQuestionDraft = (
+    draftId: string,
+    field: 'question' | 'explanation',
+    value: string
+  ) => {
+    setQuestionDrafts((prev) =>
+      prev.map((d) => (d.id === draftId ? { ...d, [field]: value, edited: true } : d))
+    );
+  };
+
+  const handleEditQuestionOption = (draftId: string, optionIndex: number, value: string) => {
+    setQuestionDrafts((prev) =>
+      prev.map((d) => {
+        if (d.id !== draftId) return d;
+        const newOptions = [...d.options];
+        newOptions[optionIndex] = value;
+        return { ...d, options: newOptions, edited: true };
+      })
+    );
+  };
+
+  const handleSetCorrectOption = (draftId: string, optionIndex: number) => {
+    setQuestionDrafts((prev) =>
+      prev.map((d) =>
+        d.id === draftId ? { ...d, correctOptionIndex: optionIndex, edited: true } : d
+      )
+    );
+  };
+
+  const handleRemoveQuestionDraft = (draftId: string) => {
+    setQuestionDrafts((prev) => prev.filter((d) => d.id !== draftId));
+  };
+
+  const handleClearQuestionDrafts = () => {
+    setQuestionDrafts([]);
+    setResultState({ status: 'idle' });
+  };
+
   const handleRetry = () => {
     if (activeMode === 'explain') {
       void handleExplain();
     } else if (activeMode === 'summarize') {
       void handleSummarize();
-    } else {
+    } else if (activeMode === 'flashcards') {
       void handleGenerateDrafts();
+    } else if (activeMode === 'questions') {
+      void handleGenerateQuestionDrafts();
     }
   };
 
@@ -554,6 +627,13 @@ export default function StudyAssistantScreen() {
                     variant={activeMode === 'flashcards' ? 'primary' : 'secondary'}
                     size="sm"
                     onPress={() => handleModeChange('flashcards')}
+                    style={{ flex: 1, minWidth: 95 }}
+                  />
+                  <Button
+                    label={t.studyAi.questionsTab}
+                    variant={activeMode === 'questions' ? 'primary' : 'secondary'}
+                    size="sm"
+                    onPress={() => handleModeChange('questions')}
                     style={{ flex: 1, minWidth: 95 }}
                   />
                 </View>
@@ -1016,6 +1096,249 @@ export default function StudyAssistantScreen() {
                     )}
                   </View>
                 )}
+
+                {activeMode === 'questions' && (
+                  <View style={{ gap: spacing.md, marginTop: spacing.sm }}>
+                    {questionDrafts.length === 0 ? (
+                      <View style={{ gap: spacing.md }}>
+                        <Button
+                          label={t.studyAi.generateQuestions}
+                          onPress={handleGenerateQuestionDrafts}
+                          loading={
+                            resultState.status === 'loading' && resultState.kind === 'questions'
+                          }
+                          disabled={resultState.status === 'loading'}
+                        />
+                      </View>
+                    ) : (
+                      <Card elevated style={{ gap: spacing.md }}>
+                        {/* Header with Title, Count, Clear, Regenerate */}
+                        <View
+                          style={{
+                            flexDirection: 'row',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            gap: spacing.xs,
+                          }}
+                        >
+                          <View
+                            style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}
+                          >
+                            <AppText variant="h3">{t.studyAi.questionDrafts}</AppText>
+                            <Badge
+                              label={t.studyAi.questionDraftCount(questionDrafts.length)}
+                              variant="default"
+                            />
+                          </View>
+                          <View style={{ flexDirection: 'row', gap: spacing.xs }}>
+                            <Button
+                              label={t.studyAi.regenerateQuestions}
+                              variant="ghost"
+                              size="sm"
+                              onPress={handleGenerateQuestionDrafts}
+                              loading={
+                                resultState.status === 'loading' &&
+                                resultState.kind === 'questions'
+                              }
+                              disabled={resultState.status === 'loading'}
+                            />
+                            <Button
+                              label={t.studyAi.clearQuestions}
+                              variant="ghost"
+                              size="sm"
+                              onPress={handleClearQuestionDrafts}
+                              disabled={resultState.status === 'loading'}
+                            />
+                          </View>
+                        </View>
+
+                        {/* Provenance Box with Non-Persisted Q-Bank Notice */}
+                        <View
+                          style={{
+                            backgroundColor: colors.surface,
+                            borderColor: colors.border,
+                            borderWidth: 1,
+                            borderRadius: radius.sm,
+                            padding: spacing.sm,
+                            gap: 4,
+                          }}
+                        >
+                          <AppText variant="label" color={colors.primary}>
+                            {t.studyAi.basedOnSource(selectedSource.title)}
+                          </AppText>
+                          <AppText variant="caption" color={colors.textSecondary}>
+                            {t.studyAi.sourceOnlyNote}
+                          </AppText>
+                          <AppText variant="caption" color={colors.warning}>
+                            {t.studyAi.questionDraftNotice}
+                          </AppText>
+                        </View>
+
+                        {/* Question Draft List */}
+                        <View style={{ gap: spacing.md }}>
+                          {questionDrafts.map((draft, index) => (
+                            <View
+                              key={draft.id}
+                              style={{
+                                borderWidth: 1,
+                                borderColor: colors.border,
+                                borderRadius: radius.md,
+                                padding: spacing.md,
+                                backgroundColor: colors.surface,
+                                gap: spacing.sm,
+                              }}
+                            >
+                              {/* Question Header & Remove Action */}
+                              <View
+                                style={{
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <View
+                                  style={{
+                                    flexDirection: 'row',
+                                    alignItems: 'center',
+                                    gap: spacing.xs,
+                                  }}
+                                >
+                                  <AppText variant="label">#{index + 1}</AppText>
+                                  {draft.edited ? (
+                                    <Badge label={t.studyAi.editedBadge} variant="default" />
+                                  ) : null}
+                                </View>
+                                <Button
+                                  label={t.studyAi.removeQuestion}
+                                  variant="ghost"
+                                  size="sm"
+                                  accessibilityLabel={t.studyAi.removeQuestionNumbered(index + 1)}
+                                  onPress={() => handleRemoveQuestionDraft(draft.id)}
+                                />
+                              </View>
+
+                              {/* Question Input */}
+                              <View style={{ gap: spacing.xs }}>
+                                <AppText variant="caption" color={colors.textSecondary}>
+                                  {t.studyAi.question}
+                                </AppText>
+                                <Input
+                                  multiline
+                                  value={draft.question}
+                                  onChangeText={(text) =>
+                                    handleEditQuestionDraft(draft.id, 'question', text)
+                                  }
+                                  accessibilityLabel={`${t.studyAi.question} #${index + 1}`}
+                                  style={{ minHeight: 60 }}
+                                />
+                              </View>
+
+                              {/* Options Input with Radio Selection for Correct Answer */}
+                              <View style={{ gap: spacing.xs }}>
+                                <AppText variant="caption" color={colors.textSecondary}>
+                                  {t.studyAi.option} (4) — {t.studyAi.correctAnswer}
+                                </AppText>
+                                <View style={{ gap: spacing.xs }} accessibilityRole="radiogroup">
+                                  {draft.options.map((optText, optIdx) => {
+                                    const isCorrect = draft.correctOptionIndex === optIdx;
+                                    return (
+                                      <View
+                                        key={optIdx}
+                                        style={{
+                                          flexDirection: 'row',
+                                          alignItems: 'center',
+                                          gap: spacing.xs,
+                                        }}
+                                      >
+                                        <TouchableOpacity
+                                          accessibilityRole="radio"
+                                          accessibilityState={{ checked: isCorrect }}
+                                          accessibilityLabel={`${t.studyAi.optionNumbered(optIdx + 1)}: ${
+                                            isCorrect
+                                              ? t.studyAi.correctAnswer
+                                              : t.studyAi.markAsCorrect
+                                          }`}
+                                          onPress={() => handleSetCorrectOption(draft.id, optIdx)}
+                                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                                          style={{
+                                            padding: spacing.xs,
+                                          }}
+                                        >
+                                          <Feather
+                                            name={isCorrect ? 'check-circle' : 'circle'}
+                                            size={20}
+                                            color={
+                                              isCorrect ? colors.primary : colors.textSecondary
+                                            }
+                                          />
+                                        </TouchableOpacity>
+                                        <View style={{ flex: 1 }}>
+                                          <Input
+                                            value={optText}
+                                            onChangeText={(val) =>
+                                              handleEditQuestionOption(draft.id, optIdx, val)
+                                            }
+                                            accessibilityLabel={`${t.studyAi.optionNumbered(optIdx + 1)} #${index + 1}`}
+                                            placeholder={t.studyAi.optionNumbered(optIdx + 1)}
+                                          />
+                                        </View>
+                                      </View>
+                                    );
+                                  })}
+                                </View>
+                              </View>
+
+                              {/* Explanation Input */}
+                              <View style={{ gap: spacing.xs }}>
+                                <AppText variant="caption" color={colors.textSecondary}>
+                                  {t.studyAi.explanation}
+                                </AppText>
+                                <Input
+                                  multiline
+                                  value={draft.explanation}
+                                  onChangeText={(text) =>
+                                    handleEditQuestionDraft(draft.id, 'explanation', text)
+                                  }
+                                  accessibilityLabel={`${t.studyAi.explanation} #${index + 1}`}
+                                  style={{ minHeight: 60 }}
+                                />
+                              </View>
+
+                              {/* Source Excerpt */}
+                              {draft.sourceExcerpt ? (
+                                <View
+                                  style={{
+                                    backgroundColor: colors.surfaceElevated,
+                                    padding: spacing.xs,
+                                    borderRadius: radius.sm,
+                                  }}
+                                >
+                                  <AppText variant="caption" color={colors.textSecondary}>
+                                    {t.studyAi.sourceExcerpt}: “{draft.sourceExcerpt}”
+                                  </AppText>
+                                </View>
+                              ) : null}
+                            </View>
+                          ))}
+                        </View>
+
+                        {/* Academic Safety Note */}
+                        <View
+                          style={{
+                            borderTopWidth: 1,
+                            borderTopColor: colors.border,
+                            paddingTop: spacing.sm,
+                          }}
+                        >
+                          <AppText variant="caption" color={colors.textSecondary}>
+                            {t.studyAi.studyUseNote}
+                          </AppText>
+                        </View>
+                      </Card>
+                    )}
+                  </View>
+                )}
               </Section>
             )}
 
@@ -1029,6 +1352,8 @@ export default function StudyAssistantScreen() {
                       ? t.studyAi.loadingExplain
                       : resultState.kind === 'summarize'
                       ? t.studyAi.loadingSummarize
+                      : resultState.kind === 'questions'
+                      ? t.studyAi.generatingQuestions
                       : t.studyAi.generatingDrafts
                   }
                 />

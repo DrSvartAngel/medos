@@ -3,6 +3,7 @@
 
 import {
   AIFlashcardDraft,
+  AIQuestionDraft,
   AIExplanationResult,
   AIProvider,
   AIServiceError,
@@ -12,11 +13,13 @@ import {
 import {
   buildExplainPrompt,
   buildFlashcardDraftPrompt,
+  buildQuestionDraftPrompt,
   buildSummarizePrompt,
   isExcerptGrounded,
 } from './prompts';
 
 export const MAX_FLASHCARD_DRAFTS = 5;
+export const MAX_QUESTION_DRAFTS = 5;
 
 export interface RawDraftItem {
   front: string;
@@ -24,10 +27,19 @@ export interface RawDraftItem {
   sourceExcerpt: string;
 }
 
+export interface RawQuestionDraftItem {
+  question: string;
+  options: string[];
+  correctOptionIndex: number;
+  explanation: string;
+  sourceExcerpt: string;
+}
+
 export interface StudyAIService {
   explainConcept(concept: string, source: AISourceContext): Promise<AIExplanationResult>;
   summarizeSource(source: AISourceContext): Promise<AISummaryResult>;
   generateFlashcardDrafts(source: AISourceContext, count?: number): Promise<AIFlashcardDraft[]>;
+  generateQuestionDrafts(source: AISourceContext, count?: number): Promise<AIQuestionDraft[]>;
 }
 
 function validateSourceContext(source: AISourceContext): void {
@@ -191,6 +203,140 @@ export function createStudyAIService(provider: AIProvider): StudyAIService {
           id: `${source.sourceId}-draft-${i + 1}-${Date.now()}`,
           front,
           back,
+          sourceExcerpt,
+          sourceId: source.sourceId,
+          sourceTitle: source.sourceTitle,
+          topicId: source.topicId,
+          edited: false,
+        });
+      }
+
+      return validatedDrafts;
+    },
+
+    async generateQuestionDrafts(
+      source: AISourceContext,
+      count = MAX_QUESTION_DRAFTS
+    ): Promise<AIQuestionDraft[]> {
+      validateSourceContext(source);
+
+      if (typeof count !== 'number' || count <= 0) {
+        throw new AIServiceError('invalid_response', 'Requested count must be greater than 0.');
+      }
+
+      if (count > MAX_QUESTION_DRAFTS) {
+        throw new AIServiceError(
+          'generation_limit_exceeded',
+          `Cannot request more than ${MAX_QUESTION_DRAFTS} questions in a single batch.`
+        );
+      }
+
+      const prompt = buildQuestionDraftPrompt(source, count);
+
+      let rawItems: RawQuestionDraftItem[];
+      try {
+        rawItems = await provider.generateStructured<RawQuestionDraftItem[]>({
+          systemPrompt: prompt.systemPrompt,
+          userPrompt: prompt.userPrompt,
+          schemaDescription: prompt.schemaDescription,
+          sources: [source],
+        });
+      } catch (err: unknown) {
+        if (err instanceof AIServiceError) throw err;
+        const msg = err instanceof Error ? err.message : 'Provider request failed';
+        throw new AIServiceError('provider_unavailable', msg);
+      }
+
+      if (!Array.isArray(rawItems)) {
+        throw new AIServiceError(
+          'invalid_response',
+          'AI provider failed to return a valid array of question drafts.'
+        );
+      }
+
+      if (rawItems.length === 0) {
+        throw new AIServiceError(
+          'invalid_response',
+          'AI provider returned an empty list of questions.'
+        );
+      }
+
+      // Enforce batch ceiling
+      const boundedItems = rawItems.slice(0, MAX_QUESTION_DRAFTS);
+      const validatedDrafts: AIQuestionDraft[] = [];
+
+      for (let i = 0; i < boundedItems.length; i++) {
+        const item = boundedItems[i];
+        if (!item || typeof item !== 'object') {
+          throw new AIServiceError('invalid_response', `Question draft at index ${i} is malformed.`);
+        }
+
+        const question = typeof item.question === 'string' ? item.question.trim() : '';
+        if (!question) {
+          throw new AIServiceError(
+            'invalid_response',
+            `Question draft at index ${i} has empty question.`
+          );
+        }
+
+        if (!Array.isArray(item.options) || item.options.length !== 4) {
+          throw new AIServiceError(
+            'invalid_response',
+            `Question draft at index ${i} must have exactly 4 options.`
+          );
+        }
+
+        const cleanOptions = item.options.map((o) => (typeof o === 'string' ? o.trim() : ''));
+        if (cleanOptions.some((o) => !o)) {
+          throw new AIServiceError(
+            'invalid_response',
+            `Question draft at index ${i} contains empty option(s).`
+          );
+        }
+
+        if (
+          typeof item.correctOptionIndex !== 'number' ||
+          !Number.isInteger(item.correctOptionIndex) ||
+          item.correctOptionIndex < 0 ||
+          item.correctOptionIndex >= 4
+        ) {
+          throw new AIServiceError(
+            'invalid_response',
+            `Question draft at index ${i} has invalid correctOptionIndex.`
+          );
+        }
+
+        const explanation = typeof item.explanation === 'string' ? item.explanation.trim() : '';
+        if (!explanation) {
+          throw new AIServiceError(
+            'invalid_response',
+            `Question draft at index ${i} has empty explanation.`
+          );
+        }
+
+        const sourceExcerpt =
+          typeof item.sourceExcerpt === 'string' ? item.sourceExcerpt.trim() : '';
+        if (!sourceExcerpt) {
+          throw new AIServiceError(
+            'invalid_response',
+            `Question draft at index ${i} is missing sourceExcerpt.`
+          );
+        }
+
+        // Strict grounding verification: excerpt MUST exist in the supplied source content
+        if (!isExcerptGrounded(sourceExcerpt, source.content)) {
+          throw new AIServiceError(
+            'grounding_failed',
+            `Question draft at index ${i} contains an unverified source excerpt not found in the study material.`
+          );
+        }
+
+        validatedDrafts.push({
+          id: `${source.sourceId}-q-draft-${i + 1}-${Date.now()}`,
+          question,
+          options: cleanOptions,
+          correctOptionIndex: item.correctOptionIndex,
+          explanation,
           sourceExcerpt,
           sourceId: source.sourceId,
           sourceTitle: source.sourceTitle,

@@ -1,6 +1,62 @@
 # MedOS — compact handoff
 
-## Current — Phase 10 Step 8: PDF / Document Ingestion Pipeline
+## Current — Phase 10 Step 9: Source-Grounded Question Draft Generator
+
+- Phase 10 Step 9 implementation: COMPLETE.
+- Phase 10 Step 8 implementation: PARTIAL (Picker + pipeline foundation + plain text extraction + truthful PDF capability boundary + manual text import fallback; on-device PDF extraction unavailable in Expo Go/Hermes).
+- Phase 10 automated/static validation: PASS (all 10 Step 9 checks pass; all 16 project validation suites pass).
+- Phase 9 implementation + validation: COMPLETE.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: Source-grounded single-best-answer practice question draft generation delivered inside the Study Assistant. Generates 4-option MCQs strictly grounded in selected Study Source content; includes verbatim excerpt provenance, radio-based correct answer selection, local in-memory editing, draft removal, regeneration, and strict Q-Bank isolation (zero session writes, zero attempts, zero accuracy/evidence impact).
+- Delivered scope:
+  - Domain Contract & Models:
+    - `AIQuestionDraft` in `models/ai.ts`: includes `id`, `question`, `options` (4 strings), `correctOptionIndex` (0..3), `explanation`, `sourceExcerpt`, `sourceId`, `sourceTitle`, `topicId`, and `edited`.
+    - Batch ceiling: `MAX_QUESTION_DRAFTS = 5`.
+  - Service & Prompt Design:
+    - Provider-neutral `buildQuestionDraftPrompt()` in `services/ai/prompts.ts` with strict grounding rules, medical scope limits, and verbatim source excerpts.
+    - `StudyAIService.generateQuestionDrafts()` in `services/ai/studyAIService.ts` validates source grounding via `isExcerptGrounded()`, enforces 4 options, valid `correctOptionIndex`, and non-empty explanations.
+    - Rejects ungrounded excerpts with `grounding_failed` and malformed structures with `invalid_response`.
+  - Mock Provider Modes:
+    - `MockAIProvider` extended deterministically for question generation: `normal`, `bad_grounding`, `malformed`, `invalid_correct_index`, `empty_options`, `empty_result`, and `unavailable`.
+  - UI Mode & Entry:
+    - 4th action tab `Questions` (`t.studyAi.questionsTab` / "Sorular") added to Study Assistant (`app/topics/[id]/assistant.tsx`).
+    - Action CTA: `Generate question drafts` (`t.studyAi.generateQuestions` / "Soru taslakları oluştur").
+    - Selecting a different source clears question drafts.
+  - Draft Presentation & Editing:
+    - Explicit non-Q-Bank notice: `"Draft — not counted as Q-Bank activity"` / `"Taslak — Q-Bank etkinliği olarak sayılmaz"`.
+    - Displays source title provenance and verbatim source excerpt.
+    - Editable fields: question, each of the 4 options, explanation, and correct answer selection via radio button (`accessibilityRole="radio"`).
+    - Local React state only; marked with `Edited` badge.
+    - Draft removal (`removeQuestion`), clear all (`clearQuestions`), and regenerate (`regenerateQuestions` replaces draft set).
+  - Strict Q-Bank Isolation:
+    - ZERO writes to `qbank_sessions`.
+    - ZERO calls to `qbankRepo.insertSession`.
+    - ZERO store mutations in `useQBankStore`.
+    - ZERO accuracy, attempt, or practice evidence contamination.
+  - Provider & Runtime Isolation:
+    - UI strictly imports from `services/ai/studyAIClient`.
+    - Zero direct imports of `GeminiAIProvider` or `fetch`.
+    - Runtime provider remains Mock.
+  - Schema & Dependencies:
+    - Schema remains strictly **v12** unchanged.
+    - Zero `package.json` modifications.
+  - Localization & Accessibility:
+    - Complete 1:1 EN/TR parity across all 17 question draft keys in `studyAi`.
+    - Radio semantics (`accessibilityRole="radio"`, `accessibilityRole="radiogroup"`, `accessibilityState={{ checked }}`).
+- Dedicated Validation:
+  - `scripts/validate-phase10-step9.cjs`: 10 comprehensive check suites covering contracts, prompt rules, service grounding, mock modes, UI integration, local editing, strict Q-Bank isolation, provider isolation, schema v12 integrity, localization parity, and accessibility.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+  - Phase 10 Step 1–9 Suites: ALL PASS (93 checks)
+  - Total: 319 automated checks passing.
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+
+## Historical — Phase 10 Step 8: PDF / Document Ingestion Pipeline
 
 - Phase 10 Step 8 implementation: PARTIAL (Picker + pipeline foundation + plain text extraction + truthful PDF capability boundary + manual text import fallback).
 - Phase 10 automated/static validation: PASS (all 11 Step 8 checks pass).
