@@ -1,6 +1,63 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 10 Step 2: Study Sources Data Layer (Schema v12)
+## Current — Phase 10 Step 3: Study Source Ingestion + Management UI
+
+- Phase 10 Step 3 implementation: COMPLETE.
+- Phase 10 automated/static validation: PASS.
+- Phase 9 implementation + validation: COMPLETE.
+- Phase 9 physical UI QA: PENDING (device validation deferred to combined QA).
+- Phase 8 physical regression QA: PENDING (still deferred).
+- Status: Topic-linked study source ingestion and management UI fully operational with plain text, notes, and textual document content.
+- Delivered scope:
+  - Topic Detail Integration (`app/topics/[id].tsx`):
+    - Added "Study Sources" section to topic detail screen.
+    - Displays source title, source type badge (`Text`, `Note`, `Document`), and localized updated timestamp.
+    - Action button to add a new study source (`/topics/[id]/sources/new`).
+    - Focus-aware screen lifecycle refreshes the source list via `studySourceRepo.getByTopic(id)`.
+    - Calm localized empty state (`t.studySources.empty`) and error feedback (`t.studySources.loadError`) with retry.
+  - Create Source Route (`app/topics/[id]/sources/new.tsx`):
+    - Dedicated creation route utilizing `ScreenWrapper includeBottomSafeArea`.
+    - Validates required title and content with whitespace trimming and localized feedback.
+    - Persists new source to SQLite via `studySourceRepo.insert()`.
+    - Safe back navigation (`router.canGoBack()` with fallback to topic detail `/topics/[id]`).
+  - Source Detail / Edit Route (`app/topics/[id]/sources/[sourceId].tsx`):
+    - View and edit modes for study sources.
+    - Shows title, source type badge, localized updated date, and scrollable content without fixed-height clipping.
+    - Update saves via `studySourceRepo.update()` preserving `createdAt`.
+    - Deletion with native confirmation alert (`Alert.alert`) and safe return to topic detail.
+    - Truthful not-found feedback (`t.studySources.notFound`) for missing/deleted sources.
+  - Reusable Form Component (`components/study-sources/StudySourceEditor.tsx`):
+    - Controlled form supporting title, multiline content, and source type selector (`text`, `note`, `document`).
+    - Accessible `radiogroup` and `radio` roles with non-color-only selected states.
+    - Native `KeyboardAvoidingView` and `ScrollView` for smooth typing and pasting of long lecture notes.
+  - Source Type Semantics:
+    - Strictly explicit textual content: `text` (pasted/plain study text), `note` (user's own study note), `document` (textual document content).
+    - PDF parsing, file pickers, binary storage, and URI fields remain strictly deferred.
+  - Localization & Accessibility:
+    - Dedicated `studySources` namespace with 100% parity across `i18n/en.ts` and `i18n/tr.ts`.
+    - Zero raw SQLite errors exposed to users.
+    - Full screen-reader semantics (`accessibilityRole`, `accessibilityLabel`, `accessibilityState`).
+  - Isolation & Security:
+    - Zero real AI providers (Gemini / OpenAI).
+    - Zero network calls (`fetch` unused).
+    - Zero API keys or secrets.
+    - AI generation still not connected; AI drafts not persisted.
+    - Database schema remains **v12** unchanged.
+- Dedicated Validation:
+  - `scripts/validate-phase10-step3.cjs`: 9 test suites covering topic integration, create route, edit/detail route, reusable editor, runtime CRUD & timestamp integrity, error masking, localization parity, accessibility semantics, and network/AI isolation.
+- Full Regression Suite:
+  - TypeScript: PASS (0 errors)
+  - Phase 2–6 validators: ALL PASS (216 checks)
+  - Phase 9 Master Suite: ALL PASS (10 checks)
+  - Phase 10 Step 1 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 2 Suite: ALL PASS (8 checks)
+  - Phase 10 Step 3 Suite: ALL PASS (9 checks)
+- Physical QA Status:
+  - Phase 8: PENDING
+  - Phase 9: PENDING
+- Next: Phase 10 Step 4 (AI draft flashcard generation & human approval flow).
+
+## Historical — Phase 10 Step 2: Study Sources Data Layer (Schema v12)
 
 - Phase 10 Step 2 implementation: COMPLETE.
 - Phase 10 automated/static validation: PASS.

@@ -1,10 +1,12 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { Alert, AppState, BackHandler } from 'react-native';
+import { Alert, AppState, BackHandler, TouchableOpacity, View } from 'react-native';
 import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { committeeRepo } from '@/db/repositories/committeeRepo';
 import { subjectRepo } from '@/db/repositories/subjectRepo';
 import { topicRepo } from '@/db/repositories/topicRepo';
 import { focusRepo } from '@/db/repositories/focusRepo';
+import { studySourceRepo } from '@/db/repositories/studySourceRepo';
+import type { StudySource } from '@/models/studySource';
 import { TopicReviewEvidence } from '@/components/memory/TopicReviewEvidence';
 import { useFocusStore } from '@/store/useFocusStore';
 import type { Topic, Subject } from '@/models/curriculum';
@@ -13,7 +15,9 @@ import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Section } from '@/components/ui/Section';
 import { FeedbackState } from '@/components/ui/FeedbackState';
 import { Button } from '@/components/ui/Button';
+import { Badge } from '@/components/ui/Badge';
 import { AppText } from '@/components/ui/Typography';
+import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
 import { topicFallback, topicRouteId } from '@/utils/topicRoutes';
 
@@ -23,14 +27,22 @@ export default function TopicDetailScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const id = topicRouteId(params.id);
   const t = useTranslation();
+  const { colors, spacing, radius } = useTheme();
   const [data, setData] = useState<Data>({ status: 'loading' });
   const [deleteError, setDeleteError] = useState(false);
   const [studyEvidence, setStudyEvidence] = useState<boolean | null>(null);
   const [startError, setStartError] = useState(false);
+  const [sources, setSources] = useState<StudySource[]>([]);
+  const [sourcesError, setSourcesError] = useState(false);
   const timerStatus = useFocusStore(state => state.timerStatus);
   function loadEvidence() {
     try { setStudyEvidence(focusRepo.hasTopicStudyActivity(id)); }
     catch { setStudyEvidence(null); }
+  }
+  function loadSources() {
+    setSourcesError(false);
+    try { setSources(studySourceRepo.getByTopic(id)); }
+    catch { setSources([]); setSourcesError(true); }
   }
   function startFocus() {
     setStartError(false);
@@ -53,7 +65,10 @@ export default function TopicDetailScreen() {
       if (subject) context.current = { id, committeeId: subject.committeeId, subjectId: subject.id };
       const committee = subject ? committeeRepo.getById(subject.committeeId) : null;
       setData(topic && subject && committee ? { status: 'ready', topic, subject, committee } : { status: 'missing' });
-      if (topic && subject && committee) loadEvidence();
+      if (topic && subject && committee) {
+        loadEvidence();
+        loadSources();
+      }
     } catch { setData({ status: 'error' }); }
   }, [id]);
   useFocusEffect(useCallback(() => {
@@ -109,6 +124,59 @@ export default function TopicDetailScreen() {
         <AppText>{data.topic.learningObjectives}</AppText>
       </Section>}
       <TopicReviewEvidence topicId={id} />
+      <Section title={t.studySources.title}>
+        <Button
+          label={t.studySources.addSource}
+          variant="secondary"
+          onPress={() => router.push(`/topics/${encodeURIComponent(id)}/sources/new` as Href)}
+        />
+        {sourcesError ? (
+          <FeedbackState
+            kind="error"
+            message={t.studySources.loadError}
+            action={{ label: t.common.retry, onPress: loadSources }}
+          />
+        ) : sources.length === 0 ? (
+          <FeedbackState kind="empty" message={t.studySources.empty} />
+        ) : (
+          sources.map((source) => (
+            <TouchableOpacity
+              key={source.id}
+              accessibilityRole="button"
+              accessibilityLabel={t.studySources.openSource(source.title)}
+              onPress={() =>
+                router.push(
+                  `/topics/${encodeURIComponent(id)}/sources/${encodeURIComponent(source.id)}` as Href
+                )
+              }
+              style={{
+                borderWidth: 1,
+                borderColor: colors.border,
+                borderRadius: radius.md,
+                padding: spacing.md,
+                backgroundColor: colors.surface,
+                gap: spacing.xs,
+              }}
+            >
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                <AppText variant="h3" style={{ flex: 1, marginRight: spacing.sm }}>
+                  {source.title}
+                </AppText>
+                <Badge label={t.studySources[source.sourceType]} variant="default" />
+              </View>
+              <AppText variant="caption" color={colors.textSecondary}>
+                {t.studySources.updatedAt(
+                  new Date(source.updatedAt).toLocaleDateString(t.dashboard.locale, {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })
+                )}
+              </AppText>
+            </TouchableOpacity>
+          ))
+        )}
+      </Section>
       <Button label={t.topics.edit} variant="secondary" onPress={() => router.push(`/topics/edit/${encodeURIComponent(id)}` as Href)} />
       {deleteError && <FeedbackState kind="error" message={t.topics.deleteError} />}
       <Button label={t.topics.remove} variant="danger" onPress={remove} />
