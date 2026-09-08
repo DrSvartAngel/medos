@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
 import { CommitteeOverviewCard } from '@/components/dashboard/CommitteeOverviewCard';
 import { QuickStartCard } from '@/components/dashboard/QuickStartCard';
 import { TodayAgenda } from '@/components/dashboard/TodayAgenda';
@@ -9,7 +10,6 @@ import { TodayMetrics } from '@/components/dashboard/TodayMetrics';
 import { MomentumCard } from '@/components/dashboard/MomentumCard';
 import { WeakTopicsList } from '@/components/analytics/WeakTopicsList';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
-import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useDashboardRefresh } from '@/hooks/useDashboardRefresh';
@@ -53,11 +53,13 @@ export default function DashboardScreen() {
             : t.dashboard.activeDetail,
       };
     }
-    return snapshot?.quickStart ?? {
-      kind: 'generic_focus',
-      title: t.dashboard.genericTitle,
-      detail: t.dashboard.genericDetail,
-    };
+    return (
+      snapshot?.quickStart ?? {
+        kind: 'generic_focus',
+        title: t.dashboard.genericTitle,
+        detail: t.dashboard.genericDetail,
+      }
+    );
   }, [snapshot?.quickStart, timerStatus, t]);
 
   const needsAttentionTopics = useMemo(() => {
@@ -144,16 +146,15 @@ export default function DashboardScreen() {
     return (
       <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.md }}>
+        <GSText size="sm" style={{ color: colors.textSecondary, marginTop: spacing.md }}>
           {t.common.loading}
-        </AppText>
+        </GSText>
       </ScreenWrapper>
     );
   }
 
   const partialErrorCount = Object.keys(sectionErrors).length;
-  const headerStatus =
-    t.dashboard.plannedToday(snapshot.agendaTotal);
+  const headerStatus = t.dashboard.plannedToday(snapshot.agendaTotal);
 
   const committee = (
     <CommitteeOverviewCard
@@ -163,6 +164,7 @@ export default function DashboardScreen() {
       onCreate={() => router.push('/committees/new' as Href)}
     />
   );
+
   const quickStart = (
     <QuickStartCard
       recommendation={recommendation}
@@ -171,6 +173,7 @@ export default function DashboardScreen() {
       onCheckIn={timerStatus === 'idle' ? handleCheckIn : undefined}
     />
   );
+
   const metrics = (
     <TodayMetrics
       focus={snapshot.focus}
@@ -184,9 +187,12 @@ export default function DashboardScreen() {
       onOpenQBank={() => router.push('/qbank/new' as Href)}
     />
   );
-  const needsAttention = needsAttentionTopics.length > 0 ? (
-    <WeakTopicsList topics={needsAttentionTopics} />
-  ) : null;
+
+  const needsAttention =
+    needsAttentionTopics.length > 0 ? (
+      <WeakTopicsList topics={needsAttentionTopics} />
+    ) : null;
+
   const agenda = (
     <TodayAgenda
       items={snapshot.agenda}
@@ -196,6 +202,7 @@ export default function DashboardScreen() {
       onOpenCalendar={() => router.push('/(tabs)/calendar' as Href)}
     />
   );
+
   const aiContextual = snapshot.committee ? (
     <Pressable
       accessibilityRole="button"
@@ -203,51 +210,111 @@ export default function DashboardScreen() {
       onPress={() => router.push(`/committees/${snapshot.committee!.id}/study-plan` as Href)}
       style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
     >
-      <Card style={[styles.aiCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-        <View style={styles.aiRow}>
-          <View style={[styles.aiIcon, { backgroundColor: colors.surfaceElevated, borderRadius: radius.sm }]}>
-            <Feather name="cpu" size={18} color={colors.primary} />
-          </View>
-          <View style={styles.aiText}>
-            <AppText variant="label" color={colors.primary} style={{ fontWeight: '600' }}>
+      <Card
+        style={[
+          styles.aiCard,
+          {
+            borderColor: colors.cardBorder,
+            backgroundColor: colors.surface,
+            borderRadius: radius.md,
+          },
+        ]}
+      >
+        <HStack style={styles.aiRow}>
+          <Box
+            style={[
+              styles.aiIcon,
+              {
+                backgroundColor: colors.primaryMuted,
+                borderRadius: radius.sm,
+              },
+            ]}
+          >
+            <Feather name="cpu" size={16} color={colors.primary} />
+          </Box>
+          <VStack space="xs" style={styles.aiText}>
+            <GSText
+              size="sm"
+              style={{
+                color: colors.primary,
+                fontWeight: '600',
+              }}
+            >
               {t.studyPlan.studyPlanButton}
-            </AppText>
-            <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+            </GSText>
+            <GSText size="xs" style={{ color: colors.textSecondary }}>
               {snapshot.committee.name}
-            </AppText>
-          </View>
-          <Feather name="chevron-right" size={18} color={colors.textMuted} />
-        </View>
+            </GSText>
+          </VStack>
+          <Feather name="chevron-right" size={16} color={colors.textMuted} />
+        </HStack>
       </Card>
     </Pressable>
   ) : null;
 
   return (
     <ScreenWrapper>
-      <View style={styles.header}>
-        <AppText variant="caption" color={colors.textMuted}>
-          {new Date(getLocalDayRange(snapshot.date).startMs).toLocaleDateString(t.dashboard.locale, { weekday: 'long', month: 'long', day: 'numeric' })}
-        </AppText>
-        <AppText variant={isTablet ? 'h1' : 'h2'} style={{ marginTop: spacing.xs }}>
+      {/* Top Context with Gluestack Typography & Hierarchy */}
+      <VStack space="xs" style={styles.header}>
+        <GSText
+          size="xs"
+          style={[
+            styles.dateLabel,
+            {
+              color: colors.textMuted,
+            },
+          ]}
+        >
+          {new Date(getLocalDayRange(snapshot.date).startMs).toLocaleDateString(
+            t.dashboard.locale,
+            { weekday: 'long', month: 'long', day: 'numeric' }
+          ).toUpperCase()}
+        </GSText>
+
+        <Heading
+          size={isTablet ? '2xl' : 'xl'}
+          style={[styles.greetingHeading, { color: colors.textPrimary }]}
+        >
           {t.dashboard.greeting(getDashboardGreeting())}
-        </AppText>
-        <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
+        </Heading>
+
+        <GSText size="sm" style={{ color: colors.textSecondary }}>
           {headerStatus}
-        </AppText>
-      </View>
+        </GSText>
+      </VStack>
 
       {partialErrorCount > 0 && (
-        <View style={[styles.partialError, { borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surfaceElevated, marginTop: spacing.md, padding: spacing.sm }]}>
-          <Feather name="alert-circle" size={17} color={colors.textMuted} />
-          <AppText variant="bodySmall" color={colors.textSecondary} style={[styles.partialErrorText, { marginLeft: spacing.sm }]}>
-            {t.dashboard.partialError}
-          </AppText>
-          <Button label={t.common.retry} variant="ghost" size="sm" onPress={refresh} loading={isRefreshing} />
-        </View>
+        <Card
+          style={[
+            styles.partialError,
+            {
+              borderColor: colors.cardBorder,
+              borderRadius: radius.md,
+              backgroundColor: colors.surfaceElevated,
+              marginTop: spacing.md,
+              padding: spacing.sm,
+            },
+          ]}
+        >
+          <HStack space="sm" style={{ alignItems: 'center' }}>
+            <Feather name="alert-circle" size={16} color={colors.textMuted} />
+            <GSText size="xs" style={[styles.partialErrorText, { color: colors.textSecondary }]}>
+              {t.dashboard.partialError}
+            </GSText>
+            <Button
+              label={t.common.retry}
+              variant="ghost"
+              size="sm"
+              onPress={refresh}
+              loading={isRefreshing}
+            />
+          </HStack>
+        </Card>
       )}
 
+      {/* Responsive Composition */}
       {isLargeTablet ? (
-        <View style={[styles.twoPane, { gap: spacing.lg, marginTop: spacing.lg }]}>
+        <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.lg }]}>
           <View style={[styles.column, { gap: spacing.lg }]}>
             {committee}
             {quickStart}
@@ -276,15 +343,56 @@ export default function DashboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  centered: { alignItems: 'center', justifyContent: 'center' },
-  header: { paddingBottom: 4, paddingTop: 8 },
-  partialError: { alignItems: 'center', borderWidth: 1, flexDirection: 'row' },
-  partialErrorText: { flex: 1 },
-  stacked: { width: '100%' },
-  twoPane: { alignItems: 'flex-start', flexDirection: 'row', width: '100%' },
-  column: { flex: 1, minWidth: 0 },
-  aiCard: { borderWidth: 1, padding: 12 },
-  aiRow: { alignItems: 'center', flexDirection: 'row' },
-  aiIcon: { alignItems: 'center', height: 34, justifyContent: 'center', marginRight: 12, width: 34 },
-  aiText: { flex: 1 },
+  centered: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  header: {
+    paddingBottom: 4,
+    paddingTop: 8,
+  },
+  dateLabel: {
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  greetingHeading: {
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  partialError: {
+    borderWidth: 1,
+  },
+  partialErrorText: {
+    flex: 1,
+  },
+  stacked: {
+    width: '100%',
+  },
+  twoPane: {
+    alignItems: 'flex-start',
+    flexDirection: 'row',
+    width: '100%',
+  },
+  column: {
+    flex: 1,
+    minWidth: 0,
+  },
+  aiCard: {
+    borderWidth: 1,
+    padding: 12,
+  },
+  aiRow: {
+    alignItems: 'center',
+    width: '100%',
+  },
+  aiIcon: {
+    alignItems: 'center',
+    height: 32,
+    justifyContent: 'center',
+    marginRight: 10,
+    width: 32,
+  },
+  aiText: {
+    flex: 1,
+  },
 });

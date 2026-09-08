@@ -1,10 +1,10 @@
-import { useTranslation } from '@/i18n';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { AppText } from '@/components/ui/Typography';
+import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { useTranslation } from '@/i18n';
 import { useTheme } from '@/hooks/useTheme';
 import type { DashboardAgendaItem, DashboardAgendaItemType } from '@/utils/dashboardRules';
 
@@ -38,45 +38,78 @@ export function TodayAgenda({
   const t = useTranslation();
 
   return (
-    <View>
-      <View style={styles.headerRow}>
-        <View style={styles.headerText}>
-          <AppText variant="h3">{t.dashboard.todayPlan}</AppText>
-          <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: 2 }}>
+    <VStack space="sm" style={styles.container}>
+      {/* Header Row */}
+      <HStack style={styles.headerRow}>
+        <VStack space="xs" style={styles.headerText}>
+          <Heading size="sm" style={{ color: colors.textPrimary }}>
+            {t.dashboard.todayPlan}
+          </Heading>
+          <GSText size="xs" style={{ color: colors.textSecondary }}>
             {t.dashboard.plannedCount(total)}
-          </AppText>
-        </View>
-        <Button label={t.dashboard.viewCalendar} variant="ghost" size="sm" onPress={onOpenCalendar} />
-      </View>
+          </GSText>
+        </VStack>
+        <Button
+          label={t.dashboard.viewCalendar}
+          variant="ghost"
+          size="sm"
+          onPress={onOpenCalendar}
+        />
+      </HStack>
 
       {error !== undefined && (
-        <View style={[styles.error, { marginTop: spacing.sm }]}>
-          <Feather name="alert-circle" size={16} color={colors.textMuted} />
-          <AppText variant="caption" color={colors.textMuted} style={{ marginLeft: spacing.sm, flexShrink: 1 }}>
+        <HStack space="xs" style={[styles.error, { marginTop: spacing.xs }]}>
+          <Feather name="alert-circle" size={14} color={colors.textMuted} />
+          <GSText size="xs" style={{ color: colors.textMuted, flexShrink: 1 }}>
             {t.dashboard.agendaError}
-          </AppText>
-        </View>
+          </GSText>
+        </HStack>
       )}
 
       {items.length === 0 ? (
-        <Card style={[styles.empty, { marginTop: spacing.md, paddingVertical: spacing.lg }]}>
-          <Feather name="sun" size={28} color={colors.accent} />
-          <AppText variant="body" style={{ marginTop: spacing.sm }}>{t.dashboard.plannedToday(0)}</AppText>
-          <AppText variant="bodySmall" color={colors.textSecondary} style={styles.emptyText}>
+        <Card
+          style={[
+            styles.empty,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.cardBorder,
+              borderRadius: radius.lg,
+              paddingVertical: spacing.lg,
+            },
+          ]}
+        >
+          <Feather name="sun" size={24} color={colors.primary} />
+          <GSText
+            size="sm"
+            style={{ color: colors.textPrimary, fontWeight: '600', marginTop: spacing.xs }}
+          >
+            {t.dashboard.plannedToday(0)}
+          </GSText>
+          <GSText size="xs" style={[styles.emptyText, { color: colors.textSecondary }]}>
             {t.dashboard.openDay}
-          </AppText>
+          </GSText>
         </Card>
       ) : (
-        <View style={{ gap: spacing.sm, marginTop: spacing.md }}>
+        <VStack space="xs" style={{ width: '100%' }}>
           {items.map((item) => {
             const config = CONFIG[item.type];
             const label = t.dashboard.agendaTypes[item.type];
-            const title = item.type === 'committee_exam' ? t.dashboard.examTitle(item.committeeName ?? '')
-              : item.type === 'committee_start' ? t.dashboard.startTitle(item.committeeName ?? '') : item.title;
-            const subtitle = item.type === 'committee_exam' ? t.dashboard.examToday
-              : item.type === 'committee_start' ? t.dashboard.committeeStart
-              : item.committeeId ? item.committeeName ?? t.dashboard.committeeRemoved : undefined;
+            const title =
+              item.type === 'committee_exam'
+                ? t.dashboard.examTitle(item.committeeName ?? '')
+                : item.type === 'committee_start'
+                ? t.dashboard.startTitle(item.committeeName ?? '')
+                : item.title;
+            const subtitle =
+              item.type === 'committee_exam'
+                ? t.dashboard.examToday
+                : item.type === 'committee_start'
+                ? t.dashboard.committeeStart
+                : item.committeeId
+                ? item.committeeName ?? t.dashboard.committeeRemoved
+                : undefined;
             const accent = colors[config.colorKey];
+
             return (
               <Pressable
                 key={item.id}
@@ -84,56 +117,98 @@ export function TodayAgenda({
                 accessibilityLabel={t.dashboard.openItem(label, title)}
                 onPress={() => onOpenItem(item)}
                 style={({ pressed }) => [
-                  styles.row,
+                  styles.agendaRow,
                   {
                     backgroundColor: colors.surface,
-                    borderColor: colors.border,
+                    borderColor: colors.cardBorder,
                     borderLeftColor: accent,
+                    borderLeftWidth: 3,
                     borderRadius: radius.md,
-                    opacity: pressed ? 0.75 : 1,
+                    opacity: pressed ? 0.8 : 1,
                     padding: spacing.md,
                   },
                 ]}
               >
-                <Feather name={config.icon} size={18} color={accent} />
-                <View style={[styles.rowText, { marginLeft: spacing.md }]}>
-                  <View style={styles.metaRow}>
-                    <AppText variant="caption" color={accent} style={styles.typeLabel}>
+                <Box style={[styles.rowIconWrap, { backgroundColor: colors.surfaceElevated, borderRadius: radius.sm }]}>
+                  <Feather name={config.icon} size={16} color={accent} />
+                </Box>
+                <VStack space="xs" style={[styles.rowText, { marginLeft: spacing.md }]}>
+                  <HStack space="xs" style={styles.metaRow}>
+                    <GSText size="xs" style={[styles.typeLabel, { color: accent }]}>
                       {label}
-                    </AppText>
+                    </GSText>
                     {item.time !== undefined && (
-                      <AppText variant="caption" color={colors.textMuted} style={{ marginLeft: spacing.sm, flexShrink: 1 }}>
-                        {item.time}
-                      </AppText>
+                      <GSText size="xs" style={{ color: colors.textMuted }}>
+                        · {item.time}
+                      </GSText>
                     )}
-                  </View>
-                  <AppText variant="body" numberOfLines={2} style={{ marginTop: 2 }}>
+                  </HStack>
+                  <GSText
+                    size="sm"
+                    numberOfLines={2}
+                    style={{ color: colors.textPrimary, fontWeight: '500' }}
+                  >
                     {title}
-                  </AppText>
+                  </GSText>
                   {subtitle !== undefined && (
-                    <AppText variant="caption" color={colors.textSecondary} numberOfLines={2}>
+                    <GSText size="xs" numberOfLines={1} style={{ color: colors.textSecondary }}>
                       {subtitle}
-                    </AppText>
+                    </GSText>
                   )}
-                </View>
-                <Feather name="chevron-right" size={18} color={colors.textMuted} />
+                </VStack>
+                <Feather name="chevron-right" size={16} color={colors.textMuted} />
               </Pressable>
             );
           })}
-        </View>
+        </VStack>
       )}
-    </View>
+    </VStack>
   );
 }
 
 const styles = StyleSheet.create({
-  headerRow: { alignItems: 'center', flexDirection: 'row' },
-  headerText: { flex: 1, marginRight: 8 },
-  error: { alignItems: 'center', flexDirection: 'row' },
-  empty: { alignItems: 'center' },
-  emptyText: { marginTop: 4, textAlign: 'center' },
-  row: { alignItems: 'center', borderLeftWidth: 4, borderWidth: 1, flexDirection: 'row', minHeight: 64 },
-  rowText: { flex: 1 },
-  metaRow: { alignItems: 'center', flexDirection: 'row' },
-  typeLabel: { fontWeight: '700' },
+  container: {
+    width: '100%',
+  },
+  headerRow: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerText: {
+    flex: 1,
+  },
+  error: {
+    alignItems: 'center',
+  },
+  empty: {
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  emptyText: {
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  agendaRow: {
+    alignItems: 'center',
+    borderWidth: 1,
+    flexDirection: 'row',
+    minHeight: 56,
+    width: '100%',
+  },
+  rowIconWrap: {
+    alignItems: 'center',
+    height: 32,
+    justifyContent: 'center',
+    width: 32,
+  },
+  rowText: {
+    flex: 1,
+  },
+  metaRow: {
+    alignItems: 'center',
+  },
+  typeLabel: {
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
 });

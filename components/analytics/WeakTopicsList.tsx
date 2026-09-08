@@ -3,11 +3,10 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import type { WeakTopicItem, WeakTopicReason } from '@/models/analytics';
+import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
+import { Card } from '@/components/ui/Card';
 import { useTranslation } from '@/i18n';
 import { useTheme } from '@/hooks/useTheme';
-import { Section } from '@/components/ui/Section';
-import { Card } from '@/components/ui/Card';
-import { AppText } from '@/components/ui/Typography';
 
 export interface WeakTopicsListProps {
   topics: WeakTopicItem[];
@@ -22,7 +21,7 @@ export function WeakTopicsList({ topics, onPressTopic }: WeakTopicsListProps) {
     return null;
   }
 
-  const displayedTopics = topics.slice(0, 5);
+  const displayedTopics = topics.slice(0, 3);
 
   const getReasonInfo = (item: WeakTopicItem, reason: WeakTopicReason) => {
     switch (reason) {
@@ -59,8 +58,17 @@ export function WeakTopicsList({ topics, onPressTopic }: WeakTopicsListProps) {
   };
 
   return (
-    <Section title={t.analytics.needsAttentionTitle}>
-      <View style={{ gap: spacing.sm }}>
+    <VStack space="sm" style={styles.container}>
+      <HStack style={styles.headerRow}>
+        <Heading size="sm" style={{ color: colors.textPrimary }}>
+          {t.analytics.needsAttentionTitle}
+        </Heading>
+        <GSText size="xs" style={{ color: colors.textMuted }}>
+          {displayedTopics.length} {t.dashboard.committee.toLowerCase()}
+        </GSText>
+      </HStack>
+
+      <VStack space="xs" style={styles.listContainer}>
         {displayedTopics.map((item) => {
           const reasonDetails = item.reasons.map((r) => getReasonInfo(item, r));
           const reasonsA11y = reasonDetails
@@ -82,60 +90,100 @@ export function WeakTopicsList({ topics, onPressTopic }: WeakTopicsListProps) {
                 },
               ]}
             >
-              <Card elevated style={[styles.itemCard, { gap: spacing.xs }]}>
-                <View style={styles.headerRow}>
-                  <AppText
-                    variant="body"
-                    style={[{ fontWeight: '600', flex: 1, marginRight: spacing.sm }]}
+              <Card
+                style={[
+                  styles.itemCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.cardBorder,
+                    borderRadius: radius.md,
+                    padding: spacing.md,
+                  },
+                ]}
+              >
+                <HStack style={styles.itemContent}>
+                  <Box
+                    style={[
+                      styles.bulletWrap,
+                      {
+                        backgroundColor: colors.warningMuted,
+                        borderRadius: radius.xs,
+                      },
+                    ]}
                   >
-                    {item.topicName}
-                  </AppText>
-                  <Feather name="chevron-right" size={16} color={colors.textMuted} />
-                </View>
+                    <Feather name="alert-triangle" size={14} color={colors.warning} />
+                  </Box>
 
-                <View style={[styles.reasonsContainer, { gap: 2 }]}>
-                  {reasonDetails.map((rd, index) => (
-                    <View key={index} style={styles.reasonRow}>
-                      <AppText variant="caption" color={colors.textSecondary}>
-                        {rd.label} ·{' '}
-                      </AppText>
-                      <AppText
-                        variant="caption"
-                        color={colors.textPrimary}
-                        style={{ fontWeight: '500' }}
-                      >
-                        {rd.value}
-                      </AppText>
-                    </View>
-                  ))}
-                </View>
+                  <VStack space="xs" style={styles.topicInfo}>
+                    <GSText
+                      size="sm"
+                      numberOfLines={1}
+                      style={[styles.topicTitle, { color: colors.textPrimary }]}
+                    >
+                      {item.topicName}
+                    </GSText>
+
+                    <HStack style={styles.reasonsRow}>
+                      {reasonDetails.map((rd, index) => (
+                        <GSText
+                          key={index}
+                          size="xs"
+                          style={{ color: colors.textSecondary }}
+                        >
+                          {rd.label} ({rd.value})
+                          {index < reasonDetails.length - 1 ? ' · ' : ''}
+                        </GSText>
+                      ))}
+                    </HStack>
+                  </VStack>
+
+                  <Feather name="chevron-right" size={16} color={colors.textMuted} />
+                </HStack>
               </Card>
             </Pressable>
           );
         })}
-      </View>
-    </Section>
+      </VStack>
+    </VStack>
   );
 }
 
 const styles = StyleSheet.create({
-  pressable: {
-    overflow: 'hidden',
-  },
-  itemCard: {
-    padding: 12,
+  container: {
+    width: '100%',
   },
   headerRow: {
-    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  reasonsContainer: {
-    flexDirection: 'column',
+  listContainer: {
+    width: '100%',
   },
-  reasonRow: {
-    flexDirection: 'row',
+  pressable: {
+    width: '100%',
+  },
+  itemCard: {
+    borderWidth: 1,
+    width: '100%',
+  },
+  itemContent: {
     alignItems: 'center',
+    width: '100%',
+  },
+  bulletWrap: {
+    width: 26,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 10,
+  },
+  topicInfo: {
+    flex: 1,
+  },
+  topicTitle: {
+    fontWeight: '600',
+  },
+  reasonsRow: {
     flexWrap: 'wrap',
   },
 });

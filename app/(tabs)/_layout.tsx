@@ -51,8 +51,8 @@ export default function TabLayout() {
   const tabBarHeight = baseTabBarHeight + androidBottomInset;
   const tabBarPaddingBottom = baseTabBarPaddingBottom + androidBottomInset;
 
-  const iconSize = isTablet ? 26 : 22;
-  const labelSize = isTablet ? Typography.size.sm : Typography.size.xs;
+  const iconSize = isTablet ? 24 : 20;
+  const labelSize = isTablet ? 13 : 11;
 
   return (
     <Tabs
@@ -60,11 +60,11 @@ export default function TabLayout() {
         headerShown: false,
         tabBarStyle: {
           backgroundColor: colors.tabBar,
-          borderTopColor: colors.border,
+          borderTopColor: colors.cardBorder,
           borderTopWidth: 1,
           height: tabBarHeight,
           paddingBottom: tabBarPaddingBottom,
-          paddingTop: Spacing.xs,
+          paddingTop: 6,
           elevation: 0,
           shadowOpacity: 0,
         },
@@ -72,8 +72,9 @@ export default function TabLayout() {
         tabBarInactiveTintColor: colors.tabInactive,
         tabBarLabelStyle: {
           fontSize: labelSize,
-          fontWeight: Typography.weight.medium,
-          marginTop: 2,
+          fontWeight: '600',
+          marginTop: 3,
+          letterSpacing: 0.1,
         },
         tabBarItemStyle: {
           paddingVertical: 2,

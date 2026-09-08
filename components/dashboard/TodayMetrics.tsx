@@ -1,9 +1,9 @@
-import { useTranslation } from '@/i18n';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { AppText } from '@/components/ui/Typography';
+import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
 import { Card } from '@/components/ui/Card';
+import { useTranslation } from '@/i18n';
 import { useTheme } from '@/hooks/useTheme';
 import { formatDashboardDuration } from '@/utils/dashboardRules';
 import type {
@@ -39,6 +39,7 @@ export function TodayMetrics({
   const t = useTranslation();
   const attentionCount = memory ? memory.againCount + memory.hardCount : 0;
 
+  // 1. Focus
   const focusValue =
     focusError !== undefined || focus === null
       ? t.dashboard.summaryUnavailable
@@ -48,6 +49,7 @@ export function TodayMetrics({
   const focusAction = focus?.completedSessions === 0 ? t.dashboard.startFocus : t.dashboard.openFocus;
   const focusA11yLabel = `${t.focus.title}: ${focusValue}. ${focusAction}`;
 
+  // 2. Memory
   const memoryValue =
     memoryError !== undefined || memory === null
       ? t.dashboard.summaryUnavailable
@@ -56,6 +58,7 @@ export function TodayMetrics({
       : `${t.dashboard.reviews(memory.reviewCount)}, ${t.dashboard.reviewSummary(memory.decksReviewed, attentionCount)}`;
   const memoryA11yLabel = `${t.memory.title}: ${memoryValue}. ${t.dashboard.openMemory}`;
 
+  // 3. Q-Bank
   const qbankValue =
     qbankError !== undefined || qbank === null
       ? t.dashboard.summaryUnavailable
@@ -69,160 +72,308 @@ export function TodayMetrics({
   const qbankA11yLabel = `${t.qbank.title}: ${qbankValue}. ${t.qbank.logSession}`;
 
   return (
-    <View>
-      <AppText variant="label" color={colors.textMuted} style={{ marginBottom: spacing.sm }}>
-        {t.dashboard.soFar}
-      </AppText>
-      <View style={[styles.metrics, { gap: spacing.sm }]}>
+    <VStack space="sm" style={styles.container}>
+      {/* Section Subtitle */}
+      <GSText
+        size="xs"
+        style={[
+          styles.sectionLabel,
+          {
+            color: colors.textMuted,
+          },
+        ]}
+      >
+        {t.dashboard.soFar.toUpperCase()}
+      </GSText>
+
+      {/* Grouped 3-Metric Surface / Responsive Row */}
+      <View style={[styles.metricGrid, { gap: spacing.sm }]}>
+        {/* Metric 1: Focus */}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={focusA11yLabel}
           onPress={onOpenFocus}
-          style={({ pressed }) => [styles.metricWrap, { opacity: pressed ? 0.75 : 1 }]}
+          style={({ pressed }) => [
+            styles.metricTileWrapper,
+            { opacity: pressed ? 0.8 : 1 },
+          ]}
         >
-          <Card style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <View style={[styles.icon, { backgroundColor: colors.primaryMuted, borderRadius: radius.sm }]}>
-                <Feather name="clock" size={18} color={colors.primary} />
-              </View>
-              <AppText variant="label" style={{ marginLeft: spacing.sm, flex: 1 }}>{t.focus.title}</AppText>
-            </View>
-            {focusError !== undefined || focus === null ? (
-              <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.md }}>
-                {t.dashboard.summaryUnavailable}
-              </AppText>
-            ) : focus.completedSessions === 0 ? (
-              <>
-                <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.dashboard.ready}</AppText>
-                <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
-                  {t.dashboard.noCompleted}
-                </AppText>
-              </>
-            ) : (
-              <>
-                <AppText variant="h2" color={colors.primary} style={{ marginTop: spacing.md }}>
-                  {t.dashboard.duration(formatDashboardDuration(focus.totalSeconds))}
-                </AppText>
-                <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
-                  {t.dashboard.completed(focus.completedSessions)}
-                </AppText>
-              </>
-            )}
-            <MetricFooter
-              label={focusAction}
-              accessibilityLabel={t.dashboard.openFocus}
-            />
+          <Card
+            style={[
+              styles.metricCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.cardBorder,
+                borderRadius: radius.lg,
+                padding: spacing.md,
+              },
+            ]}
+          >
+            <VStack space="xs" style={styles.tileStack}>
+              <HStack style={styles.metricHeader}>
+                <Box
+                  style={[
+                    styles.metricIconWrap,
+                    {
+                      backgroundColor: colors.primaryMuted,
+                      borderRadius: radius.sm,
+                    },
+                  ]}
+                >
+                  <Feather name="clock" size={16} color={colors.primary} />
+                </Box>
+                <GSText
+                  size="xs"
+                  style={[styles.tileLabel, { color: colors.textSecondary }]}
+                >
+                  {t.focus.title}
+                </GSText>
+              </HStack>
+
+              {focusError !== undefined || focus === null ? (
+                <GSText size="xs" style={{ color: colors.textMuted, marginTop: 4 }}>
+                  {t.dashboard.summaryUnavailable}
+                </GSText>
+              ) : focus.completedSessions === 0 ? (
+                <VStack space="xs" style={styles.valueGroup}>
+                  <Heading size="md" style={{ color: colors.textPrimary }}>
+                    {t.dashboard.ready}
+                  </Heading>
+                  <GSText size="xs" style={{ color: colors.textMuted }}>
+                    {t.dashboard.noCompleted}
+                  </GSText>
+                </VStack>
+              ) : (
+                <VStack space="xs" style={styles.valueGroup}>
+                  <Heading size="md" style={{ color: colors.primary }}>
+                    {t.dashboard.duration(formatDashboardDuration(focus.totalSeconds))}
+                  </Heading>
+                  <GSText size="xs" style={{ color: colors.textSecondary }}>
+                    {t.dashboard.completed(focus.completedSessions)}
+                  </GSText>
+                </VStack>
+              )}
+
+              <HStack style={styles.tileFooter}>
+                <GSText size="xs" style={[styles.footerText, { color: colors.textMuted }]}>
+                  {focusAction}
+                </GSText>
+                <Feather name="chevron-right" size={14} color={colors.textMuted} />
+              </HStack>
+            </VStack>
           </Card>
         </Pressable>
 
+        {/* Metric 2: Memory */}
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={memoryA11yLabel}
           onPress={onOpenMemory}
-          style={({ pressed }) => [styles.metricWrap, { opacity: pressed ? 0.75 : 1 }]}
+          style={({ pressed }) => [
+            styles.metricTileWrapper,
+            { opacity: pressed ? 0.8 : 1 },
+          ]}
         >
-          <Card style={styles.metricCard}>
-            <View style={styles.metricHeader}>
-              <View style={[styles.icon, { backgroundColor: colors.accentMuted, borderRadius: radius.sm }]}>
-                <Feather name="layers" size={18} color={colors.accent} />
-              </View>
-              <AppText variant="label" style={{ marginLeft: spacing.sm, flex: 1 }}>{t.memory.title}</AppText>
-            </View>
-            {memoryError !== undefined || memory === null ? (
-              <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.md }}>
-                {t.dashboard.summaryUnavailable}
-              </AppText>
-            ) : memory.reviewCount === 0 ? (
-              <>
-                <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.dashboard.reinforce}</AppText>
-                <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
-                  {t.dashboard.noReviews}
-                </AppText>
-              </>
-            ) : (
-              <>
-                <AppText variant="h2" color={colors.accent} style={{ marginTop: spacing.md }}>
-                  {t.dashboard.reviews(memory.reviewCount)}
-                </AppText>
-                <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
-                  {t.dashboard.reviewSummary(memory.decksReviewed, attentionCount)}
-                </AppText>
-              </>
-            )}
-            <MetricFooter
-              label={t.dashboard.openMemory}
-              accessibilityLabel={t.dashboard.openMemory}
-            />
+          <Card
+            style={[
+              styles.metricCard,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.cardBorder,
+                borderRadius: radius.lg,
+                padding: spacing.md,
+              },
+            ]}
+          >
+            <VStack space="xs" style={styles.tileStack}>
+              <HStack style={styles.metricHeader}>
+                <Box
+                  style={[
+                    styles.metricIconWrap,
+                    {
+                      backgroundColor: colors.primaryMuted,
+                      borderRadius: radius.sm,
+                    },
+                  ]}
+                >
+                  <Feather name="layers" size={16} color={colors.primary} />
+                </Box>
+                <GSText
+                  size="xs"
+                  style={[styles.tileLabel, { color: colors.textSecondary }]}
+                >
+                  {t.memory.title}
+                </GSText>
+              </HStack>
+
+              {memoryError !== undefined || memory === null ? (
+                <GSText size="xs" style={{ color: colors.textMuted, marginTop: 4 }}>
+                  {t.dashboard.summaryUnavailable}
+                </GSText>
+              ) : memory.reviewCount === 0 ? (
+                <VStack space="xs" style={styles.valueGroup}>
+                  <Heading size="md" style={{ color: colors.textPrimary }}>
+                    {t.dashboard.reinforce}
+                  </Heading>
+                  <GSText size="xs" style={{ color: colors.textMuted }}>
+                    {t.dashboard.noReviews}
+                  </GSText>
+                </VStack>
+              ) : (
+                <VStack space="xs" style={styles.valueGroup}>
+                  <Heading size="md" style={{ color: colors.primary }}>
+                    {t.dashboard.reviews(memory.reviewCount)}
+                  </Heading>
+                  <GSText size="xs" style={{ color: colors.textSecondary }}>
+                    {t.dashboard.reviewSummary(memory.decksReviewed, attentionCount)}
+                  </GSText>
+                </VStack>
+              )}
+
+              <HStack style={styles.tileFooter}>
+                <GSText size="xs" style={[styles.footerText, { color: colors.textMuted }]}>
+                  {t.dashboard.openMemory}
+                </GSText>
+                <Feather name="chevron-right" size={14} color={colors.textMuted} />
+              </HStack>
+            </VStack>
           </Card>
         </Pressable>
 
+        {/* Metric 3: Q-Bank */}
         {qbank !== undefined && (
           <Pressable
             accessibilityRole="button"
             accessibilityLabel={qbankA11yLabel}
             onPress={onOpenQBank}
-            style={({ pressed }) => [styles.metricWrap, { opacity: pressed ? 0.75 : 1 }]}
+            style={({ pressed }) => [
+              styles.metricTileWrapper,
+              { opacity: pressed ? 0.8 : 1 },
+            ]}
           >
-            <Card style={styles.metricCard}>
-              <View style={styles.metricHeader}>
-                <View style={[styles.icon, { backgroundColor: colors.surfaceElevated, borderRadius: radius.sm }]}>
-                  <Feather name="help-circle" size={18} color={colors.info} />
-                </View>
-                <AppText variant="label" style={{ marginLeft: spacing.sm, flex: 1 }}>{t.qbank.title}</AppText>
-              </View>
-              {qbankError !== undefined || qbank === null ? (
-                <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.md }}>
-                  {t.dashboard.summaryUnavailable}
-                </AppText>
-              ) : qbank.totalQuestions === 0 ? (
-                <>
-                  <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.dashboard.ready}</AppText>
-                  <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
-                    {t.dashboard.noQuestions}
-                  </AppText>
-                </>
-              ) : (
-                <>
-                  <AppText variant="h2" color={colors.info} style={{ marginTop: spacing.md }}>
-                    {qbank.totalQuestions}
-                  </AppText>
-                  <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
-                    {qbank.accuracyPercent !== null
-                      ? `${t.dashboard.questionsSolved} · ${t.dashboard.qbankAccuracy(qbank.accuracyPercent)}`
-                      : t.dashboard.questionsSolved}
-                  </AppText>
-                </>
-              )}
-              <MetricFooter
-                label={t.qbank.logSession}
-                accessibilityLabel={t.qbank.logSession}
-              />
+            <Card
+              style={[
+                styles.metricCard,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.cardBorder,
+                  borderRadius: radius.lg,
+                  padding: spacing.md,
+                },
+              ]}
+            >
+              <VStack space="xs" style={styles.tileStack}>
+                <HStack style={styles.metricHeader}>
+                  <Box
+                    style={[
+                      styles.metricIconWrap,
+                      {
+                        backgroundColor: colors.surfaceElevated,
+                        borderRadius: radius.sm,
+                      },
+                    ]}
+                  >
+                    <Feather name="help-circle" size={16} color={colors.info} />
+                  </Box>
+                  <GSText
+                    size="xs"
+                    style={[styles.tileLabel, { color: colors.textSecondary }]}
+                  >
+                    {t.qbank.title}
+                  </GSText>
+                </HStack>
+
+                {qbankError !== undefined || qbank === null ? (
+                  <GSText size="xs" style={{ color: colors.textMuted, marginTop: 4 }}>
+                    {t.dashboard.summaryUnavailable}
+                  </GSText>
+                ) : qbank.totalQuestions === 0 ? (
+                  <VStack space="xs" style={styles.valueGroup}>
+                    <Heading size="md" style={{ color: colors.textPrimary }}>
+                      {t.dashboard.ready}
+                    </Heading>
+                    <GSText size="xs" style={{ color: colors.textMuted }}>
+                      {t.dashboard.noQuestions}
+                    </GSText>
+                  </VStack>
+                ) : (
+                  <VStack space="xs" style={styles.valueGroup}>
+                    <Heading size="md" style={{ color: colors.info }}>
+                      {qbank.totalQuestions}
+                    </Heading>
+                    <GSText size="xs" style={{ color: colors.textSecondary }}>
+                      {qbank.accuracyPercent !== null
+                        ? `${t.dashboard.questionsSolved} · ${t.dashboard.qbankAccuracy(qbank.accuracyPercent)}`
+                        : t.dashboard.questionsSolved}
+                    </GSText>
+                  </VStack>
+                )}
+
+                <HStack style={styles.tileFooter}>
+                  <GSText size="xs" style={[styles.footerText, { color: colors.textMuted }]}>
+                    {t.qbank.logSession}
+                  </GSText>
+                  <Feather name="chevron-right" size={14} color={colors.textMuted} />
+                </HStack>
+              </VStack>
             </Card>
           </Pressable>
         )}
       </View>
-    </View>
+    </VStack>
   );
-
-  function MetricFooter({ label, accessibilityLabel }: { label: string; accessibilityLabel?: string }) {
-    return (
-      <View
-        style={[styles.footer, { marginTop: spacing.md }]}
-        accessibilityLabel={accessibilityLabel ?? label}
-      >
-        <AppText variant="caption" color={colors.textMuted} style={styles.footerText}>{label}</AppText>
-        <Feather name="chevron-right" size={16} color={colors.textMuted} />
-      </View>
-    );
-  }
 }
 
 const styles = StyleSheet.create({
-  metrics: { flexDirection: 'row', flexWrap: 'wrap' },
-  metricWrap: { flexBasis: 160, flexGrow: 1 },
-  metricCard: { flex: 1 },
-  metricHeader: { alignItems: 'center', flexDirection: 'row' },
-  icon: { alignItems: 'center', height: 34, justifyContent: 'center', width: 34 },
-  footer: { alignItems: 'center', flexDirection: 'row' },
-  footerText: { flex: 1, fontWeight: '600' },
+  container: {
+    width: '100%',
+  },
+  sectionLabel: {
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  metricGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    width: '100%',
+  },
+  metricTileWrapper: {
+    flexBasis: 140,
+    flexGrow: 1,
+    minWidth: 100,
+  },
+  metricCard: {
+    flex: 1,
+    borderWidth: 1,
+  },
+  tileStack: {
+    justifyContent: 'space-between',
+    minHeight: 110,
+  },
+  metricHeader: {
+    alignItems: 'center',
+    gap: 8,
+  },
+  metricIconWrap: {
+    width: 26,
+    height: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  tileLabel: {
+    fontWeight: '600',
+    flex: 1,
+  },
+  valueGroup: {
+    marginTop: 2,
+    marginBottom: 4,
+  },
+  tileFooter: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 6,
+  },
+  footerText: {
+    fontWeight: '600',
+  },
 });

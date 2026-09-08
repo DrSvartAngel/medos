@@ -1,11 +1,11 @@
-import { useTranslation } from '@/i18n';
 import React from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { AppText } from '@/components/ui/Typography';
+import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { useTranslation } from '@/i18n';
 import { useTheme } from '@/hooks/useTheme';
 import type { DashboardCommittee, DashboardCommitteeStatus } from '@/utils/dashboardRules';
 
@@ -35,83 +35,163 @@ export function CommitteeOverviewCard({
   const t = useTranslation();
 
   return (
-    <View>
-      <AppText variant="label" color={colors.textMuted} style={{ marginBottom: spacing.sm }}>
-        {t.dashboard.committee}
-      </AppText>
+    <VStack space="xs" style={styles.container}>
+      <GSText
+        size="xs"
+        style={[
+          styles.sectionLabel,
+          {
+            color: colors.textMuted,
+          },
+        ]}
+      >
+        {t.dashboard.committee.toUpperCase()}
+      </GSText>
 
       {error !== undefined ? (
-        <Card>
-          <View style={styles.messageRow}>
-            <Feather name="alert-circle" size={19} color={colors.textMuted} />
-            <AppText variant="bodySmall" color={colors.textSecondary} style={styles.messageText}>
+        <Card style={{ backgroundColor: colors.surface, borderColor: colors.cardBorder }}>
+          <HStack space="sm" style={styles.messageRow}>
+            <Feather name="alert-circle" size={18} color={colors.textMuted} />
+            <GSText size="sm" style={{ color: colors.textSecondary, flex: 1 }}>
               {t.dashboard.committeeError}
-            </AppText>
-          </View>
+            </GSText>
+          </HStack>
         </Card>
       ) : committee === null ? (
-        <Card elevated style={styles.empty}>
-          <Feather name="book-open" size={30} color={colors.info} />
-          <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.dashboard.firstCommittee}</AppText>
-          <AppText variant="bodySmall" color={colors.textSecondary} style={styles.emptyText}>
+        <Card
+          style={[
+            styles.empty,
+            {
+              backgroundColor: colors.surface,
+              borderColor: colors.cardBorder,
+              borderRadius: radius.lg,
+              padding: spacing.lg,
+            },
+          ]}
+        >
+          <Feather name="book-open" size={28} color={colors.primary} />
+          <Heading size="sm" style={{ color: colors.textPrimary, marginTop: spacing.sm }}>
+            {t.dashboard.firstCommittee}
+          </Heading>
+          <GSText
+            size="xs"
+            style={[styles.emptyText, { color: colors.textSecondary, marginTop: 4 }]}
+          >
             {t.dashboard.firstCommitteeDetail}
-          </AppText>
-          <Button label={t.dashboard.createCommittee} variant="secondary" onPress={onCreate} style={{ marginTop: spacing.md }} />
+          </GSText>
+          <Button
+            label={t.dashboard.createCommittee}
+            variant="secondary"
+            onPress={onCreate}
+            style={{ marginTop: spacing.md }}
+          />
         </Card>
       ) : (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t.dashboard.openCommittee(committee.name)}
           onPress={() => onOpen(committee.id)}
-          style={({ pressed }) => ({ opacity: pressed ? 0.75 : 1 })}
+          style={({ pressed }) => [{ opacity: pressed ? 0.8 : 1 }]}
         >
           <Card
             style={[
               styles.committeeCard,
-              { borderLeftColor: committee.color, borderRadius: radius.md },
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.cardBorder,
+                borderLeftColor: committee.color || colors.primary,
+                borderLeftWidth: 4,
+                borderRadius: radius.lg,
+                padding: spacing.md,
+              },
             ]}
           >
-            <View style={styles.titleRow}>
-              <View style={styles.titleText}>
-                <Badge label={t.dashboard.committeeStatuses[committee.status]} variant={STATUS[committee.status].variant} dot />
-                <AppText variant="h3" numberOfLines={2} style={{ marginTop: spacing.sm }}>
-                  {committee.name}
-                </AppText>
-              </View>
-              <Feather name="chevron-right" size={20} color={colors.textMuted} />
-            </View>
+            <VStack space="xs">
+              <HStack style={styles.topRow}>
+                <HStack space="sm" style={styles.headerInfo}>
+                  <Badge
+                    label={t.dashboard.committeeStatuses[committee.status]}
+                    variant={STATUS[committee.status].variant}
+                    dot
+                  />
+                </HStack>
+                <Feather name="chevron-right" size={18} color={colors.textMuted} />
+              </HStack>
 
-            <View style={[styles.metaRow, { marginTop: spacing.md }]}>
-              <Feather name="calendar" size={16} color={colors.textMuted} />
-              <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginLeft: spacing.sm }}>
-                {new Date(committee.examDate).toLocaleDateString(t.dashboard.locale, {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric',
-                })}
-              </AppText>
-            </View>
-            <AppText
-              variant="body"
-              color={committee.status === 'active' ? colors.textPrimary : colors.textSecondary}
-              style={{ fontWeight: '600', marginTop: spacing.xs }}
-            >
-              {t.dashboard.examTiming(committee.daysToExam, committee.status === 'recently_completed')}
-            </AppText>
+              <Heading
+                size="md"
+                numberOfLines={2}
+                style={{ color: colors.textPrimary, marginTop: 2 }}
+              >
+                {committee.name}
+              </Heading>
+
+              <HStack space="sm" style={styles.metaRow}>
+                <Feather name="calendar" size={14} color={colors.textMuted} />
+                <GSText size="xs" style={{ color: colors.textSecondary }}>
+                  {new Date(committee.examDate).toLocaleDateString(t.dashboard.locale, {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </GSText>
+                <GSText size="xs" style={{ color: colors.textMuted }}>
+                  ·
+                </GSText>
+                <GSText
+                  size="xs"
+                  style={{
+                    color: committee.status === 'active' ? colors.primary : colors.textSecondary,
+                    fontWeight: '600',
+                  }}
+                >
+                  {t.dashboard.examTiming(
+                    committee.daysToExam,
+                    committee.status === 'recently_completed'
+                  )}
+                </GSText>
+              </HStack>
+            </VStack>
           </Card>
         </Pressable>
       )}
-    </View>
+    </VStack>
   );
 }
 
 const styles = StyleSheet.create({
-  committeeCard: { borderLeftWidth: 4 },
-  titleRow: { alignItems: 'center', flexDirection: 'row' },
-  titleText: { flex: 1, marginRight: 12 },
-  metaRow: { alignItems: 'center', flexDirection: 'row' },
-  empty: { alignItems: 'center' },
-  emptyText: { marginTop: 6, maxWidth: 420, textAlign: 'center' },
-  messageRow: { alignItems: 'center', flexDirection: 'row' },
-  messageText: { flex: 1, marginLeft: 10 },
+  container: {
+    width: '100%',
+  },
+  sectionLabel: {
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  committeeCard: {
+    width: '100%',
+    borderWidth: 1,
+  },
+  topRow: {
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerInfo: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  metaRow: {
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  empty: {
+    alignItems: 'center',
+    borderWidth: 1,
+  },
+  emptyText: {
+    maxWidth: 400,
+    textAlign: 'center',
+  },
+  messageRow: {
+    alignItems: 'center',
+  },
 });

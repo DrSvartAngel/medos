@@ -39,7 +39,7 @@ export function Card({
   const cardStyle: ViewStyle = {
     backgroundColor: bgMap[resolvedVariant],
     borderColor: colors.cardBorder,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: padded ? spacing.md : 0,
     ...(elevated ? shadows.subtle : shadows.none),
   };
