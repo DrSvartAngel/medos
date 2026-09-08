@@ -17,11 +17,11 @@ interface TabConfig {
 }
 
 const VISIBLE_TABS: TabConfig[] = [
-  { name: 'index',       titleKey: 'home',       icon: 'home' },
-  { name: 'committees',  titleKey: 'curriculum', icon: 'book-open' },
+  { name: 'committees',  titleKey: 'committees', icon: 'book-open' },
   { name: 'focus',       titleKey: 'focus',      icon: 'clock' },
+  { name: 'calendar',    titleKey: 'calendar',   icon: 'calendar' },
   { name: 'memory',      titleKey: 'memory',     icon: 'layers' },
-  { name: 'profile',     titleKey: 'profile',    icon: 'user' },
+  { name: 'ai',          titleKey: 'ai',         icon: 'message-circle' },
 ];
 
 export default function TabLayout() {
@@ -97,10 +97,17 @@ export default function TabLayout() {
         />
       ))}
       <Tabs.Screen
-        name="calendar"
+        name="index"
         options={{
           href: null,
-          title: t.tabs.calendar,
+          title: t.tabs.home,
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          href: null,
+          title: t.tabs.profile,
         }}
       />
     </Tabs>

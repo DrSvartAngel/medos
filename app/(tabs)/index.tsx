@@ -7,9 +7,11 @@ import { CommitteeOverviewCard } from '@/components/dashboard/CommitteeOverviewC
 import { QuickStartCard } from '@/components/dashboard/QuickStartCard';
 import { TodayAgenda } from '@/components/dashboard/TodayAgenda';
 import { TodayMetrics } from '@/components/dashboard/TodayMetrics';
+import { WeeklyFocusChart } from '@/components/dashboard/WeeklyFocusChart';
 import { MomentumCard } from '@/components/dashboard/MomentumCard';
 import { WeakTopicsList } from '@/components/analytics/WeakTopicsList';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
+import { TabTopHeader } from '@/components/layout/TabTopHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useDashboardRefresh } from '@/hooks/useDashboardRefresh';
@@ -203,11 +205,17 @@ export default function DashboardScreen() {
     />
   );
 
-  const aiContextual = snapshot.committee ? (
+  const aiContextual = (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={t.studyPlan.subtitle(snapshot.committee.name)}
-      onPress={() => router.push(`/committees/${snapshot.committee!.id}/study-plan` as Href)}
+      accessibilityLabel={t.dashboard.aiAssistant}
+      onPress={() => {
+        if (snapshot.committee) {
+          router.push(`/committees/${snapshot.committee.id}/study-plan` as Href);
+        } else {
+          router.push('/(tabs)/ai' as Href);
+        }
+      }}
       style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
     >
       <Card style={styles.aiCard}>
@@ -231,22 +239,42 @@ export default function DashboardScreen() {
                 fontWeight: '600',
               }}
             >
-              {t.studyPlan.studyPlanButton}
+              {snapshot.committee ? t.studyPlan.studyPlanButton : t.dashboard.aiAssistant}
             </GSText>
             <GSText size="xs" style={{ color: colors.textSecondary }}>
-              {snapshot.committee.name}
+              {snapshot.committee ? snapshot.committee.name : t.dashboard.aiAssistantDesc}
             </GSText>
           </VStack>
           <Feather name="chevron-right" size={16} color={colors.textMuted} />
         </HStack>
       </Card>
     </Pressable>
-  ) : null;
+  );
 
   return (
     <ScreenWrapper>
-      {/* Top Context with Gluestack Typography & Hierarchy */}
+      {/* Global Top Header Navigation: Dashboard (left) & Profile (right) */}
+      <TabTopHeader />
+
+      {/* Under Header Row: Greeting, Committee/countdown, Date */}
       <VStack space="xs" style={styles.header}>
+        <Heading
+          size={isTablet ? '2xl' : 'xl'}
+          style={[styles.greetingHeading, { color: colors.textPrimary }]}
+        >
+          {t.dashboard.greeting(getDashboardGreeting())}
+        </Heading>
+
+        {snapshot.committee ? (
+          <GSText size="xs" style={{ color: colors.primary, fontWeight: '600' }}>
+            {snapshot.committee.name} · {t.dashboard.examTiming(snapshot.committee.daysToExam, snapshot.committee.status === 'recently_completed')}
+          </GSText>
+        ) : (
+          <GSText size="xs" style={{ color: colors.textSecondary }}>
+            {headerStatus}
+          </GSText>
+        )}
+
         <GSText
           size="xs"
           style={[
@@ -258,19 +286,8 @@ export default function DashboardScreen() {
         >
           {new Date(getLocalDayRange(snapshot.date).startMs).toLocaleDateString(
             t.dashboard.locale,
-            { weekday: 'long', month: 'long', day: 'numeric' }
-          ).toUpperCase()}
-        </GSText>
-
-        <Heading
-          size={isTablet ? '2xl' : 'xl'}
-          style={[styles.greetingHeading, { color: colors.textPrimary }]}
-        >
-          {t.dashboard.greeting(getDashboardGreeting())}
-        </Heading>
-
-        <GSText size="sm" style={{ color: colors.textSecondary }}>
-          {headerStatus}
+            { weekday: 'long', month: 'short', day: 'numeric' }
+          )}
         </GSText>
       </VStack>
 
@@ -307,35 +324,30 @@ export default function DashboardScreen() {
       {isLargeTablet ? (
         <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.lg }]}>
           <View style={[styles.column, { gap: spacing.lg }]}>
-            {committee}
             {quickStart}
-            {needsAttention}
-            {aiContextual}
+            <WeeklyFocusChart />
+            {committee}
           </View>
           <View style={[styles.column, { gap: spacing.lg }]}>
             {metrics}
+            {needsAttention}
             <MomentumCard />
             {agenda}
+            {aiContextual}
           </View>
         </View>
       ) : (
         <View style={[styles.stacked, { gap: spacing.lg, marginTop: spacing.lg }]}>
-          {committee}
           {quickStart}
+          <WeeklyFocusChart />
           {metrics}
+          {committee}
           {needsAttention}
           <MomentumCard />
           {agenda}
           {aiContextual}
         </View>
       )}
-
-      {/* TODO: Temporary diagnostic marker for physical acceptance — remove after verification */}
-      <View style={styles.diagnosticMarker}>
-        <GSText size="xs" style={[styles.diagnosticText, { color: colors.textMuted }]}>
-          V2 GLUESTACK ACTIVE — 56db301
-        </GSText>
-      </View>
     </ScreenWrapper>
   );
 }
@@ -347,11 +359,12 @@ const styles = StyleSheet.create({
   },
   header: {
     paddingBottom: 4,
-    paddingTop: 8,
+    paddingTop: 4,
   },
   dateLabel: {
-    fontWeight: '700',
-    letterSpacing: 0.8,
+    fontWeight: '600',
+    letterSpacing: 0.3,
+    marginTop: 2,
   },
   greetingHeading: {
     fontWeight: '700',
@@ -376,7 +389,6 @@ const styles = StyleSheet.create({
     minWidth: 0,
   },
   aiCard: {
-    borderWidth: 1,
     padding: 12,
   },
   aiRow: {
@@ -392,15 +404,5 @@ const styles = StyleSheet.create({
   },
   aiText: {
     flex: 1,
-  },
-  diagnosticMarker: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 16,
-    marginTop: 8,
-  },
-  diagnosticText: {
-    fontSize: 11,
-    letterSpacing: 0.5,
   },
 });

@@ -49,12 +49,21 @@ export function TodayAgenda({
             {t.dashboard.plannedCount(total)}
           </GSText>
         </VStack>
-        <Button
-          label={t.dashboard.viewCalendar}
-          variant="ghost"
-          size="sm"
-          onPress={onOpenCalendar}
-        />
+        {onOpenCalendar && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={t.dashboard.viewCalendar}
+            onPress={onOpenCalendar}
+            style={({ pressed }) => [{ opacity: pressed ? 0.7 : 1, padding: 4 }]}
+          >
+            <HStack space="xs" style={{ alignItems: 'center' }}>
+              <GSText size="xs" style={{ color: colors.textMuted }}>
+                {t.tabs.calendar}
+              </GSText>
+              <Feather name="chevron-right" size={14} color={colors.textMuted} />
+            </HStack>
+          </Pressable>
+        )}
       </HStack>
 
       {error !== undefined && (

@@ -94,7 +94,7 @@ export function QuickStartCard({
               },
             ]}
           >
-            {t.dashboard.quickStart.toUpperCase()}
+            {t.dashboard.nextBestStep.toUpperCase()}
           </GSText>
         </HStack>
 

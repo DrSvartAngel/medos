@@ -7,9 +7,9 @@ import { CalendarMonthGrid } from '@/components/calendar/CalendarMonthGrid';
 import { CalendarMonthHeader } from '@/components/calendar/CalendarMonthHeader';
 import { DayAgenda } from '@/components/calendar/DayAgenda';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
+import { TabTopHeader } from '@/components/layout/TabTopHeader';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
-import { IconButton } from '@/components/ui/IconButton';
 import { Card } from '@/components/ui/Card';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTheme } from '@/hooks/useTheme';
@@ -106,28 +106,12 @@ export default function CalendarScreen() {
 
   return (
     <ScreenWrapper>
+      <TabTopHeader />
       <View style={styles.header}>
-        <View style={styles.headerTitleRow}>
-          <IconButton
-            icon="arrow-left"
-            variant="ghost"
-            size="sm"
-            onPress={() => {
-              if (router.canGoBack()) {
-                router.back();
-              } else {
-                router.replace('/(tabs)' as Href);
-              }
-            }}
-            accessibilityLabel={t.common.back}
-          />
-          <View style={{ flex: 1, marginLeft: spacing.xs }}>
-            <AppText variant={isTablet ? 'h1' : 'h2'}>{t.calendar.title}</AppText>
-            <AppText variant="body" color={colors.textSecondary} style={{ marginTop: 2 }}>
-              {t.calendar.subtitle}
-            </AppText>
-          </View>
-        </View>
+        <AppText variant={isTablet ? 'h1' : 'h2'}>{t.calendar.title}</AppText>
+        <AppText variant="body" color={colors.textSecondary} style={{ marginTop: 2 }}>
+          {t.calendar.subtitle}
+        </AppText>
       </View>
 
       {error !== null && (

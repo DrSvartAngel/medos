@@ -9,6 +9,7 @@ import { router } from 'expo-router';
 import type { Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
+import { TabTopHeader } from '@/components/layout/TabTopHeader';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { CommitteeCard } from '@/components/committees/CommitteeCard';
@@ -51,6 +52,7 @@ export default function CommitteesScreen() {
 
   return (
     <ScreenWrapper>
+      <TabTopHeader />
       {/* ── Header ─────────────────────────────────────────── */}
       <View style={styles.header}>
         <View style={styles.headerTop}>

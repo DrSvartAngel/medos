@@ -7,6 +7,7 @@ import { DeckCard } from '@/components/memory/DeckCard';
 import { DeckEmptyState } from '@/components/memory/DeckEmptyState';
 import { RecentReviewList } from '@/components/memory/RecentReviewList';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
+import { TabTopHeader } from '@/components/layout/TabTopHeader';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
@@ -100,6 +101,7 @@ export default function MemoryScreen() {
 
   return (
     <ScreenWrapper>
+      <TabTopHeader />
       {/* 1. Memory Title */}
       <View style={styles.headerRow}>
         <View style={styles.headerText}>

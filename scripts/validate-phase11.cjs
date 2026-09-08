@@ -206,8 +206,8 @@ console.log('\n--- Checking Global Shell & Navigation ---');
 assert.ok(exists('app/(tabs)/_layout.tsx'), 'app/(tabs)/_layout.tsx must exist');
 const tabLayoutSrc = read('app/(tabs)/_layout.tsx');
 
-// Check 5 visible tabs
-const visibleTabs = ['index', 'committees', 'focus', 'memory', 'profile'];
+// Check 5 visible tabs for Phase 11 V2.2 Locked Navigation IA
+const visibleTabs = ['committees', 'focus', 'calendar', 'memory', 'ai'];
 for (const tab of visibleTabs) {
   assert.ok(
     tabLayoutSrc.includes(`name: '${tab}'`),
@@ -215,10 +215,14 @@ for (const tab of visibleTabs) {
   );
 }
 
-// Check calendar is hidden via href: null
+// Check index and profile are hidden via href: null
 assert.ok(
-  tabLayoutSrc.includes("name=\"calendar\"") && tabLayoutSrc.includes("href: null"),
-  'Calendar must be hidden from tab bar via href: null'
+  tabLayoutSrc.includes("name=\"index\"") && tabLayoutSrc.includes("href: null"),
+  'Dashboard/Home must be hidden from tab bar via href: null'
+);
+assert.ok(
+  tabLayoutSrc.includes("name=\"profile\"") && tabLayoutSrc.includes("href: null"),
+  'Profile must be hidden from tab bar via href: null'
 );
 
 // Check calendar screen exists and is reachable

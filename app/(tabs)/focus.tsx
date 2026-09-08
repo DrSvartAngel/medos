@@ -18,6 +18,7 @@ import { SessionControls } from '@/components/focus/SessionControls';
 import { SessionHistoryList } from '@/components/focus/SessionHistoryList';
 import { TimerDisplay } from '@/components/focus/TimerDisplay';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
+import { TabTopHeader } from '@/components/layout/TabTopHeader';
 import { Button } from '@/components/ui/Button';
 import { AppText } from '@/components/ui/Typography';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -215,6 +216,7 @@ export default function FocusScreen() {
   if (isActive) {
     return (
       <ScreenWrapper contentStyle={styles.activeScreen}>
+        <TabTopHeader />
         <View
           style={[
             styles.activeShell,
@@ -320,6 +322,7 @@ export default function FocusScreen() {
 
   return (
     <ScreenWrapper>
+      <TabTopHeader />
       <View style={styles.header}>
         <AppText variant={isTablet ? 'h1' : 'h2'}>{t.focus.title}</AppText>
         <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>

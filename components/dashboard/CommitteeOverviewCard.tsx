@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useTranslation } from '@/i18n';
 import { useTheme } from '@/hooks/useTheme';
+import { analyticsRepo } from '@/db/repositories/analyticsRepo';
 import type { DashboardCommittee, DashboardCommitteeStatus } from '@/utils/dashboardRules';
 
 interface CommitteeOverviewCardProps {
@@ -34,6 +35,15 @@ export function CommitteeOverviewCard({
   const { colors, spacing, radius } = useTheme();
   const t = useTranslation();
 
+  const analytics = useMemo(() => {
+    if (!committee) return null;
+    try {
+      return analyticsRepo.getCommitteeAnalytics(committee.id);
+    } catch {
+      return null;
+    }
+  }, [committee]);
+
   return (
     <VStack space="xs" style={styles.container}>
       <GSText
@@ -45,7 +55,7 @@ export function CommitteeOverviewCard({
           },
         ]}
       >
-        {t.dashboard.committee.toUpperCase()}
+        {t.dashboard.committeeProgress.toUpperCase()}
       </GSText>
 
       {error !== undefined ? (
@@ -108,6 +118,9 @@ export function CommitteeOverviewCard({
                     variant={STATUS[committee.status].variant}
                     dot
                   />
+                  <GSText size="xs" style={{ color: colors.textMuted }}>
+                    {t.dashboard.examTiming(committee.daysToExam, committee.status === 'recently_completed')}
+                  </GSText>
                 </HStack>
                 <Feather name="chevron-right" size={18} color={colors.textMuted} />
               </HStack>
@@ -120,31 +133,31 @@ export function CommitteeOverviewCard({
                 {committee.name}
               </Heading>
 
-              <HStack space="sm" style={styles.metaRow}>
-                <Feather name="calendar" size={14} color={colors.textMuted} />
-                <GSText size="xs" style={{ color: colors.textSecondary }}>
-                  {new Date(committee.examDate).toLocaleDateString(t.dashboard.locale, {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </GSText>
-                <GSText size="xs" style={{ color: colors.textMuted }}>
-                  ·
-                </GSText>
-                <GSText
-                  size="xs"
-                  style={{
-                    color: committee.status === 'active' ? colors.primary : colors.textSecondary,
-                    fontWeight: '600',
-                  }}
-                >
-                  {t.dashboard.examTiming(
-                    committee.daysToExam,
-                    committee.status === 'recently_completed'
-                  )}
-                </GSText>
-              </HStack>
+              {/* Factual Progress Bar */}
+              {analytics && analytics.totalTopics > 0 && (
+                <VStack space="xs" style={{ marginTop: 6 }}>
+                  <HStack style={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                    <GSText size="xs" style={{ color: colors.textSecondary }}>
+                      {t.dashboard.topicsComplete(analytics.practicedTopics, analytics.totalTopics)}
+                    </GSText>
+                    <GSText size="xs" style={{ color: colors.primary, fontWeight: '700' }}>
+                      {analytics.coveragePercent !== null ? `${analytics.coveragePercent}%` : '0%'}
+                    </GSText>
+                  </HStack>
+                  <View style={[styles.progressTrack, { backgroundColor: colors.surfaceElevated, borderRadius: radius.xs }]}>
+                    <View
+                      style={[
+                        styles.progressFill,
+                        {
+                          width: `${analytics.coveragePercent ?? 0}%`,
+                          backgroundColor: colors.primary,
+                          borderRadius: radius.xs,
+                        },
+                      ]}
+                    />
+                  </View>
+                </VStack>
+              )}
             </VStack>
           </Card>
         </Pressable>
@@ -163,7 +176,6 @@ const styles = StyleSheet.create({
   },
   committeeCard: {
     width: '100%',
-    borderWidth: 1,
   },
   topRow: {
     alignItems: 'center',
@@ -171,21 +183,24 @@ const styles = StyleSheet.create({
   },
   headerInfo: {
     alignItems: 'center',
-    flex: 1,
-  },
-  metaRow: {
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  empty: {
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  emptyText: {
-    maxWidth: 400,
-    textAlign: 'center',
   },
   messageRow: {
     alignItems: 'center',
+    padding: 12,
+  },
+  empty: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    textAlign: 'center',
+  },
+  progressTrack: {
+    height: 6,
+    overflow: 'hidden',
+    width: '100%',
+  },
+  progressFill: {
+    height: '100%',
   },
 });
