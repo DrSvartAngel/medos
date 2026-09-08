@@ -45,16 +45,14 @@ let apiKeyChecker: (() => Promise<boolean>) | null = null;
 
 function resolveDependencies() {
   if (!geminiFactory) {
-    const geminiModName = ['./gemini', 'Provider'].join('');
-    const geminiModFallback = ['../../services/ai/gemini', 'Provider'].join('');
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const mod = require(geminiModName);
+      const mod = require('./geminiProvider');
       geminiFactory = mod.createGeminiProvider;
     } catch {
       try {
         // eslint-disable-next-line @typescript-eslint/no-require-imports
-        const mod = require(geminiModFallback);
+        const mod = require('../../services/ai/geminiProvider');
         geminiFactory = mod.createGeminiProvider;
       } catch {
         // Safe fallback

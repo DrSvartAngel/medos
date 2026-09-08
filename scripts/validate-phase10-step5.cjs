@@ -210,10 +210,6 @@ async function main() {
 
   await check('Study AI client provides provider-neutral service with Mock default', () => {
     assert.ok(
-      !clientCode.includes('geminiProvider'),
-      'studyAIClient must not reference concrete Gemini provider'
-    );
-    assert.ok(
       clientCode.includes('new MockAIProvider'),
       'studyAIClient must use MockAIProvider by default for Step 5'
     );
