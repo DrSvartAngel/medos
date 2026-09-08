@@ -72,6 +72,7 @@ export default function ProfileScreen() {
   const lowStimulationMode = useAppStore((state) => state.lowStimulationMode);
   const gentleNudgesEnabled = useAppStore((state) => state.gentleNudgesEnabled);
   const language = useAppStore((state) => state.language);
+  const colorScheme = useAppStore((state) => state.colorScheme);
   const isPreferencesHydrated = useAppStore((state) => state.isPreferencesHydrated);
   const preferencesError = useAppStore((state) => state.preferencesError);
   const setDefaultFocusSec = useAppStore((state) => state.setDefaultFocusSec);
@@ -83,6 +84,7 @@ export default function ProfileScreen() {
     (state) => state.setGentleNudgesEnabled
   );
   const setLanguage = useAppStore((state) => state.setLanguage);
+  const setColorScheme = useAppStore((state) => state.setColorScheme);
 
   if (!isPreferencesHydrated) {
     return (
@@ -249,6 +251,41 @@ export default function ProfileScreen() {
             selected={language === 'en'}
             accessibilityLabel={t.profile.selectEnglish}
             onPress={() => setLanguage('en')}
+          />
+        </View>
+      </Card>
+
+      {/* Theme selector */}
+      <Card style={{ marginTop: spacing.lg }}>
+        <View style={styles.sectionHeading}>
+          <View style={[styles.iconWrap, { backgroundColor: colors.primaryMuted }]}>
+            <Feather name="moon" size={18} color={colors.primary} />
+          </View>
+          <View style={styles.headingText}>
+            <AppText variant="h3">{t.profile.theme}</AppText>
+            <AppText variant="bodySmall" color={colors.textMuted}>
+              {t.profile.themeDesc}
+            </AppText>
+          </View>
+        </View>
+        <View accessibilityRole="radiogroup" style={[styles.choiceGrid, { gap: spacing.sm }]}>
+          <PreferenceChoice
+            label={t.profile.themeLight}
+            selected={colorScheme === 'light'}
+            accessibilityLabel={t.profile.selectLight}
+            onPress={() => setColorScheme('light')}
+          />
+          <PreferenceChoice
+            label={t.profile.themeDark}
+            selected={colorScheme === 'dark'}
+            accessibilityLabel={t.profile.selectDark}
+            onPress={() => setColorScheme('dark')}
+          />
+          <PreferenceChoice
+            label={t.profile.themeSystem}
+            selected={colorScheme === 'system'}
+            accessibilityLabel={t.profile.selectSystem}
+            onPress={() => setColorScheme('system')}
           />
         </View>
       </Card>

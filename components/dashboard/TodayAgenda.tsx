@@ -71,9 +71,6 @@ export function TodayAgenda({
           style={[
             styles.empty,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.cardBorder,
-              borderRadius: radius.lg,
               paddingVertical: spacing.lg,
             },
           ]}
@@ -116,11 +113,10 @@ export function TodayAgenda({
                 accessibilityRole="button"
                 accessibilityLabel={t.dashboard.openItem(label, title)}
                 onPress={() => onOpenItem(item)}
+                className="bg-card border border-border"
                 style={({ pressed }) => [
                   styles.agendaRow,
                   {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.cardBorder,
                     borderLeftColor: accent,
                     borderLeftWidth: 3,
                     borderRadius: radius.md,

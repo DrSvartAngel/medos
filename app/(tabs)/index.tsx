@@ -210,16 +210,7 @@ export default function DashboardScreen() {
       onPress={() => router.push(`/committees/${snapshot.committee!.id}/study-plan` as Href)}
       style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
     >
-      <Card
-        style={[
-          styles.aiCard,
-          {
-            borderColor: colors.cardBorder,
-            backgroundColor: colors.surface,
-            borderRadius: radius.md,
-          },
-        ]}
-      >
+      <Card style={styles.aiCard}>
         <HStack style={styles.aiRow}>
           <Box
             style={[
@@ -338,6 +329,13 @@ export default function DashboardScreen() {
           {aiContextual}
         </View>
       )}
+
+      {/* TODO: Temporary diagnostic marker for physical acceptance — remove after verification */}
+      <View style={styles.diagnosticMarker}>
+        <GSText size="xs" style={[styles.diagnosticText, { color: colors.textMuted }]}>
+          V2 GLUESTACK ACTIVE — 56db301
+        </GSText>
+      </View>
     </ScreenWrapper>
   );
 }
@@ -394,5 +392,15 @@ const styles = StyleSheet.create({
   },
   aiText: {
     flex: 1,
+  },
+  diagnosticMarker: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 16,
+    marginTop: 8,
+  },
+  diagnosticText: {
+    fontSize: 11,
+    letterSpacing: 0.5,
   },
 });

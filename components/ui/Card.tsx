@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle, StyleProp, Pressable } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
+import { ViewStyle, StyleProp, Pressable } from 'react-native';
+import { Card as GSCard } from './card/index';
 
 export type CardVariant = 'default' | 'elevated' | 'highlight' | 'outlined';
 
 export interface CardProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
   elevated?: boolean;
   padded?: boolean;
@@ -13,6 +13,7 @@ export interface CardProps {
   onPress?: () => void;
   accessibilityLabel?: string;
   accessibilityRole?: 'button' | 'none';
+  className?: string;
 }
 
 export function Card({
@@ -24,25 +25,20 @@ export function Card({
   onPress,
   accessibilityLabel,
   accessibilityRole,
+  className,
 }: CardProps) {
-  const { colors, spacing, radius, shadows } = useTheme();
-
   const resolvedVariant: CardVariant = variant ?? (elevated ? 'elevated' : 'default');
 
-  const bgMap: Record<CardVariant, string> = {
-    default: colors.surface,
-    elevated: colors.surfaceElevated,
-    highlight: colors.surfaceHighlight,
-    outlined: 'transparent',
-  };
+  const variantClass =
+    resolvedVariant === 'outlined'
+      ? 'bg-transparent border border-border'
+      : resolvedVariant === 'highlight'
+      ? 'bg-secondary border border-border'
+      : resolvedVariant === 'elevated'
+      ? 'bg-card border border-border shadow-md'
+      : 'bg-card border border-border shadow-sm';
 
-  const cardStyle: ViewStyle = {
-    backgroundColor: bgMap[resolvedVariant],
-    borderColor: colors.cardBorder,
-    borderRadius: radius.lg,
-    padding: padded ? spacing.md : 0,
-    ...(elevated ? shadows.subtle : shadows.none),
-  };
+  const paddingClass = padded ? 'p-4' : 'p-0';
 
   if (onPress) {
     return (
@@ -51,27 +47,25 @@ export function Card({
         accessibilityRole={accessibilityRole ?? 'button'}
         accessibilityLabel={accessibilityLabel}
         style={({ pressed }) => [
-          styles.card,
-          cardStyle,
           { opacity: pressed ? 0.85 : 1 },
           style,
         ]}
       >
-        {children}
+        <GSCard
+          className={`rounded-xl overflow-hidden ${variantClass} ${paddingClass} ${className ?? ''}`}
+        >
+          {children}
+        </GSCard>
       </Pressable>
     );
   }
 
   return (
-    <View style={[styles.card, cardStyle, style]}>
+    <GSCard
+      className={`rounded-xl overflow-hidden ${variantClass} ${paddingClass} ${className ?? ''}`}
+      style={style}
+    >
       {children}
-    </View>
+    </GSCard>
   );
 }
-
-const styles = StyleSheet.create({
-  card: {
-    borderWidth: 1,
-    overflow: 'hidden',
-  },
-});

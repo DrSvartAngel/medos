@@ -47,9 +47,6 @@ export function MomentumCard() {
       style={[
         styles.card,
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.cardBorder,
-          borderRadius: radius.lg,
           padding: spacing.md,
         },
       ]}

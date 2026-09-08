@@ -102,9 +102,6 @@ export function TodayMetrics({
             style={[
               styles.metricCard,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.cardBorder,
-                borderRadius: radius.lg,
                 padding: spacing.md,
               },
             ]}
@@ -178,9 +175,6 @@ export function TodayMetrics({
             style={[
               styles.metricCard,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.cardBorder,
-                borderRadius: radius.lg,
                 padding: spacing.md,
               },
             ]}
@@ -255,9 +249,6 @@ export function TodayMetrics({
               style={[
                 styles.metricCard,
                 {
-                  backgroundColor: colors.surface,
-                  borderColor: colors.cardBorder,
-                  borderRadius: radius.lg,
                   padding: spacing.md,
                 },
               ]}

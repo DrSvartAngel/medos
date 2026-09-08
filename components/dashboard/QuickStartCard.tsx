@@ -65,11 +65,8 @@ export function QuickStartCard({
       style={[
         styles.heroSurface,
         {
-          backgroundColor: colors.surface,
-          borderColor: colors.cardBorder,
           borderLeftColor: accent,
           borderLeftWidth: 4,
-          borderRadius: radius.lg,
           padding: isTablet ? spacing.xl : spacing.lg,
         },
       ]}

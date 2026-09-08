@@ -94,9 +94,6 @@ export function WeakTopicsList({ topics, onPressTopic }: WeakTopicsListProps) {
                 style={[
                   styles.itemCard,
                   {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.cardBorder,
-                    borderRadius: radius.md,
                     padding: spacing.md,
                   },
                 ]}

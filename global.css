@@ -51,9 +51,9 @@
   :where(.dark, .dark *) {
     --background: 11 17 32;
     --foreground: 248 250 252;
-    --card: 19 28 49;
+    --card: 17 24 39;
     --card-foreground: 248 250 252;
-    --popover: 19 28 49;
+    --popover: 17 24 39;
     --popover-foreground: 248 250 252;
     --primary: 20 184 166;
     --primary-foreground: 11 17 32;
@@ -74,9 +74,9 @@
     :root:not(:where(.light, .light *, .dark, .dark *)) {
       --background: 11 17 32;
       --foreground: 248 250 252;
-      --card: 19 28 49;
+      --card: 17 24 39;
       --card-foreground: 248 250 252;
-      --popover: 19 28 49;
+      --popover: 17 24 39;
       --popover-foreground: 248 250 252;
       --primary: 20 184 166;
       --primary-foreground: 11 17 32;

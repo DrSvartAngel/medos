@@ -12,7 +12,7 @@ import {
   type FocusDurationSec,
 } from '@/utils/preferences';
 
-type ColorScheme = 'dark' | 'light';
+export type ColorScheme = 'light' | 'dark' | 'system';
 
 // Zustand persist writes after every store mutation, including mutations whose
 // fields are removed by partialize. Keep writes paused until AsyncStorage has
@@ -55,7 +55,7 @@ interface AppState {
 export const useAppStore = create<AppState>()(
   persist(
     (set) => ({
-      colorScheme: 'dark',
+      colorScheme: 'light',
       isOnboarded: false,
       defaultFocusSec: DEFAULT_FOCUS_SEC,
       dailyFocusGoalMin: null,
@@ -95,9 +95,16 @@ export const useAppStore = create<AppState>()(
       merge: (persistedState, currentState) => {
         const persisted = (persistedState ?? {}) as Partial<AppState>;
         const language = normalizeLanguage(persisted.language);
+        const colorScheme: ColorScheme =
+          persisted.colorScheme === 'dark' ||
+          persisted.colorScheme === 'light' ||
+          persisted.colorScheme === 'system'
+            ? persisted.colorScheme
+            : 'light';
         return {
           ...currentState,
           ...persisted,
+          colorScheme,
           defaultFocusSec: normalizeFocusDurationSec(persisted.defaultFocusSec),
           dailyFocusGoalMin: normalizeDailyFocusGoalMin(persisted.dailyFocusGoalMin),
           lowStimulationMode: normalizeBooleanPreference(

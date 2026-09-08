@@ -49,7 +49,7 @@ export function CommitteeOverviewCard({
       </GSText>
 
       {error !== undefined ? (
-        <Card style={{ backgroundColor: colors.surface, borderColor: colors.cardBorder }}>
+        <Card>
           <HStack space="sm" style={styles.messageRow}>
             <Feather name="alert-circle" size={18} color={colors.textMuted} />
             <GSText size="sm" style={{ color: colors.textSecondary, flex: 1 }}>
@@ -62,9 +62,6 @@ export function CommitteeOverviewCard({
           style={[
             styles.empty,
             {
-              backgroundColor: colors.surface,
-              borderColor: colors.cardBorder,
-              borderRadius: radius.lg,
               padding: spacing.lg,
             },
           ]}
@@ -97,11 +94,8 @@ export function CommitteeOverviewCard({
             style={[
               styles.committeeCard,
               {
-                backgroundColor: colors.surface,
-                borderColor: colors.cardBorder,
                 borderLeftColor: committee.color || colors.primary,
                 borderLeftWidth: 4,
-                borderRadius: radius.lg,
                 padding: spacing.md,
               },
             ]}

@@ -1,3 +1,4 @@
+import { useColorScheme as useRNColorScheme } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { DarkColors, LightColors, type ThemeColors } from '@/theme/colors';
 import { Spacing, Radius } from '@/theme/spacing';
@@ -10,7 +11,9 @@ import { Shadows } from '@/theme/shadows';
  */
 export function useTheme() {
   const colorScheme = useAppStore((s) => s.colorScheme);
-  const isDark = colorScheme === 'dark';
+  const systemScheme = useRNColorScheme();
+  const effectiveScheme = colorScheme === 'system' ? (systemScheme ?? 'light') : colorScheme;
+  const isDark = effectiveScheme === 'dark';
   const colors: ThemeColors = isDark ? DarkColors : LightColors;
 
   return {
