@@ -239,12 +239,15 @@ assert.ok(
 const rootLayoutSrc = read('app/_layout.tsx');
 assert.ok(rootLayoutSrc.includes('useTheme'), 'Root layout must use useTheme()');
 
-// Check no external UI library dependencies added
+// Check no conflicting external UI library dependencies added (gluestack + uniwind is the sole design system)
 const pkgSrc = read('package.json');
-const forbiddenDeps = ['@gluestack', '@tamagui', 'react-native-paper', 'native-base', 'nativewind'];
+const forbiddenDeps = ['@tamagui', 'react-native-paper', 'native-base', 'nativewind', 'react-native-css', 'react-native-reusables'];
 for (const dep of forbiddenDeps) {
-  assert.ok(!pkgSrc.includes(dep), `package.json must not include UI library ${dep}`);
+  assert.ok(!pkgSrc.includes(dep), `package.json must not include conflicting UI library ${dep}`);
 }
+assert.ok(pkgSrc.includes('@gluestack-ui/core'), 'package.json must include @gluestack-ui/core');
+assert.ok(pkgSrc.includes('uniwind'), 'package.json must include uniwind');
+
 
 console.log('PASS: Global shell and navigation conform to Phase 11 Step 4 invariants');
 
