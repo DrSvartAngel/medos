@@ -69,24 +69,21 @@ function createPdfServer() {
         totalLength += chunk.length;
         if (totalLength > MAX_PDF_SIZE_BYTES) {
           tooLarge = true;
-          req.destroy();
+          req.resume();
           return;
         }
         chunks.push(chunk);
       });
 
-      req.on('close', () => {
+      req.on('end', async () => {
         if (tooLarge) {
           res.writeHead(413, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({
             status: 'file_too_large',
             errorMessage: 'Payload exceeds maximum 5 MB limit',
           }));
+          return;
         }
-      });
-
-      req.on('end', async () => {
-        if (tooLarge) return;
 
         try {
           const bodyBuffer = Buffer.concat(chunks);
