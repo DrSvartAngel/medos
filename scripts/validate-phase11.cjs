@@ -122,8 +122,11 @@ const requiredPrimitives = [
   'SegmentedControl',
   'Divider',
   'Breadcrumb',
+  'ListRow',
+  'Screen',
   'EmptyState',
   'ErrorState',
+  'LoadingState',
   'Input',
   'FormField',
 ];
@@ -143,7 +146,19 @@ for (const prim of requiredPrimitives) {
     `components/ui/index.ts must export ${prim}`
   );
 }
-console.log('PASS: All required UI primitives exist and are exported');
+
+// Check that components/ui does not use legacy violet hex
+for (const prim of requiredPrimitives) {
+  const file = exists(`components/ui/${prim}.tsx`)
+    ? `components/ui/${prim}.tsx`
+    : `components/ui/${prim}.ts`;
+  const code = read(file);
+  assert.ok(
+    !code.includes('#6C63FF') && !code.includes('#5850EC'),
+    `${file} must not contain legacy violet hex colors`
+  );
+}
+console.log('PASS: All required UI primitives exist, are exported, and use theme tokens without legacy violet');
 
 // 3. Screen Redesigns & Design Token Usage
 console.log('\n--- Checking Screen Implementations ---');
