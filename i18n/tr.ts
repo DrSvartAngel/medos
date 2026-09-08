@@ -300,10 +300,12 @@ const tr: Strings = {
   },
   // ── Sekme etiketleri ─────────────────────────────────────────────────────────
   tabs: {
-    dashboard: 'Genel Bakış',
-    committees: 'Komiteler',
-    focus: 'Odaklanma',
-    memory: 'Bellek',
+    home: 'Ana Sayfa',
+    dashboard: 'Ana Sayfa',
+    curriculum: 'Müfredat',
+    committees: 'Müfredat',
+    focus: 'Odak',
+    memory: 'Hafıza',
     calendar: 'Takvim',
     profile: 'Profil',
   },

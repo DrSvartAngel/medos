@@ -9,6 +9,7 @@ import { DayAgenda } from '@/components/calendar/DayAgenda';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import { IconButton } from '@/components/ui/IconButton';
 import { Card } from '@/components/ui/Card';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTheme } from '@/hooks/useTheme';
@@ -106,10 +107,27 @@ export default function CalendarScreen() {
   return (
     <ScreenWrapper>
       <View style={styles.header}>
-        <AppText variant={isTablet ? 'h1' : 'h2'}>{t.calendar.title}</AppText>
-        <AppText variant="body" color={colors.textSecondary} style={{ marginTop: 4 }}>
-          {t.calendar.subtitle}
-        </AppText>
+        <View style={styles.headerTitleRow}>
+          <IconButton
+            icon="arrow-left"
+            variant="ghost"
+            size="sm"
+            onPress={() => {
+              if (router.canGoBack()) {
+                router.back();
+              } else {
+                router.replace('/(tabs)' as Href);
+              }
+            }}
+            accessibilityLabel={t.common.back}
+          />
+          <View style={{ flex: 1, marginLeft: spacing.xs }}>
+            <AppText variant={isTablet ? 'h1' : 'h2'}>{t.calendar.title}</AppText>
+            <AppText variant="body" color={colors.textSecondary} style={{ marginTop: 2 }}>
+              {t.calendar.subtitle}
+            </AppText>
+          </View>
+        </View>
       </View>
 
       {error !== null && (
@@ -154,6 +172,7 @@ export default function CalendarScreen() {
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center' },
   header: { paddingTop: 8 },
+  headerTitleRow: { alignItems: 'center', flexDirection: 'row' },
   error: { alignItems: 'center', borderRadius: 12, borderWidth: 1, flexDirection: 'row' },
   errorText: { flex: 1, marginLeft: 8 },
   monthPanel: { width: '100%' },

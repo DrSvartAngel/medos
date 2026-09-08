@@ -200,6 +200,54 @@ assert.ok(
 );
 console.log('PASS: Core screens use design tokens, localization, and hierarchy primitives');
 
+// 3.5 Global Shell & Navigation
+console.log('\n--- Checking Global Shell & Navigation ---');
+
+assert.ok(exists('app/(tabs)/_layout.tsx'), 'app/(tabs)/_layout.tsx must exist');
+const tabLayoutSrc = read('app/(tabs)/_layout.tsx');
+
+// Check 5 visible tabs
+const visibleTabs = ['index', 'committees', 'focus', 'memory', 'profile'];
+for (const tab of visibleTabs) {
+  assert.ok(
+    tabLayoutSrc.includes(`name: '${tab}'`),
+    `app/(tabs)/_layout.tsx must configure visible tab: ${tab}`
+  );
+}
+
+// Check calendar is hidden via href: null
+assert.ok(
+  tabLayoutSrc.includes("name=\"calendar\"") && tabLayoutSrc.includes("href: null"),
+  'Calendar must be hidden from tab bar via href: null'
+);
+
+// Check calendar screen exists and is reachable
+assert.ok(exists('app/(tabs)/calendar.tsx'), 'app/(tabs)/calendar.tsx route must exist');
+const calendarSrc = read('app/(tabs)/calendar.tsx');
+assert.ok(calendarSrc.includes('router'), 'Calendar must support navigation');
+
+// Check tab layout uses theme tokens and no legacy violet
+assert.ok(tabLayoutSrc.includes('colors.tabBar'), 'TabLayout must use colors.tabBar');
+assert.ok(tabLayoutSrc.includes('colors.tabActive'), 'TabLayout must use colors.tabActive');
+assert.ok(tabLayoutSrc.includes('colors.tabInactive'), 'TabLayout must use colors.tabInactive');
+assert.ok(
+  !tabLayoutSrc.includes('#6C63FF') && !tabLayoutSrc.includes('#5850EC'),
+  'TabLayout must not contain legacy violet hex colors'
+);
+
+// Check root layout uses useTheme
+const rootLayoutSrc = read('app/_layout.tsx');
+assert.ok(rootLayoutSrc.includes('useTheme'), 'Root layout must use useTheme()');
+
+// Check no external UI library dependencies added
+const pkgSrc = read('package.json');
+const forbiddenDeps = ['@gluestack', '@tamagui', 'react-native-paper', 'native-base', 'nativewind'];
+for (const dep of forbiddenDeps) {
+  assert.ok(!pkgSrc.includes(dep), `package.json must not include UI library ${dep}`);
+}
+
+console.log('PASS: Global shell and navigation conform to Phase 11 Step 4 invariants');
+
 // 4. Architectural Safeguards
 console.log('\n--- Checking Architectural Integrity ---');
 

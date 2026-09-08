@@ -298,8 +298,10 @@ const en = {
   },
   // ── Tab labels ──────────────────────────────────────────────────────────────
   tabs: {
-    dashboard: 'Dashboard',
-    committees: 'Committees',
+    home: 'Home',
+    dashboard: 'Home',
+    curriculum: 'Curriculum',
+    committees: 'Curriculum',
     focus: 'Focus',
     memory: 'Memory',
     calendar: 'Calendar',

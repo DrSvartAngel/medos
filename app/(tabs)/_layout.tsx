@@ -16,12 +16,11 @@ interface TabConfig {
   icon: FeatherIconName;
 }
 
-const TAB_CONFIGS: TabConfig[] = [
-  { name: 'index',       titleKey: 'dashboard',  icon: 'home' },
-  { name: 'committees',  titleKey: 'committees', icon: 'book-open' },
+const VISIBLE_TABS: TabConfig[] = [
+  { name: 'index',       titleKey: 'home',       icon: 'home' },
+  { name: 'committees',  titleKey: 'curriculum', icon: 'book-open' },
   { name: 'focus',       titleKey: 'focus',      icon: 'clock' },
   { name: 'memory',      titleKey: 'memory',     icon: 'layers' },
-  { name: 'calendar',    titleKey: 'calendar',   icon: 'calendar' },
   { name: 'profile',     titleKey: 'profile',    icon: 'user' },
 ];
 
@@ -66,6 +65,8 @@ export default function TabLayout() {
           height: tabBarHeight,
           paddingBottom: tabBarPaddingBottom,
           paddingTop: Spacing.xs,
+          elevation: 0,
+          shadowOpacity: 0,
         },
         tabBarActiveTintColor: colors.tabActive,
         tabBarInactiveTintColor: colors.tabInactive,
@@ -74,20 +75,33 @@ export default function TabLayout() {
           fontWeight: Typography.weight.medium,
           marginTop: 2,
         },
+        tabBarItemStyle: {
+          paddingVertical: 2,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
       }}
     >
-      {TAB_CONFIGS.map((tab) => (
+      {VISIBLE_TABS.map((tab) => (
         <Tabs.Screen
           key={tab.name}
           name={tab.name}
           options={{
             title: t.tabs[tab.titleKey],
+            tabBarAccessibilityLabel: t.tabs[tab.titleKey],
             tabBarIcon: ({ color }) => (
               <Feather name={tab.icon} size={iconSize} color={color} />
             ),
           }}
         />
       ))}
+      <Tabs.Screen
+        name="calendar"
+        options={{
+          href: null,
+          title: t.tabs.calendar,
+        }}
+      />
     </Tabs>
   );
 }
