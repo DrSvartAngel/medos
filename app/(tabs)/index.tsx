@@ -32,7 +32,7 @@ import { useTranslation } from '@/i18n';
 
 export default function DashboardScreen() {
   const { colors, spacing, radius } = useTheme();
-  const { isTablet, isLargeTablet } = useResponsive();
+  const { isTablet, isLargeTablet, isLandscape } = useResponsive();
   const t = useTranslation();
   const isDBReady = useAppStore((state) => state.isDBReady);
   const snapshot = useDashboardStore((state) => state.snapshot);
@@ -321,7 +321,7 @@ export default function DashboardScreen() {
       )}
 
       {/* Responsive Composition */}
-      {isLargeTablet ? (
+      {isLargeTablet || (isTablet && isLandscape) ? (
         <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.lg }]}>
           <View style={[styles.column, { gap: spacing.lg }]}>
             {quickStart}

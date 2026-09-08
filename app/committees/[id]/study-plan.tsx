@@ -568,7 +568,7 @@ export default function CommitteeStudyPlanScreen() {
                         >
                           <AppText
                             variant="caption"
-                            color={isSelected ? colors.surface : colors.textSecondary}
+                            color={isSelected ? colors.textInverse : colors.textSecondary}
                             style={{ fontWeight: isSelected ? '600' : '400' }}
                           >
                             {label}

@@ -20,7 +20,7 @@ import { useTranslation } from '@/i18n';
 
 export default function CalendarScreen() {
   const { colors, spacing } = useTheme();
-  const { isTablet, isLargeTablet } = useResponsive();
+  const { isTablet, isLargeTablet, isLandscape } = useResponsive();
   const t = useTranslation();
   const isDBReady = useAppStore((state) => state.isDBReady);
   const selectedDate = useCalendarStore((state) => state.selectedDate);
@@ -138,7 +138,7 @@ export default function CalendarScreen() {
         <View style={[styles.centered, { paddingVertical: spacing.xl }]}>
           <ActivityIndicator size="small" color={colors.accent} />
         </View>
-      ) : isLargeTablet ? (
+      ) : isLargeTablet || (isTablet && isLandscape) ? (
         <View style={[styles.twoPane, { gap: spacing.lg, marginTop: spacing.lg }]}>
           <View style={styles.calendarColumn}>{monthPanel}</View>
           <View style={styles.agendaColumn}>{agendaPanel}</View>
