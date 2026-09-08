@@ -1,0 +1,15 @@
+{
+  "name": "medos-pdf-extraction-server",
+  "version": "1.0.0",
+  "private": true,
+  "main": "pdfServer.js",
+  "scripts": {
+    "start": "node pdfServer.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "pdf-parse": "1.1.1"
+  }
+}

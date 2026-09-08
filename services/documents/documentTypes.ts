@@ -6,6 +6,7 @@ export const MAX_DOCUMENT_TEXT_LENGTH = 100_000; // 100,000 characters
 
 export type ExtractionStatus =
   | 'success'
+  | 'partial'
   | 'unavailable'
   | 'empty'
   | 'unsupported'

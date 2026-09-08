@@ -48,6 +48,7 @@ export default function ImportDocumentScreen() {
   const [isExtracting, setIsExtracting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [extractionMetadata, setExtractionMetadata] = useState<import('@/models/ingestion').SourceIngestionMetadata | null>(null);
+  const [extractionProvenance, setExtractionProvenance] = useState<import('@/models/ingestion').SourceProvenance | null>(null);
   const [extractionNotice, setExtractionNotice] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -93,6 +94,7 @@ export default function ImportDocumentScreen() {
       setValidationError(null);
       setSaveError(null);
       setExtractionNotice(null);
+      setExtractionProvenance(null);
 
       const result = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'text/plain', 'text/markdown'],
@@ -125,6 +127,12 @@ export default function ImportDocumentScreen() {
       setIsExtracting(true);
       try {
         const extraction = await documentExtractor.extract(docInput);
+        const pdfExtraction = extraction as import('@/services/documents/pdfTypes').PdfExtractionResult;
+
+        if (pdfExtraction.provenance && pdfExtraction.provenance.length > 0) {
+          setExtractionProvenance(pdfExtraction.provenance[0]);
+        }
+
         if (extraction.metadata) {
           setExtractionMetadata(extraction.metadata);
         }
@@ -132,6 +140,9 @@ export default function ImportDocumentScreen() {
         if (extraction.status === 'success') {
           setContent(extraction.text);
           setExtractionNotice(t.documentImport.extractionSuccess);
+        } else if (extraction.status === 'partial') {
+          setContent(extraction.text);
+          setExtractionNotice(t.documentImport.extractionUnavailableDesc);
         } else if (extraction.status === 'unavailable') {
           setContent('');
           setExtractionNotice(t.documentImport.extractionUnavailableDesc);
@@ -204,6 +215,7 @@ export default function ImportDocumentScreen() {
           processingStatus: 'ready',
           lastProcessedAt: Date.now(),
         } : undefined),
+        provenance: extractionProvenance ?? undefined,
       });
       handleBack();
     } catch {
