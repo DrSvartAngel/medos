@@ -7,6 +7,7 @@ import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-ro
 import { committeeRepo } from '@/db/repositories/committeeRepo';
 import { subjectRepo } from '@/db/repositories/subjectRepo';
 import { topicRepo } from '@/db/repositories/topicRepo';
+import { analyticsRepo } from '@/db/repositories/analyticsRepo';
 import type { Subject } from '@/models/curriculum';
 import type { Committee } from '@/store/useCommitteeStore';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
@@ -14,6 +15,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Section } from '@/components/ui/Section';
 import { AppText } from '@/components/ui/Typography';
 import { useTheme } from '@/hooks/useTheme';
@@ -192,6 +194,34 @@ export default function SubjectDetailScreen() {
                   variant="primary"
                   size="md"
                 />
+              </View>
+            )}
+
+            {count !== null && count > 0 && (
+              <View style={{ marginTop: spacing.xs }}>
+                {(() => {
+                  try {
+                    const analytics = analyticsRepo.getSubjectAnalytics(id);
+                    if (analytics && analytics.totalTopics > 0) {
+                      return (
+                        <ProgressBar
+                          value={analytics.practicedTopics}
+                          max={analytics.totalTopics}
+                          label={t.dashboard.topicsComplete(
+                            analytics.practicedTopics,
+                            analytics.totalTopics
+                          )}
+                          showPercentage
+                          height={6}
+                          color={colors.primary}
+                        />
+                      );
+                    }
+                  } catch {
+                    /* safe fallback */
+                  }
+                  return null;
+                })()}
               </View>
             )}
 

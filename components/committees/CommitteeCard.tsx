@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTranslation } from '@/i18n';
 import { TouchableOpacity, View, StyleSheet, ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 import { AppText } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
+import { ProgressBar } from '@/components/ui/ProgressBar';
+import { analyticsRepo } from '@/db/repositories/analyticsRepo';
 import type { Committee, CommitteeStatus } from '@/store/useCommitteeStore';
 import {
   getCommitteeDateStatus,
@@ -20,21 +22,14 @@ interface CommitteeCardProps {
   style?: ViewStyle;
 }
 
-// Badge variant type matches Badge component's BadgeVariant
 type BadgeVariant = 'default' | 'primary' | 'success' | 'warning' | 'error' | 'info';
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
 const STATUS_CONFIG: Record<CommitteeStatus, { variant: BadgeVariant }> = {
-  upcoming:  { variant: 'info',    },
-  active:    { variant: 'success', },
-  completed: { variant: 'default', },
+  upcoming:  { variant: 'info' },
+  active:    { variant: 'success' },
+  completed: { variant: 'default' },
 };
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
 function formatExamDate(ts: number, locale: string): string {
   return new Date(ts).toLocaleDateString(locale, {
     month: 'short',
@@ -42,7 +37,6 @@ function formatExamDate(ts: number, locale: string): string {
     year: 'numeric',
   });
 }
-
 
 function getDaysColor(
   days: number,
@@ -55,9 +49,6 @@ function getDaysColor(
   return colors.error;
 }
 
-// ---------------------------------------------------------------------------
-// Component
-// ---------------------------------------------------------------------------
 export function CommitteeCard({ committee, onPress, style }: CommitteeCardProps) {
   const t = useTranslation();
   const { colors, spacing, radius } = useTheme();
@@ -67,6 +58,14 @@ export function CommitteeCard({ committee, onPress, style }: CommitteeCardProps)
   const daysLabel = currentStatus === 'completed' ? t.sweep.statuses.completed : t.sweep.daysLeft(days);
   const daysColor = getDaysColor(days, currentStatus, colors);
   const badgeConfig = STATUS_CONFIG[currentStatus];
+
+  const analytics = useMemo(() => {
+    try {
+      return analyticsRepo.getCommitteeAnalytics(committee.id);
+    } catch {
+      return null;
+    }
+  }, [committee.id]);
 
   return (
     <TouchableOpacity
@@ -81,7 +80,7 @@ export function CommitteeCard({ committee, onPress, style }: CommitteeCardProps)
           borderColor: colors.border,
           borderRadius: radius.md,
           padding: spacing.md,
-          borderLeftColor: committee.color,
+          borderLeftColor: committee.color || colors.primary,
         },
         style,
       ]}
@@ -94,16 +93,24 @@ export function CommitteeCard({ committee, onPress, style }: CommitteeCardProps)
         <Feather name="chevron-right" size={18} color={colors.textMuted} />
       </View>
 
-      {/* Status badge */}
-      <Badge
-        label={t.sweep.statuses[currentStatus]}
-        variant={badgeConfig.variant}
-        dot
-        style={{ marginTop: spacing.xs }}
-      />
+      {/* Status badge + days */}
+      <View style={[styles.badgeRow, { marginTop: spacing.xs }]}>
+        <Badge
+          label={t.sweep.statuses[currentStatus]}
+          variant={badgeConfig.variant}
+          dot
+        />
+        <AppText
+          variant="bodySmall"
+          color={daysColor}
+          style={[styles.daysText, { marginLeft: spacing.sm }]}
+        >
+          {daysLabel}
+        </AppText>
+      </View>
 
-      {/* Exam date + days remaining */}
-      <View style={[styles.metaRow, { marginTop: spacing.sm }]}>
+      {/* Exam date */}
+      <View style={[styles.metaRow, { marginTop: spacing.xs }]}>
         <Feather name="calendar" size={13} color={colors.textMuted} />
         <AppText
           variant="bodySmall"
@@ -112,25 +119,28 @@ export function CommitteeCard({ committee, onPress, style }: CommitteeCardProps)
         >
           {formatExamDate(committee.examDate, t.dashboard.locale)}
         </AppText>
-        <View style={[styles.dot, { backgroundColor: colors.textMuted }]} />
-        <AppText
-          variant="bodySmall"
-          color={daysColor}
-          style={styles.daysText}
-        >
-          {daysLabel}
-        </AppText>
       </View>
+
+      {/* Factual Progress if topics exist */}
+      {analytics && analytics.totalTopics > 0 && (
+        <View style={{ marginTop: spacing.sm }}>
+          <ProgressBar
+            value={analytics.practicedTopics}
+            max={analytics.totalTopics}
+            label={t.dashboard.topicsComplete(analytics.practicedTopics, analytics.totalTopics)}
+            showPercentage
+            height={5}
+            color={colors.primary}
+          />
+        </View>
+      )}
     </TouchableOpacity>
   );
 }
 
-// ---------------------------------------------------------------------------
-// Styles
-// ---------------------------------------------------------------------------
 const styles = StyleSheet.create({
   card: {
-    minHeight: 44,
+    minHeight: 48,
     borderWidth: 1,
     borderLeftWidth: 4,
     overflow: 'hidden',
@@ -144,17 +154,16 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 8,
   },
-  metaRow: {
+  badgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
   },
-  dot: {
-    width: 3,
-    height: 3,
-    borderRadius: 2,
-    marginHorizontal: 6,
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   daysText: {
     fontWeight: '600',
   },
 });
+

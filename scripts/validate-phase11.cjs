@@ -383,7 +383,29 @@ for (const file of curriculumPresentationFiles) {
   }
 }
 
+// Check V4 Curriculum & Topic Workspace Invariants
+const topicWorkspaceSrc = read('app/topics/[id].tsx');
+assert.ok(topicWorkspaceSrc.includes('startFocus'), 'Topic workspace must expose Focus action');
+assert.ok(topicWorkspaceSrc.includes('studySources.title'), 'Topic workspace must expose Sources');
+assert.ok(topicWorkspaceSrc.includes('memory.title') || topicWorkspaceSrc.includes('TopicReviewEvidence'), 'Topic workspace must expose Memory context');
+assert.ok(topicWorkspaceSrc.includes('qbank.title') || topicWorkspaceSrc.includes('qbankRepo'), 'Topic workspace must expose Q-Bank context');
+assert.ok(topicWorkspaceSrc.includes('studyAi.assistant'), 'Topic workspace must expose AI assistant');
+assert.ok(topicWorkspaceSrc.includes('Breadcrumb'), 'Topic workspace must use Breadcrumb');
+
+const subjectDetailSrc = read('app/subjects/[id].tsx');
+assert.ok(subjectDetailSrc.includes('Breadcrumb'), 'Subject detail must use Breadcrumb');
+assert.ok(subjectDetailSrc.includes('TopicList'), 'Subject detail must include TopicList');
+
+const committeeDetailSrc = read('app/committees/[id].tsx');
+assert.ok(committeeDetailSrc.includes('Breadcrumb'), 'Committee detail must use Breadcrumb');
+assert.ok(committeeDetailSrc.includes('SubjectList'), 'Committee detail must include SubjectList');
+
+const committeesTabSrc = read('app/(tabs)/committees.tsx');
+assert.ok(committeesTabSrc.includes('TabTopHeader'), 'Committees tab must include TabTopHeader');
+assert.ok(committeesTabSrc.includes('ListRow'), 'Committees tab must use ListRow presentation');
+
 console.log('PASS: Curriculum redesign satisfies Phase 11 Step 6 hierarchy and design invariants');
+
 
 // 3.8 Study Workflows Redesign (Phase 11 Step 7)
 console.log('\n--- Checking Study Workflows Redesign ---');

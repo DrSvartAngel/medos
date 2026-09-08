@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { Alert, AppState, BackHandler, TouchableOpacity, View, StyleSheet } from 'react-native';
 import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { committeeRepo } from '@/db/repositories/committeeRepo';
@@ -6,6 +6,8 @@ import { subjectRepo } from '@/db/repositories/subjectRepo';
 import { topicRepo } from '@/db/repositories/topicRepo';
 import { focusRepo } from '@/db/repositories/focusRepo';
 import { studySourceRepo } from '@/db/repositories/studySourceRepo';
+import { memoryRepo } from '@/db/repositories/memoryRepo';
+import { qbankRepo } from '@/db/repositories/qbankRepo';
 import type { StudySource } from '@/models/studySource';
 import { TopicReviewEvidence } from '@/components/memory/TopicReviewEvidence';
 import { useFocusStore } from '@/store/useFocusStore';
@@ -25,6 +27,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
 import { topicFallback, topicRouteId } from '@/utils/topicRoutes';
 import { Feather } from '@expo/vector-icons';
+import { Interaction } from '@/theme/interaction';
 
 type Data =
   | { status: 'ready'; topic: Topic; subject: Subject; committee: Committee }
@@ -42,6 +45,8 @@ export default function TopicDetailScreen() {
   const [startError, setStartError] = useState(false);
   const [sources, setSources] = useState<StudySource[]>([]);
   const [sourcesError, setSourcesError] = useState(false);
+  const [memoryEvidence, setMemoryEvidence] = useState<{ linkedCards: number; dueCards: number } | null>(null);
+  const [qbankEvidence, setQBankEvidence] = useState<{ totalQuestions: number; accuracyPercent: number | null } | null>(null);
   const timerStatus = useFocusStore((state) => state.timerStatus);
 
   function loadEvidence() {
@@ -59,6 +64,21 @@ export default function TopicDetailScreen() {
     } catch {
       setSources([]);
       setSourcesError(true);
+    }
+  }
+
+  function loadTools() {
+    try {
+      const mem = memoryRepo.getTopicLearningEvidence(id);
+      setMemoryEvidence(mem);
+    } catch {
+      setMemoryEvidence(null);
+    }
+    try {
+      const qb = qbankRepo.getTopicEvidence(id);
+      setQBankEvidence(qb);
+    } catch {
+      setQBankEvidence(null);
     }
   }
 
@@ -103,6 +123,7 @@ export default function TopicDetailScreen() {
       if (topic && subject && committee) {
         loadEvidence();
         loadSources();
+        loadTools();
       }
     } catch {
       setData({ status: 'error' });
@@ -186,7 +207,7 @@ export default function TopicDetailScreen() {
 
       {data.status === 'ready' && (
         <View style={{ gap: spacing.lg }}>
-          {/* Breadcrumb Hierarchy Navigation */}
+          {/* ── 1. Breadcrumb Hierarchy Navigation ──────────── */}
           <Breadcrumb
             items={[
               {
@@ -208,10 +229,13 @@ export default function TopicDetailScreen() {
             ]}
           />
 
-          {/* Topic Overview Card */}
-          <Card elevated style={{ padding: spacing.lg, gap: spacing.md }}>
+          {/* ── 2. Topic Overview Header ────────────────────── */}
+          <Card elevated style={{ padding: spacing.lg, gap: spacing.sm, backgroundColor: colors.surface }}>
             <View style={styles.titleHeader}>
               <View style={{ flex: 1, marginRight: spacing.sm }}>
+                <AppText variant="caption" color={colors.textMuted} style={{ marginBottom: 2 }}>
+                  {data.committee.name} · {data.subject.name}
+                </AppText>
                 <AppText variant="h2">{data.topic.name}</AppText>
                 {data.topic.description ? (
                   <AppText
@@ -227,6 +251,7 @@ export default function TopicDetailScreen() {
                 label={t.topics.edit}
                 variant="secondary"
                 size="sm"
+                icon={<Feather name="edit-2" size={14} color={colors.primary} />}
                 onPress={() =>
                   router.push(`/topics/edit/${encodeURIComponent(id)}` as Href)
                 }
@@ -240,19 +265,25 @@ export default function TopicDetailScreen() {
             </Section>}
           </Card>
 
-          {/* Focus Action Card */}
-          <Card style={{ padding: spacing.lg, gap: spacing.sm }}>
-            <SectionHeader
-              title={t.focus.title}
-              badge={
-                studyEvidence === null
-                  ? undefined
-                  : studyEvidence
-                  ? t.topics.studyRecorded
-                  : t.topics.studyUnrecorded
-              }
-              badgeVariant={studyEvidence ? 'success' : 'default'}
-            />
+          {/* ── 3. Primary Action: Focus ────────────────────── */}
+          <Card elevated style={{ padding: spacing.md, gap: spacing.sm, backgroundColor: colors.surface }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Feather name="clock" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+                <AppText variant="label" style={{ fontWeight: '600' }}>
+                  {t.focus.title.toUpperCase()}
+                </AppText>
+              </View>
+
+              {studyEvidence !== null && (
+                <Badge
+                  label={studyEvidence ? t.topics.studyRecorded : t.topics.studyUnrecorded}
+                  variant={studyEvidence ? 'success' : 'default'}
+                  size="sm"
+                  dot
+                />
+              )}
+            </View>
 
             {studyEvidence === null ? (
               <FeedbackState
@@ -273,7 +304,8 @@ export default function TopicDetailScreen() {
                   : t.topics.continueFocus
               }
               onPress={startFocus}
-              size="md"
+              size="lg"
+              icon={<Feather name="play" size={18} color={colors.textInverse} />}
               style={{ marginTop: spacing.xs }}
             />
             {startError && (
@@ -281,21 +313,163 @@ export default function TopicDetailScreen() {
             )}
           </Card>
 
-          {/* Memory Review Evidence */}
-          <TopicReviewEvidence topicId={id} />
-
-          {/* Study Sources & AI Ingestion */}
-          <Card style={{ padding: spacing.lg, gap: spacing.md }}>
+          {/* ── 4. Study Tools (2x2 Grid) ───────────────────── */}
+          <View style={{ gap: spacing.sm }}>
             <SectionHeader
-              title={t.studySources.title}
-              subtitle={t.studySources.description}
+              title={t.dashboard.quickStart}
             />
+
+            <View style={styles.toolsGrid}>
+              {/* Tool: Study Sources */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t.studySources.title}
+                onPress={() => router.push(`/topics/${encodeURIComponent(id)}/sources/new` as Href)}
+                activeOpacity={0.75}
+                style={[
+                  styles.toolCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    borderRadius: radius.md,
+                    padding: spacing.md,
+                  },
+                ]}
+              >
+                <View style={styles.toolIconRow}>
+                  <Feather name="file-text" size={20} color={colors.primary} />
+                  <Badge label={`${sources.length}`} variant="default" size="sm" />
+                </View>
+                <AppText variant="subhead" style={{ fontWeight: '600', marginTop: spacing.xs }}>
+                  {t.studySources.title}
+                </AppText>
+                <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                  {sources.length === 0 ? t.studySources.empty : `${sources.length} sources`}
+                </AppText>
+              </TouchableOpacity>
+
+              {/* Tool: Memory / Flashcards */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t.memory.title}
+                onPress={() => router.push('/(tabs)/memory' as Href)}
+                activeOpacity={0.75}
+                style={[
+                  styles.toolCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    borderRadius: radius.md,
+                    padding: spacing.md,
+                  },
+                ]}
+              >
+                <View style={styles.toolIconRow}>
+                  <Feather name="layers" size={20} color={colors.primary} />
+                  {(memoryEvidence?.dueCards ?? 0) > 0 ? (
+                    <Badge label={`${memoryEvidence?.dueCards}`} variant="warning" size="sm" />
+                  ) : null}
+                </View>
+                <AppText variant="subhead" style={{ fontWeight: '600', marginTop: spacing.xs }}>
+                  {t.memory.title}
+                </AppText>
+                <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                  {(memoryEvidence?.dueCards ?? 0) > 0
+                    ? t.topicEvidence.due(memoryEvidence!.dueCards)
+                    : (memoryEvidence?.linkedCards ?? 0) > 0
+                    ? t.topicEvidence.cards(memoryEvidence!.linkedCards)
+                    : t.memory.noReviewsDue}
+                </AppText>
+              </TouchableOpacity>
+
+              {/* Tool: Q-Bank */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t.qbank.title}
+                onPress={() => router.push('/qbank/new' as Href)}
+                activeOpacity={0.75}
+                style={[
+                  styles.toolCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    borderRadius: radius.md,
+                    padding: spacing.md,
+                  },
+                ]}
+              >
+                <View style={styles.toolIconRow}>
+                  <Feather name="check-circle" size={20} color={colors.primary} />
+                  {(qbankEvidence?.totalQuestions ?? 0) > 0 ? (
+                    <Badge label={`${qbankEvidence?.totalQuestions}`} variant="default" size="sm" />
+                  ) : null}
+                </View>
+                <AppText variant="subhead" style={{ fontWeight: '600', marginTop: spacing.xs }}>
+                  {t.qbank.title}
+                </AppText>
+                <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                  {(qbankEvidence?.totalQuestions ?? 0) > 0
+                    ? `${t.qbank.evidence.questions(qbankEvidence!.totalQuestions)}` + (qbankEvidence?.accuracyPercent !== null ? ` · ${qbankEvidence!.accuracyPercent}%` : '')
+                    : t.qbank.evidence.noPractice}
+                </AppText>
+              </TouchableOpacity>
+
+              {/* Tool: AI Assistant */}
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={t.studyAi.assistant}
+                onPress={() => router.push(`/topics/${encodeURIComponent(id)}/assistant` as Href)}
+                activeOpacity={0.75}
+                style={[
+                  styles.toolCard,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: colors.border,
+                    borderRadius: radius.md,
+                    padding: spacing.md,
+                  },
+                ]}
+              >
+                <View style={styles.toolIconRow}>
+                  <Feather name="cpu" size={20} color={colors.primary} />
+                  <Badge label="AI" variant="info" size="sm" />
+                </View>
+                <AppText variant="subhead" style={{ fontWeight: '600', marginTop: spacing.xs }}>
+                  {t.studyAi.assistant}
+                </AppText>
+                <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                  {t.dashboard.quickStart}
+                </AppText>
+              </TouchableOpacity>
+            </View>
+          </View>
+
+          {/* ── 5. Study Sources (Phase 12 Preparation) ──────── */}
+          <Card style={{ padding: spacing.lg, gap: spacing.md, backgroundColor: colors.surface }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+              <View style={{ flex: 1, marginRight: spacing.sm }}>
+                <SectionHeader
+                  title={t.studySources.title}
+                  subtitle={t.studySources.description}
+                />
+              </View>
+              <Button
+                label={t.studyAi.assistant}
+                variant="primary"
+                size="sm"
+                icon={<Feather name="cpu" size={14} color={colors.textInverse} />}
+                onPress={() =>
+                  router.push(`/topics/${encodeURIComponent(id)}/assistant` as Href)
+                }
+              />
+            </View>
 
             <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
               <Button
                 label={t.studySources.addSource}
                 variant="secondary"
                 size="sm"
+                icon={<Feather name="plus" size={14} color={colors.primary} />}
                 onPress={() =>
                   router.push(`/topics/${encodeURIComponent(id)}/sources/new` as Href)
                 }
@@ -304,18 +478,11 @@ export default function TopicDetailScreen() {
                 label={t.studySources.importDocument}
                 variant="secondary"
                 size="sm"
+                icon={<Feather name="upload" size={14} color={colors.primary} />}
                 onPress={() =>
                   router.push(
                     `/topics/${encodeURIComponent(id)}/sources/import-document` as Href
                   )
-                }
-              />
-              <Button
-                label={t.studyAi.assistant}
-                variant="primary"
-                size="sm"
-                onPress={() =>
-                  router.push(`/topics/${encodeURIComponent(id)}/assistant` as Href)
                 }
               />
             </View>
@@ -368,12 +535,16 @@ export default function TopicDetailScreen() {
             )}
           </Card>
 
-          {/* Danger Zone */}
+          {/* ── 6. Learning Status / Activity ───────────────── */}
+          <TopicReviewEvidence topicId={id} />
+
+          {/* ── 7. Danger Zone ───────────────────────────────── */}
           <Card
             style={{
               borderColor: colors.errorMuted,
               padding: spacing.md,
               gap: spacing.sm,
+              marginBottom: spacing.xl,
             }}
           >
             <AppText variant="label" color={colors.error}>
@@ -401,19 +572,21 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
   },
-  objectivesBox: {
-    borderWidth: 1,
-  },
-  sourceItem: {
-    borderWidth: 1,
-  },
-  sourceHeader: {
+  toolsGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  toolCard: {
+    flexBasis: '48%',
+    flexGrow: 1,
+    minHeight: 88,
+    borderWidth: 1,
+  },
+  toolIconRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
   },
 });
+

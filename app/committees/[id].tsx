@@ -23,6 +23,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { useTheme } from '@/hooks/useTheme';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useCommitteeStore, type CommitteeStatus } from '@/store/useCommitteeStore';
@@ -305,6 +306,22 @@ export default function CommitteeDetailScreen() {
             {t.sweep.countdown(daysToExam)}
           </AppText>
         </View>
+
+        {analyticsSummary && analyticsSummary.totalTopics > 0 && (
+          <View style={{ marginTop: spacing.md }}>
+            <ProgressBar
+              value={analyticsSummary.practicedTopics}
+              max={analyticsSummary.totalTopics}
+              label={t.dashboard.topicsComplete(
+                analyticsSummary.practicedTopics,
+                analyticsSummary.totalTopics
+              )}
+              showPercentage
+              height={6}
+              color={colors.primary}
+            />
+          </View>
+        )}
       </Card>
 
       <SubjectList key={committee.id} committeeId={committee.id} />
