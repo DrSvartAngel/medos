@@ -60,6 +60,16 @@ export default function DashboardScreen() {
     };
   }, [snapshot?.quickStart, timerStatus, t]);
 
+  const needsAttentionTopics = useMemo(() => {
+    if (!isDBReady || !snapshot?.committee?.id) return [];
+    try {
+      const topicEvidences = analyticsRepo.getCommitteeTopicAnalytics(snapshot.committee.id);
+      return getWeakTopics(topicEvidences, 3);
+    } catch {
+      return [];
+    }
+  }, [isDBReady, snapshot?.committee?.id]);
+
   function handleQuickStart() {
     const focusState = useFocusStore.getState();
     if (focusState.timerStatus !== 'idle' || recommendation.kind === 'continue_focus') {
@@ -144,16 +154,6 @@ export default function DashboardScreen() {
   const partialErrorCount = Object.keys(sectionErrors).length;
   const headerStatus =
     t.dashboard.plannedToday(snapshot.agendaTotal);
-
-  const needsAttentionTopics = useMemo(() => {
-    if (!isDBReady || !snapshot?.committee?.id) return [];
-    try {
-      const topicEvidences = analyticsRepo.getCommitteeTopicAnalytics(snapshot.committee.id);
-      return getWeakTopics(topicEvidences, 3);
-    } catch {
-      return [];
-    }
-  }, [isDBReady, snapshot?.committee?.id]);
 
   const committee = (
     <CommitteeOverviewCard

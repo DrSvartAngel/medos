@@ -289,6 +289,19 @@ for (const comp of dashboardComponents) {
   );
 }
 
+// Check Rules of Hooks in Dashboard: all hook calls must appear before early conditional returns
+const earlyReturnIdx = dashboardSrc.indexOf('if (!isDBReady || isInitialLoading || snapshot === null)');
+assert.ok(earlyReturnIdx > 0, 'DashboardScreen must contain isInitialLoading early return branch');
+const hookMatches = [...dashboardSrc.matchAll(/\b(useMemo|useEffect|useCallback|useState|useTheme|useResponsive|useTranslation|useAppStore|useDashboardStore|useFocusStore|useDashboardRefresh)\b/g)];
+for (const match of hookMatches) {
+  if (match.index !== undefined && match.index > 0) {
+    assert.ok(
+      match.index < earlyReturnIdx,
+      `Hook ${match[0]} at index ${match.index} must be called unconditionally before early return (index ${earlyReturnIdx}) in DashboardScreen`
+    );
+  }
+}
+
 console.log('PASS: Dashboard redesign satisfies Phase 11 Step 5 hierarchy and design invariants');
 
 // 3.7 Curriculum Redesign & Hierarchy
