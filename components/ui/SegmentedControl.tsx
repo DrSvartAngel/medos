@@ -49,7 +49,7 @@ export function SegmentedControl<T extends string = string>({
           <TouchableOpacity
             key={option.id}
             accessibilityRole="radio"
-            accessibilityState={{ selected: isSelected }}
+            accessibilityState={{ selected: isSelected, checked: isSelected }}
             accessibilityLabel={option.label}
             activeOpacity={Interaction.pressedOpacity}
             onPress={() => onSelect(option.id)}
@@ -97,6 +97,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 36,
+    minHeight: Interaction.minTarget,
   },
 });

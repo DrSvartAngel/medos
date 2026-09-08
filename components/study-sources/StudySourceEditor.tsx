@@ -128,7 +128,7 @@ export function StudySourceEditor({
                 <TouchableOpacity
                   key={type}
                   accessibilityRole="radio"
-                  accessibilityState={{ selected: isSelected, disabled: isSaving }}
+                  accessibilityState={{ selected: isSelected, checked: isSelected, disabled: isSaving }}
                   accessibilityLabel={t.studySources[type]}
                   disabled={isSaving}
                   onPress={() => setSourceType(type)}
@@ -221,6 +221,7 @@ const styles = StyleSheet.create({
   typeOption: {
     flexDirection: 'row',
     alignItems: 'center',
+    minHeight: 44,
     borderWidth: 1.5,
   },
   radioIndicator: {

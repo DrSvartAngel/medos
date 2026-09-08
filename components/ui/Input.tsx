@@ -80,6 +80,8 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         multiline={multiline}
         editable={editable}
         placeholderTextColor={placeholderTextColor ?? colors.textMuted}
+        accessibilityLabel={props.accessibilityLabel ?? label}
+        accessibilityHint={props.accessibilityHint ?? helperText}
         accessibilityState={{
           ...accessibilityState,
           disabled: !editable || accessibilityState?.disabled,

@@ -75,7 +75,7 @@ export function ListRow({
               color: destructive ? colors.error : colors.textPrimary,
               fontWeight: '600',
             }}
-            numberOfLines={1}
+            numberOfLines={2}
           >
             {title}
           </GSText>
@@ -124,6 +124,7 @@ export function ListRow({
           accessibilityLabel ?? (subtitle ? `${title}, ${subtitle}` : title)
         }
         accessibilityHint={accessibilityHint}
+        accessibilityState={{ disabled }}
         style={({ pressed }: { pressed: boolean }) => [
           { opacity: pressed ? Interaction.pressedOpacity : 1 },
         ]}

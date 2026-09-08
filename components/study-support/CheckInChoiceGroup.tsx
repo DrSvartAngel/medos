@@ -35,7 +35,7 @@ export function CheckInChoiceGroup<T extends string>({
               key={choice.value}
               accessibilityRole="radio"
               accessibilityLabel={choice.label}
-              accessibilityState={{ checked: isSelected }}
+              accessibilityState={{ checked: isSelected, selected: isSelected }}
               activeOpacity={0.75}
               onPress={() => onSelect(choice.value)}
               style={[

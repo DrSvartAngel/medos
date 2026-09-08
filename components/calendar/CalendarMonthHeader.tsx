@@ -42,9 +42,15 @@ export function CalendarMonthHeader({
 
       <View style={[styles.labelWrap, { paddingHorizontal: spacing.sm }]}> 
         <AppText variant="h3" style={styles.label}>{label}</AppText>
-        <Pressable accessibilityRole="button" onPress={onToday} hitSlop={8}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={t.sweep.today}
+          onPress={onToday}
+          hitSlop={8}
+        >
           <AppText variant="caption" color={colors.accent} style={styles.today}>
-            {t.sweep.today}</AppText>
+            {t.sweep.today}
+          </AppText>
         </Pressable>
       </View>
 

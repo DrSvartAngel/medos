@@ -44,6 +44,7 @@ export function ReviewControls({ revealed, onReveal, onRate }: ReviewControlsPro
             <Pressable
               key={item.rating}
               accessibilityRole="button"
+              accessibilityLabel={`${item.label}, ${item.hint}`}
               onPress={() => onRate(item.rating)}
               style={({ pressed }) => [
                 styles.rating,
@@ -81,6 +82,8 @@ const styles = StyleSheet.create({
   },
   rating: {
     alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 48,
     borderWidth: 1,
     flexBasis: '47%',
     flexGrow: 1,

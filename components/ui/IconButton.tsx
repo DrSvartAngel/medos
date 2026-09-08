@@ -65,6 +65,7 @@ export function IconButton({
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
+      accessibilityState={{ disabled }}
       hitSlop={4}
       style={({ pressed }: { pressed: boolean }) => [
         styles.button,

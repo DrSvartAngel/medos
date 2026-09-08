@@ -39,6 +39,7 @@ export function Breadcrumb({ items, accessibilityLabel, style }: BreadcrumbProps
                 accessibilityRole="button"
                 accessibilityLabel={item.label}
                 activeOpacity={Interaction.pressedOpacity}
+                hitSlop={4}
                 style={[styles.touchable, { paddingVertical: spacing.xs, paddingHorizontal: spacing.xxs }]}
               >
                 <AppText
@@ -87,6 +88,7 @@ const styles = StyleSheet.create({
   },
   touchable: {
     justifyContent: 'center',
+    minHeight: Interaction.minTarget,
     maxWidth: 200,
   },
   label: {

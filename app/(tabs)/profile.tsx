@@ -39,7 +39,7 @@ function PreferenceChoice({
     <Pressable
       accessibilityRole="radio"
       accessibilityLabel={accessibilityLabel}
-      accessibilityState={{ checked: selected }}
+      accessibilityState={{ checked: selected, selected }}
       onPress={onPress}
       style={({ pressed }) => [
         styles.choice,
