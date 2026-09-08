@@ -248,6 +248,49 @@ for (const dep of forbiddenDeps) {
 
 console.log('PASS: Global shell and navigation conform to Phase 11 Step 4 invariants');
 
+// 3.6 Dashboard Redesign & Information Hierarchy
+console.log('\n--- Checking Dashboard Redesign ---');
+
+const dashboardSrc = read('app/(tabs)/index.tsx');
+
+// Check that Dashboard has the required hierarchy components
+assert.ok(dashboardSrc.includes('CommitteeOverviewCard'), 'Dashboard must include CommitteeOverviewCard');
+assert.ok(dashboardSrc.includes('QuickStartCard'), 'Dashboard must include QuickStartCard');
+assert.ok(dashboardSrc.includes('TodayMetrics'), 'Dashboard must include TodayMetrics');
+assert.ok(dashboardSrc.includes('WeakTopicsList'), 'Dashboard must include WeakTopicsList');
+assert.ok(dashboardSrc.includes('MomentumCard'), 'Dashboard must include MomentumCard');
+assert.ok(dashboardSrc.includes('TodayAgenda'), 'Dashboard must include TodayAgenda');
+
+// Check that Calendar remains reachable via onOpenCalendar
+assert.ok(
+  dashboardSrc.includes('onOpenCalendar') && dashboardSrc.includes('/(tabs)/calendar'),
+  'Dashboard must preserve contextual Calendar navigation'
+);
+
+// Check that Needs Attention uses pure analytics rules without fake scoring
+assert.ok(
+  dashboardSrc.includes('getWeakTopics') && dashboardSrc.includes('analyticsRepo'),
+  'Dashboard Needs Attention must consume pure analytics priority rules'
+);
+
+// Check that components/dashboard contains no legacy violet hex
+const dashboardComponents = [
+  'CommitteeOverviewCard.tsx',
+  'QuickStartCard.tsx',
+  'TodayAgenda.tsx',
+  'TodayMetrics.tsx',
+  'MomentumCard.tsx',
+];
+for (const comp of dashboardComponents) {
+  const compCode = read(`components/dashboard/${comp}`);
+  assert.ok(
+    !compCode.includes('#6C63FF') && !compCode.includes('#5850EC'),
+    `components/dashboard/${comp} must not contain legacy violet hex colors`
+  );
+}
+
+console.log('PASS: Dashboard redesign satisfies Phase 11 Step 5 hierarchy and design invariants');
+
 // 4. Architectural Safeguards
 console.log('\n--- Checking Architectural Integrity ---');
 

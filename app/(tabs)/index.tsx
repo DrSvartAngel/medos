@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { CommitteeOverviewCard } from '@/components/dashboard/CommitteeOverviewCard';
@@ -7,9 +7,11 @@ import { QuickStartCard } from '@/components/dashboard/QuickStartCard';
 import { TodayAgenda } from '@/components/dashboard/TodayAgenda';
 import { TodayMetrics } from '@/components/dashboard/TodayMetrics';
 import { MomentumCard } from '@/components/dashboard/MomentumCard';
+import { WeakTopicsList } from '@/components/analytics/WeakTopicsList';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { useDashboardRefresh } from '@/hooks/useDashboardRefresh';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTheme } from '@/hooks/useTheme';
@@ -17,6 +19,8 @@ import { useAppStore } from '@/store/useAppStore';
 import { useDashboardStore } from '@/store/useDashboardStore';
 import { DEFAULT_FOCUS_SEC, useFocusStore } from '@/store/useFocusStore';
 import { getLocalDayRange } from '@/utils/calendarDate';
+import { analyticsRepo } from '@/db/repositories/analyticsRepo';
+import { getWeakTopics } from '@/utils/analyticsPriorityRules';
 import {
   getDashboardGreeting,
   type DashboardAgendaItem,
@@ -141,20 +145,30 @@ export default function DashboardScreen() {
   const headerStatus =
     t.dashboard.plannedToday(snapshot.agendaTotal);
 
-  const quickStart = (
-    <QuickStartCard
-      recommendation={recommendation}
-      onAction={handleQuickStart}
-      onStartSmall={timerStatus === 'idle' ? handleStartSmall : undefined}
-      onCheckIn={timerStatus === 'idle' ? handleCheckIn : undefined}
-    />
-  );
+  const needsAttentionTopics = useMemo(() => {
+    if (!isDBReady || !snapshot?.committee?.id) return [];
+    try {
+      const topicEvidences = analyticsRepo.getCommitteeTopicAnalytics(snapshot.committee.id);
+      return getWeakTopics(topicEvidences, 3);
+    } catch {
+      return [];
+    }
+  }, [isDBReady, snapshot?.committee?.id]);
+
   const committee = (
     <CommitteeOverviewCard
       committee={snapshot.committee}
       error={sectionErrors.committee}
       onOpen={(id) => router.push(`/committees/${id}` as Href)}
       onCreate={() => router.push('/committees/new' as Href)}
+    />
+  );
+  const quickStart = (
+    <QuickStartCard
+      recommendation={recommendation}
+      onAction={handleQuickStart}
+      onStartSmall={timerStatus === 'idle' ? handleStartSmall : undefined}
+      onCheckIn={timerStatus === 'idle' ? handleCheckIn : undefined}
     />
   );
   const metrics = (
@@ -170,6 +184,9 @@ export default function DashboardScreen() {
       onOpenQBank={() => router.push('/qbank/new' as Href)}
     />
   );
+  const needsAttention = needsAttentionTopics.length > 0 ? (
+    <WeakTopicsList topics={needsAttentionTopics} />
+  ) : null;
   const agenda = (
     <TodayAgenda
       items={snapshot.agenda}
@@ -179,6 +196,31 @@ export default function DashboardScreen() {
       onOpenCalendar={() => router.push('/(tabs)/calendar' as Href)}
     />
   );
+  const aiContextual = snapshot.committee ? (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={t.studyPlan.subtitle(snapshot.committee.name)}
+      onPress={() => router.push(`/committees/${snapshot.committee!.id}/study-plan` as Href)}
+      style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
+    >
+      <Card style={[styles.aiCard, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+        <View style={styles.aiRow}>
+          <View style={[styles.aiIcon, { backgroundColor: colors.surfaceElevated, borderRadius: radius.sm }]}>
+            <Feather name="cpu" size={18} color={colors.primary} />
+          </View>
+          <View style={styles.aiText}>
+            <AppText variant="label" color={colors.primary} style={{ fontWeight: '600' }}>
+              {t.studyPlan.studyPlanButton}
+            </AppText>
+            <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+              {snapshot.committee.name}
+            </AppText>
+          </View>
+          <Feather name="chevron-right" size={18} color={colors.textMuted} />
+        </View>
+      </Card>
+    </Pressable>
+  ) : null;
 
   return (
     <ScreenWrapper>
@@ -207,22 +249,26 @@ export default function DashboardScreen() {
       {isLargeTablet ? (
         <View style={[styles.twoPane, { gap: spacing.lg, marginTop: spacing.lg }]}>
           <View style={[styles.column, { gap: spacing.lg }]}>
-            {quickStart}
-            {metrics}
             {committee}
+            {quickStart}
+            {needsAttention}
+            {aiContextual}
           </View>
           <View style={[styles.column, { gap: spacing.lg }]}>
+            {metrics}
             <MomentumCard />
             {agenda}
           </View>
         </View>
       ) : (
         <View style={[styles.stacked, { gap: spacing.lg, marginTop: spacing.lg }]}>
+          {committee}
           {quickStart}
           {metrics}
-          {committee}
+          {needsAttention}
           <MomentumCard />
           {agenda}
+          {aiContextual}
         </View>
       )}
     </ScreenWrapper>
@@ -237,4 +283,8 @@ const styles = StyleSheet.create({
   stacked: { width: '100%' },
   twoPane: { alignItems: 'flex-start', flexDirection: 'row', width: '100%' },
   column: { flex: 1, minWidth: 0 },
+  aiCard: { borderWidth: 1, padding: 12 },
+  aiRow: { alignItems: 'center', flexDirection: 'row' },
+  aiIcon: { alignItems: 'center', height: 34, justifyContent: 'center', marginRight: 12, width: 34 },
+  aiText: { flex: 1 },
 });
