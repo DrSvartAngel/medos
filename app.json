@@ -1,13 +1,12 @@
 {
   "expo": {
     "name": "MedOS",
-    "slug": "medos",
+    "slug": "drsvartangel",
     "version": "1.0.0",
     "orientation": "default",
     "icon": "./assets/icon.png",
     "scheme": "medos",
     "userInterfaceStyle": "dark",
-    "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.medos.app"
@@ -17,8 +16,7 @@
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundColor": "#0D0F14"
       },
-      "package": "com.medos.app",
-      "edgeToEdgeEnabled": true
+      "package": "com.medos.app"
     },
     "web": {
       "bundler": "metro",
@@ -37,6 +35,19 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "67cfe2e8-4de0-4585-bc8b-dcec35d393e6"
+      }
+    },
+    "owner": "drsvartangels-team",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/67cfe2e8-4de0-4585-bc8b-dcec35d393e6"
     }
   }
 }
