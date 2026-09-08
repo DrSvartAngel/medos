@@ -10,13 +10,17 @@ import {
   MAX_DOCUMENT_FILE_SIZE_BYTES,
 } from './documentTypes';
 import { pdfExtractor } from './pdfExtractor';
+import { pptxExtractor } from './pptxExtractor';
 import { textExtractor } from './textExtractor';
+
+export * from './pptxExtractor';
 
 export class CompositeDocumentExtractor implements DocumentExtractor {
   isSupported(mimeType?: string, fileName?: string): boolean {
     return (
       textExtractor.isSupported(mimeType, fileName) ||
-      (mimeType === 'application/pdf' || (fileName ? fileName.toLowerCase().endsWith('.pdf') : false))
+      (mimeType === 'application/pdf' || (fileName ? fileName.toLowerCase().endsWith('.pdf') : false)) ||
+      pptxExtractor.isSupported(mimeType, fileName)
     );
   }
 
@@ -50,13 +54,24 @@ export class CompositeDocumentExtractor implements DocumentExtractor {
       return await pdfExtractor.extract(input);
     }
 
+    // Check if PPTX
+    if (
+      mime === 'application/vnd.openxmlformats-officedocument.presentationml.presentation' ||
+      mime === 'application/vnd.ms-powerpoint' ||
+      name.endsWith('.pptx') ||
+      name.endsWith('.ppt')
+    ) {
+      return await pptxExtractor.extract(input);
+    }
+
     return {
       status: 'unsupported',
       text: '',
-      errorMessage: 'Unsupported document format. Please select a PDF or plain text file.',
+      errorMessage: 'Unsupported document format. Please select a PDF, presentation, or plain text file.',
     };
   }
 }
 
 export const documentExtractor = new CompositeDocumentExtractor();
+
 

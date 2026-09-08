@@ -1065,6 +1065,7 @@ const en = {
     sourceTitlePlaceholder: 'e.g. Chapter 4 Summary, Physiology Notes...',
     extracting: 'Extracting readable text...',
     extractionSuccess: 'Text extracted successfully',
+    slidesExtracted: (count: number) => `${count} slide${count === 1 ? '' : 's'} extracted successfully`,
     extractionFailed: 'Could not extract text from document.',
     extractionUnavailable: 'Automatic extraction unavailable',
     extractionUnavailableDesc:

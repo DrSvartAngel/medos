@@ -3,6 +3,7 @@
 
 const http = require('http');
 const { parsePdfBuffer, MAX_PDF_SIZE_BYTES } = require('./pdfParser');
+const { parsePptxBuffer } = require('./pptxParser');
 
 function parseMultipartBody(buffer, boundary) {
   const boundaryBuffer = Buffer.from(`--${boundary}`);
@@ -59,8 +60,14 @@ function createPdfServer() {
       return;
     }
 
-    // Extraction endpoint
-    if (req.method === 'POST' && (req.url === '/extract' || req.url === '/api/v1/extract-pdf')) {
+    // Extraction endpoint (supports both PDF and PPTX)
+    if (
+      req.method === 'POST' &&
+      (req.url === '/extract' ||
+        req.url === '/api/v1/extract-pdf' ||
+        req.url === '/extract-pptx' ||
+        req.url === '/api/v1/extract-pptx')
+    ) {
       const chunks = [];
       let totalLength = 0;
       let tooLarge = false;
@@ -131,20 +138,60 @@ function createPdfServer() {
               return;
             }
           } else {
-            // Direct binary (application/pdf or application/octet-stream)
+            // Direct binary (application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation, etc.)
             pdfBuffer = bodyBuffer;
+          }
+
+          const isZip =
+            pdfBuffer.length >= 4 &&
+            pdfBuffer[0] === 0x50 &&
+            pdfBuffer[1] === 0x4b &&
+            pdfBuffer[2] === 0x03 &&
+            pdfBuffer[3] === 0x04;
+          const isPptx =
+            isZip ||
+            req.url.includes('pptx') ||
+            contentType.includes('presentation') ||
+            contentType.includes('powerpoint');
+
+          if (isPptx) {
+            const parsedResult = await parsePptxBuffer(pdfBuffer);
+            const hasText = parsedResult.slides.some((s) => s.text.trim().length > 0);
+
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(
+              JSON.stringify({
+                status: hasText
+                  ? 'success'
+                  : parsedResult.slideCount > 0
+                  ? 'partial'
+                  : 'empty',
+                canonicalType: 'pptx',
+                slideCount: parsedResult.slideCount,
+                slides: parsedResult.slides,
+                warnings: parsedResult.warnings,
+              })
+            );
+            return;
           }
 
           const parsedResult = await parsePdfBuffer(pdfBuffer);
           const hasText = parsedResult.pages.some((p) => p.text.trim().length > 0);
 
           res.writeHead(200, { 'Content-Type': 'application/json' });
-          res.end(JSON.stringify({
-            status: hasText ? 'success' : (parsedResult.pageCount > 0 ? 'partial' : 'empty'),
-            pageCount: parsedResult.pageCount,
-            pages: parsedResult.pages,
-            warnings: parsedResult.warnings,
-          }));
+          res.end(
+            JSON.stringify({
+              status: hasText
+                ? 'success'
+                : parsedResult.pageCount > 0
+                ? 'partial'
+                : 'empty',
+              canonicalType: 'pdf',
+              pageCount: parsedResult.pageCount,
+              pages: parsedResult.pages,
+              warnings: parsedResult.warnings,
+            })
+          );
         } catch (err) {
           const message = err instanceof Error ? err.message : 'Unknown extraction failure';
           const code = err && err.code ? err.code : 'extraction_error';

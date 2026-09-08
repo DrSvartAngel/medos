@@ -1072,6 +1072,7 @@ const tr: Strings = {
     sourceTitlePlaceholder: 'ör. Bölüm 4 Özeti, Fizyoloji Notları...',
     extracting: 'Okunabilir metin çıkarılıyor...',
     extractionSuccess: 'Metin başarıyla çıkarıldı',
+    slidesExtracted: (count: number) => `${count} slayt başarıyla çıkarıldı`,
     extractionFailed: 'Belgeden metin çıkarılamadı.',
     extractionUnavailable: 'Otomatik metin çıkarma kullanılamıyor',
     extractionUnavailableDesc:

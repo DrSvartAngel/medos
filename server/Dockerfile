@@ -9,7 +9,7 @@ ENV PORT=3001
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY pdfParser.js pdfServer.js ./
+COPY pdfParser.js pptxParser.js pdfServer.js ./
 
 EXPOSE 3001
 

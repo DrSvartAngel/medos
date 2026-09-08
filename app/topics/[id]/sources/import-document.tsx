@@ -97,7 +97,13 @@ export default function ImportDocumentScreen() {
       setExtractionProvenance(null);
 
       const result = await DocumentPicker.getDocumentAsync({
-        type: ['application/pdf', 'text/plain', 'text/markdown'],
+        type: [
+          'application/pdf',
+          'text/plain',
+          'text/markdown',
+          'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+          'application/vnd.ms-powerpoint',
+        ],
         copyToCacheDirectory: true,
       });
 
@@ -127,10 +133,14 @@ export default function ImportDocumentScreen() {
       setIsExtracting(true);
       try {
         const extraction = await documentExtractor.extract(docInput);
-        const pdfExtraction = extraction as import('@/services/documents/pdfTypes').PdfExtractionResult;
+        const structuredExtraction = extraction as {
+          provenance?: import('@/models/ingestion').SourceProvenance[];
+          slideCount?: number;
+          canonicalType?: string;
+        };
 
-        if (pdfExtraction.provenance && pdfExtraction.provenance.length > 0) {
-          setExtractionProvenance(pdfExtraction.provenance[0]);
+        if (structuredExtraction.provenance && structuredExtraction.provenance.length > 0) {
+          setExtractionProvenance(structuredExtraction.provenance[0]);
         }
 
         if (extraction.metadata) {
@@ -139,7 +149,12 @@ export default function ImportDocumentScreen() {
 
         if (extraction.status === 'success') {
           setContent(extraction.text);
-          setExtractionNotice(t.documentImport.extractionSuccess);
+          const slideCount = structuredExtraction.slideCount ?? extraction.metadata?.slideCount;
+          if (slideCount && slideCount > 0) {
+            setExtractionNotice(t.documentImport.slidesExtracted(slideCount));
+          } else {
+            setExtractionNotice(t.documentImport.extractionSuccess);
+          }
         } else if (extraction.status === 'partial') {
           setContent(extraction.text);
           setExtractionNotice(t.documentImport.extractionUnavailableDesc);
@@ -211,7 +226,13 @@ export default function ImportDocumentScreen() {
           mimeType: selectedFile.mimeType,
           fileSizeBytes: selectedFile.size,
           origin: 'file_import',
-          canonicalType: selectedFile.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'text',
+          canonicalType:
+            selectedFile.name.toLowerCase().endsWith('.pptx') ||
+            selectedFile.name.toLowerCase().endsWith('.ppt')
+              ? 'pptx'
+              : selectedFile.name.toLowerCase().endsWith('.pdf')
+              ? 'pdf'
+              : 'text',
           processingStatus: 'ready',
           lastProcessedAt: Date.now(),
         } : undefined),
