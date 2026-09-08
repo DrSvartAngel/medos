@@ -24,6 +24,10 @@ const VISIBLE_TABS: TabConfig[] = [
   { name: 'ai',          titleKey: 'ai',         icon: 'message-circle' },
 ];
 
+export const unstable_settings = {
+  initialRouteName: 'index',
+};
+
 export default function TabLayout() {
   const { colors } = useTheme();
   const { isTablet } = useResponsive();
@@ -56,6 +60,7 @@ export default function TabLayout() {
 
   return (
     <Tabs
+      initialRouteName="index"
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
@@ -83,6 +88,13 @@ export default function TabLayout() {
         },
       }}
     >
+      <Tabs.Screen
+        name="index"
+        options={{
+          href: null,
+          title: t.tabs.home,
+        }}
+      />
       {VISIBLE_TABS.map((tab) => (
         <Tabs.Screen
           key={tab.name}
@@ -96,13 +108,6 @@ export default function TabLayout() {
           }}
         />
       ))}
-      <Tabs.Screen
-        name="index"
-        options={{
-          href: null,
-          title: t.tabs.home,
-        }}
-      />
       <Tabs.Screen
         name="profile"
         options={{

@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
+import { Progress as GSProgress, ProgressFilledTrack } from './progress/index';
+import { GSText, HStack } from './gluestack';
 import { useTheme } from '@/hooks/useTheme';
-import { AppText } from './Typography';
 
 export interface ProgressBarProps {
   value: number;
@@ -12,7 +13,8 @@ export interface ProgressBarProps {
   trackColor?: string;
   height?: number;
   accessibilityLabel?: string;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 export function ProgressBar({
@@ -25,6 +27,7 @@ export function ProgressBar({
   height = 8,
   accessibilityLabel,
   style,
+  className,
 }: ProgressBarProps) {
   const { colors, spacing, radius } = useTheme();
 
@@ -41,23 +44,30 @@ export function ProgressBar({
       accessibilityValue={{ min: 0, max: safeMax, now: clampedValue }}
       accessibilityLabel={accessibilityLabel ?? label ?? `${percentage}%`}
       style={[styles.container, style]}
+      className={className}
     >
       {label || showPercentage ? (
-        <View style={[styles.labelRow, { marginBottom: spacing.xs }]}>
+        <HStack style={[styles.labelRow, { marginBottom: spacing.xs }]}>
           {label ? (
-            <AppText variant="caption" color={colors.textSecondary}>
+            <GSText size="xs" style={{ color: colors.textSecondary }}>
               {label}
-            </AppText>
-          ) : <View />}
+            </GSText>
+          ) : (
+            <View />
+          )}
           {showPercentage ? (
-            <AppText variant="caption" color={colors.textPrimary} style={{ fontWeight: '600' }}>
+            <GSText
+              size="xs"
+              style={{ color: colors.textPrimary, fontWeight: '600' }}
+            >
               {percentage}%
-            </AppText>
+            </GSText>
           ) : null}
-        </View>
+        </HStack>
       ) : null}
 
-      <View
+      <GSProgress
+        value={percentage}
         style={[
           styles.track,
           {
@@ -67,18 +77,14 @@ export function ProgressBar({
           },
         ]}
       >
-        <View
-          style={[
-            styles.fill,
-            {
-              width: `${percentage}%`,
-              height,
-              backgroundColor: resolvedColor,
-              borderRadius: radius.full,
-            },
-          ]}
+        <ProgressFilledTrack
+          style={{
+            height,
+            backgroundColor: resolvedColor,
+            borderRadius: radius.full,
+          }}
         />
-      </View>
+      </GSProgress>
     </View>
   );
 }
@@ -91,12 +97,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    width: '100%',
   },
   track: {
     width: '100%',
     overflow: 'hidden',
-  },
-  fill: {
-    minWidth: 0,
   },
 });

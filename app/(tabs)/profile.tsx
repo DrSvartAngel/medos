@@ -4,6 +4,7 @@ import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
+import { TabTopHeader } from '@/components/layout/TabTopHeader';
 import { PreferenceToggleRow } from '@/components/profile/PreferenceToggleRow';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -121,6 +122,7 @@ export default function ProfileScreen() {
 
   return (
     <ScreenWrapper>
+      <TabTopHeader />
       <View style={{ marginBottom: spacing.xl }}>
         <AppText variant="h1">{t.profile.title}</AppText>
         <AppText color={colors.textMuted} style={{ marginTop: spacing.xs }}>

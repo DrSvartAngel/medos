@@ -2,13 +2,13 @@ import React from 'react';
 import {
   StyleSheet,
   View,
-  TouchableOpacity,
   type ViewStyle,
+  type StyleProp,
   type AccessibilityRole,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { HStack, VStack, GSText, Pressable as GSPressable } from './gluestack';
 import { useTheme } from '@/hooks/useTheme';
-import { AppText } from './Typography';
 import { Interaction } from '@/theme/interaction';
 
 export interface ListRowProps {
@@ -16,6 +16,7 @@ export interface ListRowProps {
   subtitle?: string;
   leading?: React.ReactNode;
   trailing?: React.ReactNode;
+  value?: string | number | React.ReactNode;
   onPress?: () => void;
   chevron?: boolean;
   destructive?: boolean;
@@ -24,7 +25,8 @@ export interface ListRowProps {
   accessibilityRole?: AccessibilityRole;
   accessibilityLabel?: string;
   accessibilityHint?: string;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 export function ListRow({
@@ -32,6 +34,7 @@ export function ListRow({
   subtitle,
   leading,
   trailing,
+  value,
   onPress,
   chevron = false,
   destructive = false,
@@ -41,72 +44,92 @@ export function ListRow({
   accessibilityLabel,
   accessibilityHint,
   style,
+  className,
 }: ListRowProps) {
   const { colors, spacing } = useTheme();
-
   const isInteractive = Boolean(onPress && !disabled);
 
-  const content = (
+  const rowContent = (
     <View
       style={[
         styles.row,
         {
+          minHeight: Interaction.minTarget,
           paddingVertical: spacing.md,
           paddingHorizontal: spacing.md,
-          borderBottomColor: borderBottom ? colors.border : 'transparent',
+          borderBottomColor: borderBottom ? colors.cardBorder : 'transparent',
           borderBottomWidth: borderBottom ? 1 : 0,
           opacity: disabled ? Interaction.disabledOpacity : 1,
         },
         style,
       ]}
+      className={className}
     >
-      {leading ? <View style={{ marginRight: spacing.md }}>{leading}</View> : null}
+      <HStack space="md" style={styles.hstack}>
+        {leading ? <View style={styles.leading}>{leading}</View> : null}
 
-      <View style={styles.textContainer}>
-        <AppText
-          variant="subhead"
-          color={destructive ? colors.error : colors.textPrimary}
-          numberOfLines={1}
-        >
-          {title}
-        </AppText>
-        {subtitle ? (
-          <AppText
-            variant="caption"
-            color={colors.textSecondary}
-            numberOfLines={2}
-            style={{ marginTop: 2 }}
+        <VStack space="xs" style={styles.textStack}>
+          <GSText
+            size="sm"
+            style={{
+              color: destructive ? colors.error : colors.textPrimary,
+              fontWeight: '600',
+            }}
+            numberOfLines={1}
           >
-            {subtitle}
-          </AppText>
+            {title}
+          </GSText>
+          {subtitle ? (
+            <GSText
+              size="xs"
+              style={{ color: colors.textSecondary }}
+              numberOfLines={2}
+            >
+              {subtitle}
+            </GSText>
+          ) : null}
+        </VStack>
+
+        {value !== undefined ? (
+          typeof value === 'string' || typeof value === 'number' ? (
+            <GSText size="xs" style={{ color: colors.textMuted }}>
+              {value}
+            </GSText>
+          ) : (
+            value
+          )
         ) : null}
-      </View>
 
-      {trailing ? <View style={{ marginLeft: spacing.sm }}>{trailing}</View> : null}
+        {trailing ? <View style={styles.trailing}>{trailing}</View> : null}
 
-      {chevron ? (
-        <Feather
-          name="chevron-right"
-          size={18}
-          color={colors.textMuted}
-          style={{ marginLeft: spacing.xs }}
-        />
-      ) : null}
+        {chevron ? (
+          <Feather
+            name="chevron-right"
+            size={18}
+            color={colors.textMuted}
+            style={{ marginLeft: spacing.xxs }}
+          />
+        ) : null}
+      </HStack>
     </View>
   );
 
   if (isInteractive) {
     return (
-      <TouchableOpacity
+      <GSPressable
         onPress={onPress}
         disabled={disabled}
         accessibilityRole={accessibilityRole}
-        accessibilityLabel={accessibilityLabel ?? (subtitle ? `${title}, ${subtitle}` : title)}
+        accessibilityLabel={
+          accessibilityLabel ?? (subtitle ? `${title}, ${subtitle}` : title)
+        }
         accessibilityHint={accessibilityHint}
-        activeOpacity={Interaction.pressedOpacity}
+        style={({ pressed }: { pressed: boolean }) => [
+          { opacity: pressed ? Interaction.pressedOpacity : 1 },
+        ]}
       >
-        {content}
-      </TouchableOpacity>
+        {rowContent}
+      </GSPressable>
     );
   }
 
@@ -114,23 +137,34 @@ export function ListRow({
     <View
       accessible
       accessibilityRole="text"
-      accessibilityLabel={accessibilityLabel ?? (subtitle ? `${title}, ${subtitle}` : title)}
+      accessibilityLabel={
+        accessibilityLabel ?? (subtitle ? `${title}, ${subtitle}` : title)
+      }
     >
-      {content}
+      {rowContent}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   row: {
-    minHeight: Interaction.minTarget, // guaranteed >=44pt
-    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'center',
+  },
+  hstack: {
     alignItems: 'center',
-    justifyContent: 'space-between',
     width: '100%',
   },
-  textContainer: {
+  leading: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textStack: {
     flex: 1,
+    justifyContent: 'center',
+  },
+  trailing: {
+    alignItems: 'center',
     justifyContent: 'center',
   },
 });

@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
-import { AppText } from './Typography';
-import { Button } from './Button';
+import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { Box, VStack, Heading, GSText } from './gluestack';
+import { Button } from './Button';
+import { useTheme } from '@/hooks/useTheme';
 
 export interface EmptyStateProps {
   title: string;
@@ -13,7 +13,8 @@ export interface EmptyStateProps {
     label: string;
     onPress: () => void;
   };
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 export function EmptyState({
@@ -22,6 +23,7 @@ export function EmptyState({
   icon = 'inbox',
   action,
   style,
+  className,
 }: EmptyStateProps) {
   const { colors, spacing, radius } = useTheme();
 
@@ -31,43 +33,55 @@ export function EmptyState({
       accessibilityRole="text"
       accessibilityLabel={`${title}. ${message ?? ''}`}
       style={[styles.container, { padding: spacing.xl }, style]}
+      className={className}
     >
-      <View
-        style={[
-          styles.iconWrap,
-          {
-            backgroundColor: colors.surfaceHighlight,
-            borderRadius: radius.full,
-            marginBottom: spacing.md,
-          },
-        ]}
-      >
-        <Feather name={icon} size={28} color={colors.textSecondary} />
-      </View>
-
-      <AppText variant="h3" color={colors.textPrimary} style={styles.textCenter}>
-        {title}
-      </AppText>
-
-      {message ? (
-        <AppText
-          variant="bodySmall"
-          color={colors.textSecondary}
-          style={[styles.textCenter, { marginTop: spacing.xs, maxWidth: 320 }]}
+      <VStack space="md" style={styles.stack}>
+        <Box
+          style={[
+            styles.iconWrap,
+            {
+              backgroundColor: colors.surfaceHighlight,
+              borderRadius: radius.full,
+            },
+          ]}
         >
-          {message}
-        </AppText>
-      ) : null}
+          <Feather name={icon} size={24} color={colors.textSecondary} />
+        </Box>
 
-      {action ? (
-        <Button
-          label={action.label}
-          onPress={action.onPress}
-          variant="secondary"
+        <Heading
           size="md"
-          style={{ marginTop: spacing.lg }}
-        />
-      ) : null}
+          style={{
+            color: colors.textPrimary,
+            textAlign: 'center',
+            fontWeight: '600',
+          }}
+        >
+          {title}
+        </Heading>
+
+        {message ? (
+          <GSText
+            size="sm"
+            style={{
+              color: colors.textSecondary,
+              textAlign: 'center',
+              maxWidth: 320,
+            }}
+          >
+            {message}
+          </GSText>
+        ) : null}
+
+        {action ? (
+          <Button
+            label={action.label}
+            onPress={action.onPress}
+            variant="secondary"
+            size="md"
+            style={{ marginTop: spacing.sm }}
+          />
+        ) : null}
+      </VStack>
     </View>
   );
 }
@@ -78,13 +92,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
   },
-  iconWrap: {
-    width: 60,
-    height: 60,
+  stack: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  textCenter: {
-    textAlign: 'center',
+  iconWrap: {
+    width: 52,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

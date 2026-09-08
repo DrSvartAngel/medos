@@ -1,7 +1,8 @@
 import React from 'react';
-import { TouchableOpacity, StyleSheet, ViewStyle } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
+import { StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { Pressable as GSPressable } from './gluestack';
+import { useTheme } from '@/hooks/useTheme';
 import { Interaction } from '@/theme/interaction';
 
 export type IconButtonVariant = 'default' | 'primary' | 'ghost' | 'danger' | 'surface';
@@ -15,7 +16,8 @@ export interface IconButtonProps {
   size?: IconButtonSize;
   color?: string;
   disabled?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 export function IconButton({
@@ -27,11 +29,12 @@ export function IconButton({
   color,
   disabled = false,
   style,
+  className,
 }: IconButtonProps) {
   const { colors, radius } = useTheme();
 
   const sizeDimensions: Record<IconButtonSize, { button: number; icon: number }> = {
-    sm: { button: 36, icon: 16 },
+    sm: { button: 44, icon: 16 },
     md: { button: 44, icon: 20 },
     lg: { button: 52, icon: 24 },
   };
@@ -57,28 +60,33 @@ export function IconButton({
   const resolvedIconColor = color ?? defaultIconColor[variant];
 
   return (
-    <TouchableOpacity
+    <GSPressable
       onPress={onPress}
       disabled={disabled}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
-      activeOpacity={Interaction.pressedOpacity}
-      style={[
+      hitSlop={4}
+      style={({ pressed }: { pressed: boolean }) => [
         styles.button,
         {
           width: currentSize.button,
           height: currentSize.button,
           borderRadius: radius.md,
           backgroundColor: bgMap[variant],
-          borderColor: variant === 'ghost' ? 'transparent' : colors.border,
+          borderColor: variant === 'ghost' ? 'transparent' : colors.cardBorder,
           borderWidth: variant === 'ghost' ? 0 : 1,
-          opacity: disabled ? Interaction.disabledOpacity : 1,
+          opacity: disabled
+            ? Interaction.disabledOpacity
+            : pressed
+            ? Interaction.pressedOpacity
+            : 1,
         },
         style,
       ]}
+      className={className}
     >
       <Feather name={icon} size={currentSize.icon} color={resolvedIconColor} />
-    </TouchableOpacity>
+    </GSPressable>
   );
 }
 

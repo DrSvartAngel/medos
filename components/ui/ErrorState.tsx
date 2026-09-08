@@ -1,9 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
-import { useTheme } from '@/hooks/useTheme';
-import { AppText } from './Typography';
-import { Button } from './Button';
+import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import { Feather } from '@expo/vector-icons';
+import { Box, VStack, Heading, GSText } from './gluestack';
+import { Button } from './Button';
+import { useTheme } from '@/hooks/useTheme';
 
 export interface ErrorStateProps {
   title?: string;
@@ -12,7 +12,8 @@ export interface ErrorStateProps {
     label: string;
     onPress: () => void;
   };
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 export function ErrorState({
@@ -20,6 +21,7 @@ export function ErrorState({
   message,
   action,
   style,
+  className,
 }: ErrorStateProps) {
   const { colors, spacing, radius } = useTheme();
 
@@ -29,43 +31,55 @@ export function ErrorState({
       accessibilityRole="alert"
       accessibilityLabel={`${title ? title + '. ' : ''}${message}`}
       style={[styles.container, { padding: spacing.xl }, style]}
+      className={className}
     >
-      <View
-        style={[
-          styles.iconWrap,
-          {
-            backgroundColor: colors.errorMuted,
-            borderRadius: radius.full,
-            marginBottom: spacing.md,
-          },
-        ]}
-      >
-        <Feather name="alert-triangle" size={28} color={colors.error} />
-      </View>
+      <VStack space="md" style={styles.stack}>
+        <Box
+          style={[
+            styles.iconWrap,
+            {
+              backgroundColor: colors.errorMuted,
+              borderRadius: radius.full,
+            },
+          ]}
+        >
+          <Feather name="alert-circle" size={24} color={colors.error} />
+        </Box>
 
-      {title ? (
-        <AppText variant="h3" color={colors.textPrimary} style={styles.textCenter}>
-          {title}
-        </AppText>
-      ) : null}
+        {title ? (
+          <Heading
+            size="md"
+            style={{
+              color: colors.textPrimary,
+              textAlign: 'center',
+              fontWeight: '600',
+            }}
+          >
+            {title}
+          </Heading>
+        ) : null}
 
-      <AppText
-        variant="bodySmall"
-        color={colors.textSecondary}
-        style={[styles.textCenter, { marginTop: spacing.xs, maxWidth: 320 }]}
-      >
-        {message}
-      </AppText>
+        <GSText
+          size="sm"
+          style={{
+            color: colors.textSecondary,
+            textAlign: 'center',
+            maxWidth: 320,
+          }}
+        >
+          {message}
+        </GSText>
 
-      {action ? (
-        <Button
-          label={action.label}
-          onPress={action.onPress}
-          variant="outline"
-          size="md"
-          style={{ marginTop: spacing.lg }}
-        />
-      ) : null}
+        {action ? (
+          <Button
+            label={action.label}
+            onPress={action.onPress}
+            variant="outline"
+            size="md"
+            style={{ marginTop: spacing.sm }}
+          />
+        ) : null}
+      </VStack>
     </View>
   );
 }
@@ -76,13 +90,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     width: '100%',
   },
-  iconWrap: {
-    width: 60,
-    height: 60,
+  stack: {
     alignItems: 'center',
     justifyContent: 'center',
   },
-  textCenter: {
-    textAlign: 'center',
+  iconWrap: {
+    width: 52,
+    height: 52,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

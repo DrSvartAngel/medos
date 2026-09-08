@@ -1,14 +1,19 @@
 import React from 'react';
-import { TouchableOpacity, ActivityIndicator, StyleSheet, ViewStyle, TextStyle, View } from 'react-native';
+import { View, StyleSheet, type ViewStyle, type TextStyle, type StyleProp } from 'react-native';
+import {
+  Button as GSButton,
+  ButtonText,
+  ButtonSpinner,
+} from './button/index';
 import { useTheme } from '@/hooks/useTheme';
-import { AppText } from './Typography';
 import { Interaction } from '@/theme/interaction';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'outline';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive' | 'outline';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
-  label: string;
+  label?: string;
+  title?: string;
   onPress: () => void;
   accessibilityLabel?: string;
   variant?: ButtonVariant;
@@ -17,12 +22,14 @@ export interface ButtonProps {
   loading?: boolean;
   icon?: React.ReactNode;
   iconRight?: React.ReactNode;
-  style?: ViewStyle;
-  textStyle?: TextStyle;
+  style?: StyleProp<ViewStyle>;
+  textStyle?: StyleProp<TextStyle>;
+  className?: string;
 }
 
 export function Button({
   label,
+  title,
   onPress,
   accessibilityLabel,
   variant = 'primary',
@@ -33,79 +40,102 @@ export function Button({
   iconRight,
   style,
   textStyle,
+  className,
 }: ButtonProps) {
   const { colors, spacing, radius } = useTheme();
+  const text = label ?? title ?? '';
 
+  // Map MedOS variant to Gluestack Button variant
+  const gsVariant =
+    variant === 'primary'
+      ? 'default'
+      : variant === 'danger' || variant === 'destructive'
+      ? 'destructive'
+      : variant === 'secondary'
+      ? 'secondary'
+      : variant === 'outline'
+      ? 'outline'
+      : 'ghost';
+
+  // Map MedOS size to Gluestack Button size
+  const gsSize = size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'default';
+
+  // Explicit semantic color overrides for exact Light/Dark parity
   const bgColors: Record<ButtonVariant, string> = {
-    primary:   colors.primary,
-    secondary: colors.surface,
-    ghost:     'transparent',
-    danger:    colors.error,
-    outline:   'transparent',
+    primary: colors.primary,
+    secondary: colors.surfaceElevated,
+    outline: 'transparent',
+    ghost: 'transparent',
+    danger: colors.error,
+    destructive: colors.error,
   };
 
   const textColors: Record<ButtonVariant, string> = {
-    primary:   colors.textInverse,
+    primary: colors.textInverse,
     secondary: colors.textPrimary,
-    ghost:     colors.textSecondary,
-    danger:    colors.textInverse,
-    outline:   colors.textPrimary,
+    outline: colors.textPrimary,
+    ghost: colors.textSecondary,
+    danger: colors.textInverse,
+    destructive: colors.textInverse,
   };
 
   const borderColors: Record<ButtonVariant, string> = {
-    primary:   'transparent',
-    secondary: colors.border,
-    ghost:     'transparent',
-    danger:    'transparent',
-    outline:   colors.border,
+    primary: 'transparent',
+    secondary: colors.cardBorder,
+    outline: colors.cardBorder,
+    ghost: 'transparent',
+    danger: 'transparent',
+    destructive: 'transparent',
   };
 
-  const paddings: Record<ButtonSize, { horizontal: number; vertical: number }> = {
-    sm: { horizontal: spacing.md,  vertical: spacing.xs },
-    md: { horizontal: spacing.lg,  vertical: spacing.sm + 2 },
-    lg: { horizontal: spacing.xl,  vertical: spacing.md },
-  };
-
-  const p = paddings[size];
+  const isBordered = variant === 'secondary' || variant === 'outline';
 
   return (
-    <TouchableOpacity
+    <GSButton
       onPress={onPress}
       disabled={disabled || loading}
+      variant={gsVariant}
+      size={gsSize}
       accessibilityRole="button"
-      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityLabel={accessibilityLabel ?? text}
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
-      activeOpacity={Interaction.pressedOpacity}
       style={[
         styles.btn,
         {
+          minHeight: Interaction.minTarget,
           backgroundColor: bgColors[variant],
-          paddingHorizontal: p.horizontal,
-          paddingVertical: p.vertical,
-          borderRadius: radius.md,
           borderColor: borderColors[variant],
-          borderWidth: variant === 'secondary' || variant === 'outline' ? 1 : 0,
+          borderWidth: isBordered ? 1 : 0,
+          borderRadius: radius.md,
+          paddingHorizontal: size === 'sm' ? spacing.md : size === 'lg' ? spacing.xl : spacing.lg,
           opacity: disabled ? Interaction.disabledOpacity : 1,
         },
         style,
       ]}
+      className={className}
     >
       {loading ? (
-        <ActivityIndicator size="small" color={textColors[variant]} />
+        <ButtonSpinner color={textColors[variant]} />
       ) : (
         <>
-          {icon ? <View style={{ marginRight: spacing.sm }}>{icon}</View> : null}
-          <AppText
-            variant={size === 'sm' ? 'label' : 'body'}
-            color={textColors[variant]}
-            style={StyleSheet.flatten([{ fontWeight: '600' as const }, textStyle])}
+          {icon ? <View style={{ marginRight: spacing.xs }}>{icon}</View> : null}
+          <ButtonText
+            style={[
+              {
+                color: textColors[variant],
+                fontWeight: '600',
+                fontSize: size === 'sm' ? 13 : 15,
+                lineHeight: size === 'sm' ? 18 : 22,
+              },
+              textStyle,
+            ]}
           >
-            {label}
-          </AppText>
-          {iconRight ? <View style={{ marginLeft: spacing.sm }}>{iconRight}</View> : null}
+            {text}
+          </ButtonText>
+          {iconRight ? <View style={{ marginLeft: spacing.xs }}>{iconRight}</View> : null}
         </>
       )}
-    </TouchableOpacity>
+    </GSButton>
   );
 }
 

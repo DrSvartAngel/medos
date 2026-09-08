@@ -1,8 +1,10 @@
 import React from 'react';
 import { ViewStyle, StyleProp, Pressable } from 'react-native';
 import { Card as GSCard } from './card/index';
+import { useTheme } from '@/hooks/useTheme';
+import { Interaction } from '@/theme/interaction';
 
-export type CardVariant = 'default' | 'elevated' | 'highlight' | 'outlined';
+export type CardVariant = 'default' | 'elevated' | 'highlight' | 'outlined' | 'interactive' | 'subtle';
 
 export interface CardProps {
   children?: React.ReactNode;
@@ -27,18 +29,39 @@ export function Card({
   accessibilityRole,
   className,
 }: CardProps) {
-  const resolvedVariant: CardVariant = variant ?? (elevated ? 'elevated' : 'default');
+  const { colors, radius, spacing } = useTheme();
 
-  const variantClass =
-    resolvedVariant === 'outlined'
-      ? 'bg-transparent border border-border'
-      : resolvedVariant === 'highlight'
-      ? 'bg-secondary border border-border'
-      : resolvedVariant === 'elevated'
-      ? 'bg-card border border-border shadow-md'
-      : 'bg-card border border-border shadow-sm';
+  const resolvedVariant: CardVariant =
+    variant ?? (onPress ? 'interactive' : elevated ? 'elevated' : 'default');
 
-  const paddingClass = padded ? 'p-4' : 'p-0';
+  const bgColors: Record<CardVariant, string> = {
+    default: colors.surface,
+    elevated: colors.surface,
+    interactive: colors.surface,
+    subtle: colors.surfaceElevated,
+    highlight: colors.surfaceHighlight,
+    outlined: 'transparent',
+  };
+
+  const borderColors: Record<CardVariant, string> = {
+    default: colors.cardBorder,
+    elevated: colors.cardBorder,
+    interactive: colors.cardBorder,
+    subtle: colors.cardBorder,
+    highlight: colors.cardBorder,
+    outlined: colors.cardBorder,
+  };
+
+  const cardStyle: StyleProp<ViewStyle> = [
+    {
+      backgroundColor: bgColors[resolvedVariant],
+      borderColor: borderColors[resolvedVariant],
+      borderWidth: 1,
+      borderRadius: radius.lg,
+      padding: padded ? spacing.md : 0,
+    },
+    style,
+  ];
 
   if (onPress) {
     return (
@@ -47,12 +70,12 @@ export function Card({
         accessibilityRole={accessibilityRole ?? 'button'}
         accessibilityLabel={accessibilityLabel}
         style={({ pressed }) => [
-          { opacity: pressed ? 0.85 : 1 },
-          style,
+          { opacity: pressed ? Interaction.pressedOpacity : 1 },
         ]}
       >
         <GSCard
-          className={`rounded-xl overflow-hidden ${variantClass} ${paddingClass} ${className ?? ''}`}
+          className={`overflow-hidden ${className ?? ''}`}
+          style={cardStyle}
         >
           {children}
         </GSCard>
@@ -62,8 +85,8 @@ export function Card({
 
   return (
     <GSCard
-      className={`rounded-xl overflow-hidden ${variantClass} ${paddingClass} ${className ?? ''}`}
-      style={style}
+      className={`overflow-hidden ${className ?? ''}`}
+      style={cardStyle}
     >
       {children}
     </GSCard>

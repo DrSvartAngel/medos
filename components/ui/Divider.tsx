@@ -1,12 +1,14 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
+import { Divider as GSDivider } from './divider/index';
 import { useTheme } from '@/hooks/useTheme';
 
 export interface DividerProps {
   orientation?: 'horizontal' | 'vertical';
   spacing?: number;
   color?: string;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 export function Divider({
@@ -14,14 +16,16 @@ export function Divider({
   spacing: customSpacing,
   color,
   style,
+  className,
 }: DividerProps) {
   const { colors, spacing } = useTheme();
-  const resolvedColor = color ?? colors.border;
+  const resolvedColor = color ?? colors.cardBorder;
   const margin = customSpacing ?? spacing.sm;
 
   if (orientation === 'vertical') {
     return (
-      <View
+      <GSDivider
+        orientation="vertical"
         style={[
           styles.vertical,
           {
@@ -30,12 +34,14 @@ export function Divider({
           },
           style,
         ]}
+        className={className}
       />
     );
   }
 
   return (
-    <View
+    <GSDivider
+      orientation="horizontal"
       style={[
         styles.horizontal,
         {
@@ -44,6 +50,7 @@ export function Divider({
         },
         style,
       ]}
+      className={className}
     />
   );
 }

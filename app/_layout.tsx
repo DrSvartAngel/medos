@@ -8,6 +8,10 @@ import { useDB } from '@/hooks/useDB';
 import { useTheme } from '@/hooks/useTheme';
 import { resolveThemeMode } from '@/theme/themeBridge';
 
+export const unstable_settings = {
+  initialRouteName: '(tabs)',
+};
+
 export default function RootLayout() {
   const { error, isInitializing, retry } = useDB();
   const { isDark, colorScheme, colors } = useTheme();
@@ -25,6 +29,7 @@ export default function RootLayout() {
           />
         ) : (
           <Stack
+            initialRouteName="(tabs)"
             screenOptions={{
               headerShown: false,
               contentStyle: { backgroundColor: colors.background },

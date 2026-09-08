@@ -1,37 +1,13 @@
 import React from 'react';
-import { ViewStyle } from 'react-native';
-import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
+import { ScreenWrapper, type ScreenWrapperProps } from '@/components/layout/ScreenWrapper';
 
-export interface ScreenProps {
-  children: React.ReactNode;
-  scrollable?: boolean;
-  centered?: boolean;
-  includeBottomSafeArea?: boolean;
-  style?: ViewStyle;
-  contentStyle?: ViewStyle;
-}
+export type ScreenProps = ScreenWrapperProps;
 
 /**
  * Standard page container for MedOS.
  * Provides theme-aware background, safe area handling, and responsive content centering.
+ * Delegates directly to ScreenWrapper for architectural unity.
  */
-export function Screen({
-  children,
-  scrollable = true,
-  centered = true,
-  includeBottomSafeArea = false,
-  style,
-  contentStyle,
-}: ScreenProps) {
-  return (
-    <ScreenWrapper
-      scrollable={scrollable}
-      centered={centered}
-      includeBottomSafeArea={includeBottomSafeArea}
-      style={style}
-      contentStyle={contentStyle}
-    >
-      {children}
-    </ScreenWrapper>
-  );
+export function Screen(props: ScreenProps) {
+  return <ScreenWrapper {...props} />;
 }
