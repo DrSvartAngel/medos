@@ -17,10 +17,12 @@ import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
 import { topicRepo } from '@/db/repositories/topicRepo';
 import { studySourceRepo } from '@/db/repositories/studySourceRepo';
+import { Feather } from '@expo/vector-icons';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Section } from '@/components/ui/Section';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
 import { FeedbackState } from '@/components/ui/FeedbackState';
@@ -206,19 +208,21 @@ export default function ImportDocumentScreen() {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
       >
         <ScrollView
-          contentContainerStyle={[styles.scrollContent, { paddingBottom: spacing.xxl }]}
+          contentContainerStyle={[
+            styles.scrollContent,
+            { paddingBottom: spacing.xxl, maxWidth: 680, width: '100%', alignSelf: 'center' },
+          ]}
           keyboardShouldPersistTaps="handled"
         >
           <Section>
-            <Button
-              label={t.common.back}
-              variant="ghost"
-              onPress={handleBack}
-              accessibilityLabel={t.common.back}
+            <Breadcrumb
+              items={[
+                { label: topic.name, onPress: handleBack },
+                { label: t.documentImport.importDocument, isCurrent: true },
+              ]}
             />
-            <AppText variant="h2">{t.documentImport.importDocument}</AppText>
-            <AppText variant="bodySmall" color={colors.textSecondary}>
-              {topic.name}
+            <AppText variant="h2" style={{ marginTop: spacing.xs }}>
+              {t.documentImport.importDocument}
             </AppText>
           </Section>
 
@@ -288,13 +292,20 @@ export default function ImportDocumentScreen() {
                 style={[
                   styles.noticeBox,
                   {
-                    backgroundColor: colors.surface,
+                    backgroundColor: colors.surfaceElevated,
                     borderColor: colors.border,
                     borderRadius: radius.md,
                     padding: spacing.md,
+                    gap: spacing.xs,
                   },
                 ]}
               >
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.xs }}>
+                  <Feather name="info" size={14} color={colors.primary} />
+                  <AppText variant="caption" color={colors.primary} style={{ fontWeight: '600' }}>
+                    {t.documentImport.extractionUnavailable}
+                  </AppText>
+                </View>
                 <AppText variant="bodySmall" color={colors.textSecondary}>
                   {extractionNotice}
                 </AppText>

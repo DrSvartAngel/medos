@@ -7,8 +7,10 @@ import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Section } from '@/components/ui/Section';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { FeedbackState } from '@/components/ui/FeedbackState';
 import { StudySourceEditor, type StudySourceFormValues } from '@/components/study-sources/StudySourceEditor';
+import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
 import { topicRouteId } from '@/utils/topicRoutes';
 
@@ -16,6 +18,7 @@ export default function NewStudySourceScreen() {
   const params = useLocalSearchParams<{ id?: string | string[] }>();
   const topicId = topicRouteId(Array.isArray(params.id) ? params.id[0] : params.id);
   const t = useTranslation();
+  const { spacing } = useTheme();
 
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -77,13 +80,30 @@ export default function NewStudySourceScreen() {
   return (
     <ScreenWrapper includeBottomSafeArea>
       <Section>
-        <Button label={t.common.back} variant="ghost" onPress={handleBack} />
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+        <Breadcrumb
+          items={[
+            { label: topic.name, onPress: handleBack },
+            { label: t.studySources.addSource, isCurrent: true },
+          ]}
+        />
+        <View
+          style={{
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: spacing.sm,
+            marginTop: spacing.xs,
+          }}
+        >
           <AppText variant="h2">{t.studySources.addSource}</AppText>
           <Button
             label={t.documentImport.importDocument}
             variant="secondary"
-            onPress={() => router.replace(`/topics/${encodeURIComponent(topicId)}/sources/import-document` as Href)}
+            size="sm"
+            onPress={() =>
+              router.replace(`/topics/${encodeURIComponent(topicId)}/sources/import-document` as Href)
+            }
           />
         </View>
         <StudySourceEditor

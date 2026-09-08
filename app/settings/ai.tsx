@@ -12,6 +12,7 @@ import { Feather } from '@expo/vector-icons';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { AppText } from '@/components/ui/Typography';
@@ -159,20 +160,19 @@ export default function AISettingsScreen() {
 
   return (
     <ScreenWrapper includeBottomSafeArea>
-      {/* Top Header */}
-      <View style={[styles.topBar, { marginBottom: spacing.md }]}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-          onPress={back}
-          style={styles.iconButton}
-        >
-          <Feather name="arrow-left" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <View style={{ flex: 1, marginLeft: spacing.sm }}>
-          <AppText variant="h3">{t.aiSettings.title}</AppText>
+      <View style={{ maxWidth: 680, width: '100%', alignSelf: 'center' }}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: t.profile.title, onPress: back },
+            { label: t.aiSettings.title, isCurrent: true },
+          ]}
+          style={{ marginBottom: spacing.xs }}
+        />
+
+        <View style={{ marginBottom: spacing.md }}>
+          <AppText variant="h2">{t.aiSettings.title}</AppText>
         </View>
-      </View>
 
       {/* Security Note Card */}
       <Card
@@ -403,6 +403,7 @@ export default function AISettingsScreen() {
           </View>
         </Card>
       )}
+      </View>
     </ScreenWrapper>
   );
 }

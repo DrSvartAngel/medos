@@ -24,6 +24,7 @@ import { buildPlanningContext } from '@/services/ai/planningContext';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useTheme } from '@/hooks/useTheme';
@@ -239,49 +240,50 @@ export default function CommitteeStudyPlanScreen() {
 
   return (
     <ScreenWrapper includeBottomSafeArea>
-      {/* Top Header */}
-      <View style={[styles.topBar, { marginBottom: spacing.md }]}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-          onPress={back}
-          style={styles.iconButton}
-        >
-          <Feather name="arrow-left" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
-        <View style={{ flex: 1, marginLeft: spacing.sm }}>
-          <AppText variant="h3">{t.studyPlan.title}</AppText>
-          <AppText color={colors.textSecondary} variant="bodySmall">
+      <View style={{ maxWidth: 720, width: '100%', alignSelf: 'center' }}>
+        {/* Breadcrumb */}
+        <Breadcrumb
+          items={[
+            { label: committee.name, onPress: back },
+            { label: t.studyPlan.title, isCurrent: true },
+          ]}
+          style={{ marginBottom: spacing.xs }}
+        />
+
+        {/* Top Header */}
+        <View style={{ marginBottom: spacing.md }}>
+          <AppText variant="h2">{t.studyPlan.title}</AppText>
+          <AppText color={colors.textSecondary} variant="bodySmall" style={{ marginTop: spacing.xxs }}>
             {t.studyPlan.subtitle(committee.name)}
           </AppText>
         </View>
-      </View>
 
-      {/* Advisory Banner */}
-      <Card
-        elevated={false}
-        style={[
-          styles.advisoryBanner,
-          {
-            backgroundColor: colors.surfaceElevated,
-            borderColor: colors.border,
-            marginBottom: spacing.md,
-            padding: spacing.md,
-            borderRadius: radius.md,
-          },
-        ]}
-      >
-        <View style={styles.bannerRow}>
-          <Feather name="info" size={18} color={colors.primary} style={{ marginTop: 2 }} />
-          <AppText
-            color={colors.textSecondary}
-            variant="bodySmall"
-            style={{ flex: 1, marginLeft: spacing.sm }}
-          >
-            {t.studyPlan.advisoryNote}
-          </AppText>
-        </View>
-      </Card>
+        {/* Advisory Banner */}
+        <Card
+          elevated={false}
+          style={[
+            styles.advisoryBanner,
+            {
+              backgroundColor: colors.surfaceElevated,
+              borderColor: colors.border,
+              marginBottom: spacing.md,
+              padding: spacing.md,
+              borderRadius: radius.md,
+            },
+          ]}
+        >
+          <View style={styles.bannerRow}>
+            <Feather name="info" size={18} color={colors.primary} style={{ marginTop: 2 }} />
+            <View style={{ flex: 1, marginLeft: spacing.sm, gap: 2 }}>
+              <AppText color={colors.textPrimary} variant="label">
+                {t.studyPlan.suggestedPlanNote}
+              </AppText>
+              <AppText color={colors.textSecondary} variant="bodySmall">
+                {t.studyPlan.advisoryNote}
+              </AppText>
+            </View>
+          </View>
+        </Card>
 
       {/* Evidence Snapshot */}
       <Card
@@ -633,6 +635,7 @@ export default function CommitteeStudyPlanScreen() {
           ))}
         </View>
       )}
+      </View>
     </ScreenWrapper>
   );
 }

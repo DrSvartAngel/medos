@@ -507,6 +507,108 @@ for (const file of studyWorkflowPresentationFiles) {
 
 console.log('PASS: Study workflows satisfy Phase 11 Step 7 hierarchy and design invariants');
 
+// 3.9 AI Screens Redesign (Phase 11 Step 8)
+console.log('\n--- Checking AI Screens Redesign ---');
+
+const aiPresentationFiles = [
+  'components/study-sources/SourceContextBar.tsx',
+  'components/study-sources/ProvenanceBlock.tsx',
+  'components/study-sources/StudySourceEditor.tsx',
+  'app/topics/[id]/assistant.tsx',
+  'app/topics/[id]/sources/new.tsx',
+  'app/topics/[id]/sources/[sourceId].tsx',
+  'app/topics/[id]/sources/import-document.tsx',
+  'app/committees/[id]/study-plan.tsx',
+  'app/settings/ai.tsx',
+];
+
+for (const file of aiPresentationFiles) {
+  assert.ok(exists(file), `AI presentation file must exist: ${file}`);
+}
+
+// 1. Topic Detail Study Sources Overview
+const topicDetailSrc = read('app/topics/[id].tsx');
+assert.ok(topicDetailSrc.includes('t.studySources.title'), 'Topic detail must reference t.studySources.title');
+assert.ok(topicDetailSrc.includes('ListRow'), 'Topic detail must render Study Sources using ListRow');
+assert.ok(topicDetailSrc.includes('studyAi.assistant'), 'Topic detail must link to Study Assistant');
+
+// 2. Source Editor & Detail
+const sourceEditorSrc = read('components/study-sources/StudySourceEditor.tsx');
+assert.ok(sourceEditorSrc.includes('accessibilityRole="radiogroup"'), 'Editor must have radiogroup');
+assert.ok(sourceEditorSrc.includes('accessibilityRole="radio"'), 'Editor must have radio options');
+assert.ok(sourceEditorSrc.includes('scrollEnabled={false}'), 'Editor input must expand smoothly');
+
+const newSourceRouteSrc = read('app/topics/[id]/sources/new.tsx');
+assert.ok(newSourceRouteSrc.includes('Breadcrumb'), 'New source screen must use Breadcrumb');
+
+const sourceDetailRouteSrc = read('app/topics/[id]/sources/[sourceId].tsx');
+assert.ok(sourceDetailRouteSrc.includes('Breadcrumb'), 'Source detail screen must use Breadcrumb');
+
+// 3. Document Ingestion Safety & Truthful Limitation
+const docImportSrc = read('app/topics/[id]/sources/import-document.tsx');
+assert.ok(docImportSrc.includes('ScreenWrapper'), 'import-document.tsx must use ScreenWrapper');
+assert.ok(docImportSrc.includes('includeBottomSafeArea'), 'import-document.tsx must includeBottomSafeArea');
+assert.ok(docImportSrc.includes('Breadcrumb'), 'import-document.tsx must use Breadcrumb');
+assert.ok(docImportSrc.includes('extractionUnavailable'), 'import-document.tsx must indicate extraction availability');
+assert.ok(docImportSrc.includes('handleConfirmSave'), 'import-document.tsx must require explicit confirm save');
+assert.ok(!docImportSrc.includes('geminiProvider'), 'import-document.tsx must NOT import Gemini provider');
+
+// 4. AI Assistant Screen
+const assistantScreenSrc = read('app/topics/[id]/assistant.tsx');
+assert.ok(assistantScreenSrc.includes('Breadcrumb'), 'assistant.tsx must use Breadcrumb');
+assert.ok(assistantScreenSrc.includes('SourceContextBar'), 'assistant.tsx must render SourceContextBar');
+assert.ok(assistantScreenSrc.includes('ProvenanceBlock'), 'assistant.tsx must use ProvenanceBlock');
+assert.ok(assistantScreenSrc.includes('flashcardsTab'), 'assistant.tsx must include flashcardsTab');
+assert.ok(assistantScreenSrc.includes('questionsTab'), 'assistant.tsx must include questionsTab');
+assert.ok(assistantScreenSrc.includes('questionDraftNotice'), 'assistant.tsx must include questionDraftNotice');
+assert.ok(!assistantScreenSrc.includes('qbankRepo'), 'assistant.tsx must NOT write to Q-Bank');
+
+// Assistant Hooks discipline: all hooks executed before any conditional return
+const assistantBody = assistantScreenSrc.slice(assistantScreenSrc.indexOf('export default function StudyAssistantScreen'));
+const assistantEarlyReturnMatches = [...assistantBody.matchAll(/if\s*\([^)]*\)\s*\{\s*return/g)];
+const assistantFirstEarlyReturn = assistantEarlyReturnMatches.length > 0 ? assistantEarlyReturnMatches[0].index : Infinity;
+const assistantHookMatches = [...assistantBody.matchAll(/\b(useMemo|useEffect|useCallback|useState|useTheme|useResponsive|useTranslation|useFocusEffect)\b/g)];
+for (const match of assistantHookMatches) {
+  if (match.index !== undefined && match.index > 0 && assistantFirstEarlyReturn !== Infinity) {
+    assert.ok(
+      match.index < assistantFirstEarlyReturn,
+      `Hook ${match[0]} at index ${match.index} must be called unconditionally before early return in StudyAssistantScreen`
+    );
+  }
+}
+
+// 5. Committee Study Plan Screen
+const studyPlanScreenSrc = read('app/committees/[id]/study-plan.tsx');
+assert.ok(studyPlanScreenSrc.includes('Breadcrumb'), 'study-plan.tsx must use Breadcrumb');
+assert.ok(studyPlanScreenSrc.includes('advisoryNote'), 'study-plan.tsx must display advisoryNote');
+assert.ok(studyPlanScreenSrc.includes('suggestedPlanNote'), 'study-plan.tsx must display suggestedPlanNote');
+assert.ok(!studyPlanScreenSrc.includes('calendarRepo'), 'study-plan.tsx must NOT import calendarRepo');
+assert.ok(!studyPlanScreenSrc.includes('useFocusStore'), 'study-plan.tsx must NOT import useFocusStore');
+assert.ok(!studyPlanScreenSrc.includes('qbankRepo'), 'study-plan.tsx must NOT import qbankRepo');
+
+// 6. AI Settings Screen
+const aiSettingsScreenSrc = read('app/settings/ai.tsx');
+assert.ok(aiSettingsScreenSrc.includes('Breadcrumb'), 'ai.tsx must use Breadcrumb');
+assert.ok(aiSettingsScreenSrc.includes('<ScreenWrapper includeBottomSafeArea>'), 'ai.tsx must use ScreenWrapper with includeBottomSafeArea');
+assert.ok(aiSettingsScreenSrc.includes('secureTextEntry'), 'ai.tsx must use secureTextEntry for API key');
+assert.ok(aiSettingsScreenSrc.includes('testAIProviderConnection'), 'ai.tsx must test provider connection');
+assert.ok(aiSettingsScreenSrc.includes('deleteGeminiApiKey'), 'ai.tsx must support deleting key');
+assert.ok(
+  !aiSettingsScreenSrc.includes('setInputKey(state.apiKey') && !aiSettingsScreenSrc.includes('value={savedKey}'),
+  'ai.tsx must NEVER prefill stored key'
+);
+
+// 7. Clean scan: zero legacy violet in AI presentation files
+for (const file of aiPresentationFiles) {
+  const content = read(file);
+  assert.ok(
+    !content.includes('#6C63FF') && !content.includes('#5850EC'),
+    `${file} must not contain legacy violet hex colors`
+  );
+}
+
+console.log('PASS: AI screens satisfy Phase 11 Step 8 hierarchy and design invariants');
+
 // 4. Architectural Safeguards
 console.log('\n--- Checking Architectural Integrity ---');
 

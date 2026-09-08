@@ -16,10 +16,13 @@ import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { FeedbackState } from '@/components/ui/FeedbackState';
+import { SourceContextBar } from '@/components/study-sources/SourceContextBar';
+import { ProvenanceBlock } from '@/components/study-sources/ProvenanceBlock';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
 import { topicRouteId } from '@/utils/topicRoutes';
@@ -522,9 +525,7 @@ export default function StudyAssistantScreen() {
 
   return (
     <ScreenWrapper includeBottomSafeArea>
-      <Section>
-        <Button label={t.common.back} variant="ghost" onPress={handleBack} />
-
+      <Section style={{ maxWidth: 760, width: '100%', alignSelf: 'center' }}>
         {loadingInitial && <FeedbackState kind="loading" message={t.common.loading} />}
 
         {!loadingInitial && loadError && (
@@ -540,20 +541,34 @@ export default function StudyAssistantScreen() {
         )}
 
         {!loadingInitial && !loadError && topic && sources.length === 0 && (
-          <FeedbackState
-            kind="empty"
-            message={t.studyAi.noSources}
-            action={{
-              label: t.studyAi.addSource,
-              onPress: () =>
-                router.push(`/topics/${encodeURIComponent(topicId)}/sources/new` as Href),
-            }}
-          />
+          <>
+            <Breadcrumb
+              items={[
+                { label: topic.name, onPress: handleBack },
+                { label: t.studyAi.assistant, isCurrent: true },
+              ]}
+            />
+            <FeedbackState
+              kind="empty"
+              message={t.studyAi.noSources}
+              action={{
+                label: t.studyAi.addSource,
+                onPress: () =>
+                  router.push(`/topics/${encodeURIComponent(topicId)}/sources/new` as Href),
+              }}
+            />
+          </>
         )}
 
         {!loadingInitial && !loadError && topic && sources.length > 0 && (
           <>
-            <View style={{ gap: spacing.xs }}>
+            <Breadcrumb
+              items={[
+                { label: topic.name, onPress: handleBack },
+                { label: t.studyAi.assistant, isCurrent: true },
+              ]}
+            />
+            <View style={{ gap: spacing.xxs, marginTop: spacing.xs, marginBottom: spacing.sm }}>
               <AppText variant="h2">{t.studyAi.assistant}</AppText>
               <AppText variant="caption" color={colors.textSecondary}>
                 {topic.name}
@@ -578,7 +593,7 @@ export default function StudyAssistantScreen() {
                       }`}
                       onPress={() => handleSelectSource(source.id)}
                       style={{
-                        borderWidth: 2,
+                        borderWidth: isSelected ? 2 : 1,
                         borderColor: isSelected ? colors.primary : colors.border,
                         borderRadius: radius.md,
                         padding: spacing.md,
@@ -597,44 +612,45 @@ export default function StudyAssistantScreen() {
                           {source.title}
                         </AppText>
                       </View>
-                      <Badge label={t.studySources[source.sourceType]} variant="default" />
+                      <Badge label={t.studySources[source.sourceType]} variant="default" size="sm" />
                     </TouchableOpacity>
                   );
                 })}
               </View>
             </Section>
 
-            {/* Action Tabs */}
+            {/* Action Tabs & Active Workspace */}
             {selectedSource && (
               <Section>
+                <SourceContextBar source={selectedSource} style={{ marginBottom: spacing.sm }} />
                 <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
                   <Button
                     label={t.studyAi.explainTab}
                     variant={activeMode === 'explain' ? 'primary' : 'secondary'}
                     size="sm"
                     onPress={() => handleModeChange('explain')}
-                    style={{ flex: 1, minWidth: 95 }}
+                    style={{ flex: 1, minWidth: '47%' }}
                   />
                   <Button
                     label={t.studyAi.summarizeTab}
                     variant={activeMode === 'summarize' ? 'primary' : 'secondary'}
                     size="sm"
                     onPress={() => handleModeChange('summarize')}
-                    style={{ flex: 1, minWidth: 95 }}
+                    style={{ flex: 1, minWidth: '47%' }}
                   />
                   <Button
                     label={t.studyAi.flashcardsTab}
                     variant={activeMode === 'flashcards' ? 'primary' : 'secondary'}
                     size="sm"
                     onPress={() => handleModeChange('flashcards')}
-                    style={{ flex: 1, minWidth: 95 }}
+                    style={{ flex: 1, minWidth: '47%' }}
                   />
                   <Button
                     label={t.studyAi.questionsTab}
                     variant={activeMode === 'questions' ? 'primary' : 'secondary'}
                     size="sm"
                     onPress={() => handleModeChange('questions')}
-                    style={{ flex: 1, minWidth: 95 }}
+                    style={{ flex: 1, minWidth: '47%' }}
                   />
                 </View>
 

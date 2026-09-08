@@ -1,5 +1,11 @@
 import React from 'react';
-import { TouchableOpacity, View, StyleSheet, ViewStyle } from 'react-native';
+import {
+  StyleSheet,
+  View,
+  TouchableOpacity,
+  type ViewStyle,
+  type AccessibilityRole,
+} from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 import { AppText } from './Typography';
@@ -15,6 +21,7 @@ export interface ListRowProps {
   destructive?: boolean;
   disabled?: boolean;
   borderBottom?: boolean;
+  accessibilityRole?: AccessibilityRole;
   accessibilityLabel?: string;
   accessibilityHint?: string;
   style?: ViewStyle;
@@ -30,6 +37,7 @@ export function ListRow({
   destructive = false,
   disabled = false,
   borderBottom = true,
+  accessibilityRole = 'button',
   accessibilityLabel,
   accessibilityHint,
   style,
@@ -92,7 +100,7 @@ export function ListRow({
       <TouchableOpacity
         onPress={onPress}
         disabled={disabled}
-        accessibilityRole="button"
+        accessibilityRole={accessibilityRole}
         accessibilityLabel={accessibilityLabel ?? (subtitle ? `${title}, ${subtitle}` : title)}
         accessibilityHint={accessibilityHint}
         activeOpacity={Interaction.pressedOpacity}

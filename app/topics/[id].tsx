@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Section } from '@/components/ui/Section';
+import { ListRow } from '@/components/ui/ListRow';
 import { AppText } from '@/components/ui/Typography';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
@@ -287,6 +288,7 @@ export default function TopicDetailScreen() {
           <Card style={{ padding: spacing.lg, gap: spacing.md }}>
             <SectionHeader
               title={t.studySources.title}
+              subtitle={t.studySources.description}
             />
 
             <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
@@ -310,7 +312,7 @@ export default function TopicDetailScreen() {
               />
               <Button
                 label={t.studyAi.assistant}
-                variant="secondary"
+                variant="primary"
                 size="sm"
                 onPress={() =>
                   router.push(`/topics/${encodeURIComponent(id)}/assistant` as Href)
@@ -327,10 +329,30 @@ export default function TopicDetailScreen() {
             ) : sources.length === 0 ? (
               <FeedbackState kind="empty" message={t.studySources.empty} />
             ) : (
-              <View style={{ gap: spacing.sm }}>
-                {sources.map((source) => (
-                  <TouchableOpacity
+              <View
+                style={{
+                  borderRadius: radius.md,
+                  borderColor: colors.border,
+                  borderWidth: 1,
+                  overflow: 'hidden',
+                  backgroundColor: colors.surfaceElevated,
+                }}
+              >
+                {sources.map((source, idx) => (
+                  <ListRow
                     key={source.id}
+                    title={source.title}
+                    subtitle={t.studySources.updatedAt(
+                      new Date(source.updatedAt).toLocaleDateString(t.dashboard.locale, {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })
+                    )}
+                    leading={<Feather name="file-text" size={16} color={colors.primary} />}
+                    trailing={<Badge label={t.studySources[source.sourceType]} variant="default" size="sm" />}
+                    chevron
+                    borderBottom={idx < sources.length - 1}
                     accessibilityRole="button"
                     accessibilityLabel={t.studySources.openSource(source.title)}
                     onPress={() =>
@@ -340,40 +362,7 @@ export default function TopicDetailScreen() {
                         )}` as Href
                       )
                     }
-                    style={[
-                      styles.sourceItem,
-                      {
-                        borderColor: colors.border,
-                        borderRadius: radius.md,
-                        padding: spacing.md,
-                        backgroundColor: colors.surfaceElevated,
-                        gap: spacing.xs,
-                      },
-                    ]}
-                  >
-                    <View style={styles.sourceHeader}>
-                      <AppText variant="h3" style={{ flex: 1, marginRight: spacing.sm }}>
-                        {source.title}
-                      </AppText>
-                      <Badge label={t.studySources[source.sourceType]} variant="default" />
-                    </View>
-                    <View style={styles.metaRow}>
-                      <Feather name="file-text" size={13} color={colors.textMuted} />
-                      <AppText
-                        variant="caption"
-                        color={colors.textSecondary}
-                        style={{ marginLeft: spacing.xs }}
-                      >
-                        {t.studySources.updatedAt(
-                          new Date(source.updatedAt).toLocaleDateString(t.dashboard.locale, {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          })
-                        )}
-                      </AppText>
-                    </View>
-                  </TouchableOpacity>
+                  />
                 ))}
               </View>
             )}

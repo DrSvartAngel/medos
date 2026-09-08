@@ -88,7 +88,10 @@ export function StudySourceEditor({
       keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
     >
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: spacing.xxl }]}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: spacing.xxl, maxWidth: 680, width: '100%', alignSelf: 'center' },
+        ]}
         keyboardShouldPersistTaps="handled"
       >
         {saveError ? (

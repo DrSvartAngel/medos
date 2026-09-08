@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, BackHandler, ScrollView, StyleSheet, View } from 'react-native';
 import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { topicRepo } from '@/db/repositories/topicRepo';
 import { studySourceRepo } from '@/db/repositories/studySourceRepo';
 import type { StudySource } from '@/models/studySource';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { FeedbackState } from '@/components/ui/FeedbackState';
@@ -21,6 +23,8 @@ export default function StudySourceDetailScreen() {
   const sourceId = topicRouteId(Array.isArray(params.sourceId) ? params.sourceId[0] : params.sourceId);
   const t = useTranslation();
   const { colors, spacing } = useTheme();
+
+  const topic = topicId ? topicRepo.getById(topicId) : null;
 
   const [source, setSource] = useState<StudySource | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,12 +171,19 @@ export default function StudySourceDetailScreen() {
 
   return (
     <ScreenWrapper includeBottomSafeArea>
-      <Section>
-        <Button label={t.common.back} variant="ghost" onPress={handleBack} />
+      <Section style={{ maxWidth: 680, width: '100%', alignSelf: 'center' }}>
+        <Breadcrumb
+          items={[
+            { label: topic?.name ?? t.studySources.title, onPress: handleBack },
+            { label: source.title, isCurrent: true },
+          ]}
+        />
 
         {isEditing ? (
           <>
-            <AppText variant="h2">{t.studySources.editSource}</AppText>
+            <AppText variant="h2" style={{ marginTop: spacing.xs, marginBottom: spacing.sm }}>
+              {t.studySources.editSource}
+            </AppText>
             <StudySourceEditor
               initialValues={{
                 title: source.title,
@@ -191,7 +202,7 @@ export default function StudySourceDetailScreen() {
             contentContainerStyle={{ paddingBottom: spacing.xxl }}
             keyboardShouldPersistTaps="handled"
           >
-            <View style={[styles.headerRow, { marginBottom: spacing.sm }]}>
+            <View style={[styles.headerRow, { marginTop: spacing.xs, marginBottom: spacing.sm }]}>
               <AppText variant="h2" style={{ flex: 1, marginRight: spacing.sm }}>
                 {source.title}
               </AppText>
