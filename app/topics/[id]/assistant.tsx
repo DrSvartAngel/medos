@@ -1269,7 +1269,7 @@ export default function StudyAssistantScreen() {
                                       >
                                         <TouchableOpacity
                                           accessibilityRole="radio"
-                                          accessibilityState={{ checked: isCorrect }}
+                                          accessibilityState={{ checked: isCorrect, selected: isCorrect }}
                                           accessibilityLabel={`${t.studyAi.optionNumbered(optIdx + 1)}: ${
                                             isCorrect
                                               ? t.studyAi.correctAnswer
@@ -1279,6 +1279,10 @@ export default function StudyAssistantScreen() {
                                           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                                           style={{
                                             padding: spacing.xs,
+                                            minWidth: 44,
+                                            minHeight: 44,
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
                                           }}
                                         >
                                           <Feather

@@ -203,7 +203,7 @@ export default function CommitteesScreen() {
 
                       <AppText
                         variant="h3"
-                        numberOfLines={1}
+                        numberOfLines={2}
                         style={{ marginTop: spacing.xs }}
                       >
                         {activeCommittee.name}
