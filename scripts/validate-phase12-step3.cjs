@@ -563,25 +563,203 @@ async function runPhase12Step3Validation() {
     }
   }
 
-  // 12. REMOTE EXTRACTION ENDPOINT CHECK
+  // 12. FULL REMOTE ACCEPTANCE TEST ON DEPLOYED RENDER SERVICE
   {
     const remoteUrl = 'https://medos-pdf-extraction.onrender.com';
-    try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
-      const res = await fetch(`${remoteUrl}/health`, { signal: controller.signal });
-      clearTimeout(timeoutId);
-      if (res.ok) {
-        console.log(`PASS Remote Render extraction service is reachable at ${remoteUrl}`);
-      } else {
-        console.log(`WARN Remote Render endpoint returned HTTP ${res.status}`);
-      }
-    } catch (err) {
-      console.log(`WARN Remote Render endpoint ping timed out or offline: ${err.message}`);
-    }
+    console.log(`Connecting to remote Render service at ${remoteUrl}...`);
+
+    // 12.1 Remote Health
+    const healthRes = await fetch(`${remoteUrl}/health`);
+    assert.equal(healthRes.status, 200, 'Remote /health must return 200');
+    const healthData = await healthRes.json();
+    assert.equal(healthData.status, 'ok', 'Remote /health status must be ok');
+    console.log('PASS Remote health: Service is online and operational');
+
+    // 12.2 Remote Corpus A: Basic 3-Slide Presentation
+    const corpusABuffer = createPptxZip([
+      { title: 'Cardiovascular Physiology', bullets: [{ lvl: 0, text: 'Introduction to hemodynamic principles.' }] },
+      { title: 'Cardiac Cycle Phases', bullets: [{ lvl: 0, text: 'Isovolumetric contraction and ventricular ejection.' }] },
+      { title: 'Clinical Summary', bullets: [{ lvl: 0, text: 'Correlations with heart sounds S1 and S2.' }] },
+    ]);
+    const remoteARes = await fetch(`${remoteUrl}/extract-pptx`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/vnd.openxmlformats-officedocument.presentationml.presentation' },
+      body: corpusABuffer,
+    });
+    assert.equal(remoteARes.status, 200, 'Remote /extract-pptx should accept Corpus A');
+    const remoteA = await remoteARes.json();
+    assert.equal(remoteA.status, 'success');
+    assert.equal(remoteA.slideCount, 3);
+    assert.equal(remoteA.slides[0].title, 'Cardiovascular Physiology');
+    assert.equal(remoteA.slides[1].title, 'Cardiac Cycle Phases');
+    assert.equal(remoteA.slides[2].title, 'Clinical Summary');
+    console.log('PASS Remote Corpus A: 3-slide presentation extracts titles, text, and order');
+
+    // 12.3 Remote Corpus B: Nested Bullets
+    const corpusBBuffer = createPptxZip([
+      {
+        title: 'Determinants of Cardiac Output',
+        bullets: [
+          { lvl: 0, text: 'Cardiac Output' },
+          { lvl: 1, text: 'Heart Rate' },
+          { lvl: 1, text: 'Stroke Volume' },
+          { lvl: 2, text: 'Preload' },
+          { lvl: 2, text: 'Afterload' },
+          { lvl: 2, text: 'Contractility' },
+        ],
+      },
+    ]);
+    const remoteBRes = await fetch(`${remoteUrl}/extract-pptx`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: corpusBBuffer,
+    });
+    assert.equal(remoteBRes.status, 200);
+    const remoteB = await remoteBRes.json();
+    assert.equal(remoteB.status, 'success');
+    const bSlide = remoteB.slides[0];
+    assert(bSlide.text.includes('  - Heart Rate'), 'Remote extraction should preserve level 1 indentation');
+    assert(bSlide.text.includes('    - Preload'), 'Remote extraction should preserve level 2 indentation');
+    console.log('PASS Remote Corpus B: Nested bullet hierarchy preserved through remote endpoint');
+
+    // 12.4 Remote Corpus C: Table Slide
+    const corpusCBuffer = createPptxZip([
+      {
+        title: 'Valvular Heart Disease Summary',
+        table: [
+          ['Lesion', 'Timing', 'Radiation'],
+          ['Aortic Stenosis', 'Systolic crescendo-decrescendo', 'Carotids'],
+          ['Mitral Regurgitation', 'Holosystolic', 'Axilla'],
+        ],
+      },
+    ]);
+    const remoteCRes = await fetch(`${remoteUrl}/extract-pptx`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: corpusCBuffer,
+    });
+    assert.equal(remoteCRes.status, 200);
+    const remoteC = await remoteCRes.json();
+    assert.equal(remoteC.status, 'success');
+    assert(remoteC.slides[0].tables && remoteC.slides[0].tables.length === 1);
+    assert.deepEqual(remoteC.slides[0].tables[0].rows[0], ['Lesion', 'Timing', 'Radiation']);
+    assert(remoteC.slides[0].text.includes('| Lesion | Timing | Radiation |'));
+    console.log('PASS Remote Corpus C: Real presentation tables extracted with rows and markdown');
+
+    // 12.5 Remote Corpus D: Speaker Notes
+    const corpusDBuffer = createPptxZip([
+      {
+        title: 'Frank-Starling Relationship',
+        bullets: [{ lvl: 0, text: 'End-diastolic volume determines stroke volume.' }],
+        notes: 'Clinical Pearl: Note that the curve shifts downward in heart failure.',
+      },
+    ]);
+    const remoteDRes = await fetch(`${remoteUrl}/extract-pptx`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: corpusDBuffer,
+    });
+    assert.equal(remoteDRes.status, 200);
+    const remoteD = await remoteDRes.json();
+    assert.equal(remoteD.status, 'success');
+    assert(remoteD.slides[0].notes.includes('Clinical Pearl: Note that the curve shifts downward'));
+    console.log('PASS Remote Corpus D: Speaker notes extracted and cleanly attached to slide');
+
+    // 12.6 Remote Corpus E: Embedded Image References
+    const corpusEBuffer = createPptxZip([
+      {
+        title: 'Ventricular Pressure-Volume Loop',
+        bullets: [{ lvl: 0, text: 'Analysis of stroke volume and systolic pressure.' }],
+        image: {
+          name: 'PV Loop Diagram',
+          alt: 'Figure 4: Left ventricular pressure-volume relationship',
+          target: 'pv_loop.png',
+        },
+      },
+    ]);
+    const remoteERes = await fetch(`${remoteUrl}/extract-pptx`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: corpusEBuffer,
+    });
+    assert.equal(remoteERes.status, 200);
+    const remoteE = await remoteERes.json();
+    assert.equal(remoteE.status, 'success');
+    assert(remoteE.slides[0].images && remoteE.slides[0].images.length === 1);
+    assert.equal(remoteE.slides[0].images[0].target, 'pv_loop.png');
+    assert(remoteE.slides[0].text.includes('[Image: pv_loop.png - Figure 4: Left ventricular pressure-volume relationship]'));
+    console.log('PASS Remote Corpus E: Image/diagram references and embedded alt text preserved');
+
+    // 12.7 Remote Corpus F: Turkish & Medical Unicode Terminology
+    const corpusFBuffer = createPptxZip([
+      {
+        title: 'Miyokart Enfarktüsü Tanı Kriterleri ve Tedavisi',
+        bullets: [
+          { lvl: 0, text: 'Akut koroner sendrom semptomları ve klinik yaklaşım:' },
+          { lvl: 1, text: 'Göğüs ağrısı: Retrosternal baskı hissi, sol kola ve çeneye yayılım gösterir.' },
+          { lvl: 1, text: 'Biyobelirteçler: Kardiyak Troponin I ve T düzeylerinde belirgin yükselme.' },
+          { lvl: 1, text: 'Elektrokardiyografi: ST elevasyonu veya yeni sol dal bloğu gelişimi.' },
+        ],
+        notes: 'Önemli Hatırlatma: Reperfüzyon tedavisi ilk 12 saat içinde acilen planlanmalıdır.',
+      },
+    ]);
+    const remoteFRes = await fetch(`${remoteUrl}/extract-pptx`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: corpusFBuffer,
+    });
+    assert.equal(remoteFRes.status, 200);
+    const remoteF = await remoteFRes.json();
+    assert.equal(remoteF.status, 'success');
+    assert.equal(remoteF.slides[0].title, 'Miyokart Enfarktüsü Tanı Kriterleri ve Tedavisi');
+    assert(remoteF.slides[0].text.includes('Göğüs ağrısı: Retrosternal baskı hissi'));
+    assert(remoteF.slides[0].notes.includes('Önemli Hatırlatma: Reperfüzyon tedavisi'));
+    console.log('PASS Remote Corpus F: Turkish and medical Unicode characters preserved faithfully');
+
+    // 12.8 Remote Slide Provenance
+    const { buildSlideStructuredText } = require(path.join(root, 'services', 'documents', 'pptxTypes.ts'));
+    const { formattedText, provenanceList } = buildSlideStructuredText(
+      remoteA.slides,
+      'remote-src-1',
+      'Cardiovascular Lecture.pptx',
+      'cardio-topic'
+    );
+    assert.equal(provenanceList.length, 3);
+    assert.equal(provenanceList[0].slideNumber, 1);
+    assert.equal(provenanceList[1].slideNumber, 2);
+    assert.equal(provenanceList[2].slideNumber, 3);
+    assert(provenanceList[0].excerpt.length > 0);
+    console.log('PASS Remote slide provenance: Exact slide numbers, section titles, and character offsets computed');
+
+    // 12.9 Remote PDF Regression (ensure /extract still extracts PDFs on deployed service)
+    const { createSampleTwoPagePdf } = require(path.join(root, 'scripts', 'test-pdf-generator.cjs'));
+    const testPdfBuffer = createSampleTwoPagePdf();
+    const pdfRes = await fetch(`${remoteUrl}/extract`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/pdf' },
+      body: testPdfBuffer,
+    });
+    assert.equal(pdfRes.status, 200, 'Deployed /extract must still accept PDFs without regression');
+    const pdfData = await pdfRes.json();
+    assert.equal(pdfData.status, 'success');
+    assert.equal(pdfData.pageCount, 2);
+    assert(pdfData.pages[0].text.includes('Cardiovascular Physiology Overview'));
+    console.log('PASS Remote PDF regression: Deployed service extracts 2-page PDF with zero regression');
+
+    // 12.10 Remote Failure Handling
+    const corruptRes = await fetch(`${remoteUrl}/extract-pptx`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' },
+      body: Buffer.from('Corrupted non-zip bytes!'),
+    });
+    assert.equal(corruptRes.status, 400);
+    const corruptData = await corruptRes.json();
+    assert.equal(corruptData.status, 'failed');
+    assert.equal(corruptData.errorCode, 'invalid_format');
+    console.log('PASS Remote failure handling: Rejects corrupted non-ZIP presentation with HTTP 400 invalid_format');
   }
 
-  console.log('\nALL PHASE 12.3 PPTX INGESTION CHECKS PASSED.');
+  console.log('\nALL PHASE 12.3 PPTX INGESTION & REMOTE ACCEPTANCE CHECKS PASSED.');
 }
 
 if (require.main === module) {
