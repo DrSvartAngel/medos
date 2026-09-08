@@ -1,4 +1,4 @@
-// MedOS – Typography scale (system font stack, Inter via expo-font in future)
+// MedOS – Typography scale & semantic variants (clean system font stack)
 import { Platform } from 'react-native';
 
 const fontFamily = Platform.select({
@@ -14,7 +14,7 @@ export const Typography = {
 
   // Sizes
   size: {
-    xs: 11,
+    xs: 12,
     sm: 13,
     base: 15,
     md: 17,
@@ -42,15 +42,15 @@ export const Typography = {
 
   // Semantic variants
   variants: {
-    display: { fontSize: 36, fontWeight: '800' as const, lineHeight: 44 },
+    display: { fontSize: 34, fontWeight: '800' as const, lineHeight: 42 },
     h1: { fontSize: 28, fontWeight: '700' as const, lineHeight: 34 },
     h2: { fontSize: 22, fontWeight: '700' as const, lineHeight: 28 },
     h3: { fontSize: 18, fontWeight: '600' as const, lineHeight: 24 },
-    subhead: { fontSize: 15, fontWeight: '600' as const, lineHeight: 20 },
+    subhead: { fontSize: 16, fontWeight: '600' as const, lineHeight: 22 },
     body: { fontSize: 15, fontWeight: '400' as const, lineHeight: 22 },
     bodySmall: { fontSize: 13, fontWeight: '400' as const, lineHeight: 18 },
     label: { fontSize: 13, fontWeight: '600' as const, lineHeight: 18 },
-    caption: { fontSize: 11, fontWeight: '400' as const, lineHeight: 14 },
+    caption: { fontSize: 12, fontWeight: '400' as const, lineHeight: 16 },
     stat: { fontSize: 32, fontWeight: '800' as const, lineHeight: 38 },
   },
 } as const;

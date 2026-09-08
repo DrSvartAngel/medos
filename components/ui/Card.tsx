@@ -25,7 +25,7 @@ export function Card({
   accessibilityLabel,
   accessibilityRole,
 }: CardProps) {
-  const { colors, spacing, radius } = useTheme();
+  const { colors, spacing, radius, shadows } = useTheme();
 
   const resolvedVariant: CardVariant = variant ?? (elevated ? 'elevated' : 'default');
 
@@ -41,6 +41,7 @@ export function Card({
     borderColor: colors.cardBorder,
     borderRadius: radius.md,
     padding: padded ? spacing.md : 0,
+    ...(elevated ? shadows.subtle : shadows.none),
   };
 
   if (onPress) {
