@@ -68,6 +68,7 @@ export default function FocusScreen() {
   const setPlannedSec = useFocusStore((state) => state.setPlannedSec);
   const setSelectedCommittee = useFocusStore((state) => state.setSelectedCommittee);
   const startTimer = useFocusStore((state) => state.startTimer);
+  const startEntrySession = useFocusStore((state) => state.startEntrySession);
   const pauseTimer = useFocusStore((state) => state.pauseTimer);
   const clearGentleBreak = useFocusStore((state) => state.clearGentleBreak);
   const resumeTimer = useFocusStore((state) => state.resumeTimer);
@@ -366,12 +367,6 @@ export default function FocusScreen() {
               </AppText>
             </View>
           )}
-          <DurationPicker plannedSec={plannedSec} onSelect={setPlannedSec} />
-          <CommitteePicker
-            committees={committees}
-            selectedId={selectedCommitteeId}
-            onSelect={setSelectedCommittee}
-          />
           <TimerDisplay
             status={timerStatus}
             displaySec={displaySec}
@@ -382,11 +377,18 @@ export default function FocusScreen() {
           <SessionControls
             status={timerStatus}
             onStart={startTimer}
+            onStartSmall={() => startEntrySession()}
             onPause={pauseTimer}
             onResume={resumeTimer}
             onFinish={finishSession}
             onCancel={cancelSession}
             onReset={resetTimer}
+          />
+          <DurationPicker plannedSec={plannedSec} onSelect={setPlannedSec} />
+          <CommitteePicker
+            committees={committees}
+            selectedId={selectedCommitteeId}
+            onSelect={setSelectedCommittee}
           />
         </View>
 

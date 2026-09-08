@@ -534,7 +534,16 @@ for (const file of studyWorkflowPresentationFiles) {
   }
 }
 
-console.log('PASS: Study workflows satisfy Phase 11 Step 7 hierarchy and design invariants');
+// 7. V5 Study Workflow Invariants
+const reviewControlsSrc = read('components/memory/ReviewControls.tsx');
+for (const grade of ["'again'", "'hard'", "'good'", "'easy'"]) {
+  assert.ok(reviewControlsSrc.includes(grade), `ReviewControls must preserve SRS grade ${grade}`);
+}
+assert.ok(focusSrc.includes('startTimer'), 'Focus must support startTimer');
+assert.ok(focusSrc.includes('startEntrySession'), 'Focus must support low-friction startEntrySession');
+assert.ok(tabLayoutSrc.includes("name: 'calendar'"), 'Calendar must remain visible bottom tab');
+
+console.log('PASS: Study workflows satisfy Phase 11 Step 7 and V5 hierarchy and design invariants');
 
 // 3.9 AI Screens Redesign (Phase 11 Step 8)
 console.log('\n--- Checking AI Screens Redesign ---');

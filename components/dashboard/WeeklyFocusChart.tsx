@@ -80,17 +80,17 @@ export function WeeklyFocusChart() {
             <Box
               style={[
                 styles.iconWrap,
-                { backgroundColor: colors.primaryMuted, borderRadius: radius.xs },
+                { backgroundColor: colors.surfaceElevated, borderRadius: radius.xs },
               ]}
             >
-              <Feather name="bar-chart-2" size={14} color={colors.primary} />
+              <Feather name="bar-chart-2" size={14} color={colors.textSecondary} />
             </Box>
             <GSText size="xs" style={[styles.sectionLabel, { color: colors.textMuted }]}>
               {t.dashboard.weeklyFocus.toUpperCase()}
             </GSText>
           </HStack>
           {weekData.hasData && (
-            <GSText size="xs" style={{ color: colors.primary, fontWeight: '700' }}>
+            <GSText size="xs" style={{ color: colors.textPrimary, fontWeight: '700' }}>
               {t.dashboard.weeklyTotal(formattedTotal)}
             </GSText>
           )}
@@ -106,12 +106,13 @@ export function WeeklyFocusChart() {
           </VStack>
         ) : (
           <VStack space="xs" style={{ width: '100%', paddingTop: 8 }}>
+            {/* Bar columns */}
             <HStack style={styles.barsRow}>
               {weekData.days.map((day) => {
-                const fillPercent = Math.min(100, Math.round((day.minutes / maxMinutes) * 100));
+                const fillPercent = maxMinutes > 0 ? Math.round((day.minutes / maxMinutes) * 100) : 0;
                 return (
                   <VStack key={day.key} style={styles.barCol}>
-                    {/* Minutes label above bar */}
+                    {/* Minutes above bar */}
                     <GSText
                       size="xs"
                       style={[
@@ -143,7 +144,7 @@ export function WeeklyFocusChart() {
                             styles.barFill,
                             {
                               height: `${fillPercent}%`,
-                              backgroundColor: day.isToday ? colors.primary : colors.primaryPressed,
+                              backgroundColor: day.isToday ? colors.primary : colors.textMuted,
                               borderRadius: radius.xs,
                             },
                           ]}

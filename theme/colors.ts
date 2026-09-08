@@ -1,25 +1,25 @@
-// MedOS – Centralized Theme Colors (Light-first with Charcoal/Navy Dark support)
+// MedOS – Centralized Theme Colors (90% Monochrome Neutrals + 10% Functional Teal Accent)
 
 export const LightColors = {
-  // Backgrounds & Surfaces (Clean clinical light)
-  background: '#F8FAFC',
+  // Backgrounds & Surfaces (90% monochrome neutrals)
+  background: '#F7F7F7',
   surface: '#FFFFFF',
-  surfaceElevated: '#F1F5F9',
-  surfaceHighlight: '#E2E8F0',
-  border: '#E2E8F0',
-  borderFaint: '#F1F5F9',
-  borderMuted: '#E2E8F0',
-  cardBorder: '#E2E8F0',
-  cardBorderHover: '#CBD5E1',
+  surfaceElevated: '#F0F0F0',
+  surfaceHighlight: '#E5E5E5',
+  border: '#E5E5E5',
+  borderFaint: '#F0F0F0',
+  borderMuted: '#E5E5E5',
+  cardBorder: '#E5E5E5',
+  cardBorderHover: '#D4D4D4',
 
-  // Brand (Clinical Teal + Deep Navy)
+  // Functional Teal Accent (10% sparingly used)
   primary: '#0D9488',          // Clinical teal
   primaryPressed: '#0F766E',   // Deep pressed teal
   primaryMuted: '#CCFBF1',     // Soft teal surface
   accent: '#0D9488',           // Primary accent
   accentMuted: '#E6FFFA',
 
-  // Semantic States
+  // Semantic States (Controlled & functional)
   success: '#059669',          // Calm emerald
   successMuted: '#DEF7EC',
   warning: '#D97706',          // Muted amber
@@ -33,35 +33,35 @@ export const LightColors = {
   focus: '#0D9488',
   focusRing: 'rgba(13, 148, 136, 0.25)',
 
-  // Typography (Deep Navy / Slate hierarchy)
-  textPrimary: '#0F172A',      // Deep navy
-  textSecondary: '#475569',    // Cool slate
-  textMuted: '#64748B',        // Muted slate
+  // Typography (90% monochrome neutrals)
+  textPrimary: '#111111',      // Deep monochrome black
+  textSecondary: '#525252',    // Neutral secondary
+  textMuted: '#737373',        // Neutral muted
   textInverse: '#FFFFFF',
 
   // Navigation Shell
   tabActive: '#0D9488',
-  tabInactive: '#64748B',
+  tabInactive: '#737373',
   tabBar: '#FFFFFF',
 } as const;
 
 export const DarkColors: Record<keyof typeof LightColors, string> = {
-  // Backgrounds & Surfaces (Premium charcoal / deep navy)
-  background: '#0B1120',
-  surface: '#111827',
-  surfaceElevated: '#1E293B',
-  surfaceHighlight: '#243049',
-  border: '#1E293B',
-  borderFaint: '#151F32',
-  borderMuted: '#172033',
-  cardBorder: '#1E293B',
-  cardBorderHover: '#334155',
+  // Backgrounds & Surfaces (Deep monochrome charcoal / black)
+  background: '#0A0A0A',
+  surface: '#171717',
+  surfaceElevated: '#212121',
+  surfaceHighlight: '#2A2A2A',
+  border: '#262626',
+  borderFaint: '#1C1C1C',
+  borderMuted: '#262626',
+  cardBorder: '#262626',
+  cardBorderHover: '#383838',
 
-  // Brand (Vibrant clinical teal on dark)
+  // Functional Teal Accent (10% sparingly used)
   primary: '#14B8A6',
   primaryPressed: '#0D9488',
   primaryMuted: '#134E48',
-  accent: '#38BDF8',
+  accent: '#14B8A6',
   accentMuted: '#164E63',
 
   // Semantic States
@@ -78,16 +78,16 @@ export const DarkColors: Record<keyof typeof LightColors, string> = {
   focus: '#14B8A6',
   focusRing: 'rgba(20, 184, 166, 0.35)',
 
-  // Typography (High-contrast near-white / cool slate)
-  textPrimary: '#F8FAFC',
-  textSecondary: '#CBD5E1',
-  textMuted: '#94A3B8',
-  textInverse: '#0B1120',
+  // Typography (High-contrast monochrome neutral)
+  textPrimary: '#FAFAFA',      // Neutral primary
+  textSecondary: '#A3A3A3',    // Neutral secondary
+  textMuted: '#737373',        // Neutral muted
+  textInverse: '#0A0A0A',
 
   // Navigation Shell
   tabActive: '#14B8A6',
-  tabInactive: '#64748B',
-  tabBar: '#0B1120',
+  tabInactive: '#737373',
+  tabBar: '#171717',
 };
 
 export type ThemeColors = Record<keyof typeof LightColors, string>;

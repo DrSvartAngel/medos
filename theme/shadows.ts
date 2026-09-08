@@ -12,7 +12,7 @@ export const Shadows = {
 
   subtle: Platform.select<ViewStyle>({
     ios: {
-      shadowColor: '#0F172A',
+      shadowColor: '#000000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.04,
       shadowRadius: 2,
@@ -21,7 +21,7 @@ export const Shadows = {
       elevation: 1,
     },
     default: {
-      shadowColor: '#0F172A',
+      shadowColor: '#000000',
       shadowOffset: { width: 0, height: 1 },
       shadowOpacity: 0.04,
       shadowRadius: 2,
@@ -30,7 +30,7 @@ export const Shadows = {
 
   card: Platform.select<ViewStyle>({
     ios: {
-      shadowColor: '#0F172A',
+      shadowColor: '#000000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.06,
       shadowRadius: 4,
@@ -39,7 +39,7 @@ export const Shadows = {
       elevation: 2,
     },
     default: {
-      shadowColor: '#0F172A',
+      shadowColor: '#000000',
       shadowOffset: { width: 0, height: 2 },
       shadowOpacity: 0.06,
       shadowRadius: 4,
@@ -48,7 +48,7 @@ export const Shadows = {
 
   elevated: Platform.select<ViewStyle>({
     ios: {
-      shadowColor: '#0F172A',
+      shadowColor: '#000000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.08,
       shadowRadius: 8,
@@ -57,7 +57,7 @@ export const Shadows = {
       elevation: 4,
     },
     default: {
-      shadowColor: '#0F172A',
+      shadowColor: '#000000',
       shadowOffset: { width: 0, height: 4 },
       shadowOpacity: 0.08,
       shadowRadius: 8,

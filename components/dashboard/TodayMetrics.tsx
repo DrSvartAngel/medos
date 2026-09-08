@@ -109,7 +109,7 @@ export function TodayMetrics({
               {/* Memory Metrics Headline */}
               <VStack space="xs">
                 <HStack style={{ alignItems: 'baseline', justifyContent: 'space-between' }}>
-                  <Heading size="md" style={{ color: dueCardCount > 0 ? colors.warning : colors.primary }}>
+                  <Heading size="md" style={{ color: dueCardCount > 0 ? colors.warning : colors.textPrimary }}>
                     {dueCardCount}
                   </Heading>
                   <GSText size="xs" style={{ color: colors.textSecondary }}>

@@ -3,6 +3,7 @@ import { useTranslation } from '@/i18n';
 import { StyleSheet, TouchableOpacity, View, type ViewStyle } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/Typography';
+import { Badge } from '@/components/ui/Badge';
 import { useTheme } from '@/hooks/useTheme';
 import type { Deck } from '@/store/useMemoryStore';
 
@@ -21,6 +22,7 @@ export function DeckCard({ deck, dueCount, committeeName, onPress, style }: Deck
   return (
     <TouchableOpacity
       accessibilityRole="button"
+      accessibilityLabel={`${deck.name}, ${t.recovery.cards(deck.cardCount)}${dueCount !== undefined && dueCount > 0 ? `, ${t.memory.dueCount(dueCount)}` : ''}`}
       onPress={onPress}
       activeOpacity={0.75}
       style={[
@@ -29,57 +31,68 @@ export function DeckCard({ deck, dueCount, committeeName, onPress, style }: Deck
           backgroundColor: colors.surface,
           borderColor: colors.border,
           borderRadius: radius.md,
-          padding: spacing.md,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.sm + 4,
         },
         style,
       ]}
     >
-      <View style={styles.titleRow}>
-        <AppText variant="h3" numberOfLines={2} style={styles.title}>
-          {deck.name}
-        </AppText>
-        <Feather name="chevron-right" size={19} color={colors.textMuted} />
-      </View>
-
-      {deck.description.length > 0 && (
-        <AppText
-          variant="bodySmall"
-          color={colors.textSecondary}
-          numberOfLines={2}
-          style={{ marginTop: spacing.xs }}
+      <View style={styles.row}>
+        <View
+          style={[
+            styles.iconWrap,
+            {
+              backgroundColor: colors.surfaceElevated,
+              borderColor: colors.border,
+              borderRadius: radius.sm,
+            },
+          ]}
         >
-          {deck.description}
-        </AppText>
-      )}
-
-      <View style={[styles.metaRow, { marginTop: spacing.md }]}>
-        <View style={styles.metaItem}>
-          <Feather name="layers" size={14} color={colors.primary} />
-          <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginLeft: 6 }}>
-            {t.recovery.cards(deck.cardCount)}
-          </AppText>
+          <Feather name="layers" size={18} color={colors.primary} />
         </View>
-        {dueCount !== undefined && dueCount > 0 && (
-          <View style={styles.metaItem}>
-            <Feather name="clock" size={14} color={colors.warning} />
-            <AppText variant="caption" color={colors.warning} style={{ marginLeft: 4, fontWeight: '600' }}>
-              {t.memory.dueCount(dueCount)}
+
+        <View style={styles.content}>
+          <View style={styles.titleRow}>
+            <AppText variant="h3" numberOfLines={1} style={styles.title}>
+              {deck.name}
             </AppText>
+            {dueCount !== undefined && dueCount > 0 && (
+              <Badge label={t.memory.dueCount(dueCount)} variant="warning" size="sm" />
+            )}
           </View>
-        )}
-        {committeeName !== undefined && (
-          <View style={[styles.metaItem, styles.committee]}>
-            <Feather name="book-open" size={14} color={colors.textMuted} />
+
+          {deck.description.length > 0 && (
             <AppText
-              variant="caption"
-              color={colors.textMuted}
+              variant="bodySmall"
+              color={colors.textSecondary}
               numberOfLines={1}
-              style={{ marginLeft: 6, flex: 1 }}
+              style={{ marginTop: 2 }}
             >
-              {committeeName}
+              {deck.description}
             </AppText>
+          )}
+
+          <View style={[styles.metaRow, { marginTop: spacing.xs }]}>
+            <AppText variant="caption" color={colors.textSecondary}>
+              {t.recovery.cards(deck.cardCount)}
+            </AppText>
+            {committeeName !== undefined && (
+              <>
+                <AppText variant="caption" color={colors.textMuted}> · </AppText>
+                <AppText
+                  variant="caption"
+                  color={colors.textMuted}
+                  numberOfLines={1}
+                  style={{ flexShrink: 1 }}
+                >
+                  {committeeName}
+                </AppText>
+              </>
+            )}
           </View>
-        )}
+        </View>
+
+        <Feather name="chevron-right" size={18} color={colors.textMuted} style={styles.chevron} />
       </View>
     </TouchableOpacity>
   );
@@ -88,11 +101,28 @@ export function DeckCard({ deck, dueCount, committeeName, onPress, style }: Deck
 const styles = StyleSheet.create({
   card: {
     borderWidth: 1,
-    minHeight: 148,
+    minHeight: 56,
+    justifyContent: 'center',
+  },
+  row: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  iconWrap: {
+    alignItems: 'center',
+    borderWidth: 1,
+    height: 38,
+    justifyContent: 'center',
+    width: 38,
+  },
+  content: {
+    flex: 1,
+    marginLeft: 12,
   },
   titleRow: {
-    alignItems: 'flex-start',
+    alignItems: 'center',
     flexDirection: 'row',
+    justifyContent: 'space-between',
   },
   title: {
     flex: 1,
@@ -101,15 +131,8 @@ const styles = StyleSheet.create({
   metaRow: {
     alignItems: 'center',
     flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
   },
-  metaItem: {
-    alignItems: 'center',
-    flexDirection: 'row',
-  },
-  committee: {
-    flex: 1,
-    minWidth: 120,
+  chevron: {
+    marginLeft: 8,
   },
 });

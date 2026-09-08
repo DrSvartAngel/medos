@@ -174,7 +174,7 @@ export default function MemoryScreen() {
           {/* 3. Compact Factual Summary */}
           <View style={[styles.stats, { gap: spacing.sm, marginTop: spacing.md }]}>
             <Card style={styles.stat}>
-              <AppText variant="h3" color={colors.primary} style={styles.statValue}>
+              <AppText variant="h3" color={colors.textPrimary} style={styles.statValue}>
                 {decks.length}
               </AppText>
               <AppText variant="caption" color={colors.textSecondary} style={styles.statLabel}>
@@ -182,7 +182,7 @@ export default function MemoryScreen() {
               </AppText>
             </Card>
             <Card style={styles.stat}>
-              <AppText variant="h3" color={colors.primary} style={styles.statValue}>
+              <AppText variant="h3" color={colors.textPrimary} style={styles.statValue}>
                 {totalCards}
               </AppText>
               <AppText variant="caption" color={colors.textSecondary} style={styles.statLabel}>

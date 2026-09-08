@@ -9,6 +9,7 @@ import { useTranslation } from '@/i18n';
 interface SessionControlsProps {
   status: TimerStatus;
   onStart: () => void;
+  onStartSmall?: () => void;
   onPause: () => void;
   onResume: () => void;
   onFinish: () => void;
@@ -19,6 +20,7 @@ interface SessionControlsProps {
 export function SessionControls({
   status,
   onStart,
+  onStartSmall,
   onPause,
   onResume,
   onFinish,
@@ -33,7 +35,15 @@ export function SessionControls({
   if (status === 'idle') {
     return (
       <View style={{ gap: spacing.sm }}>
-        <Button label={t.focus.startSession} size={size} onPress={onStart} />
+        <Button label={t.focus.startSession} size={size} variant="primary" onPress={onStart} />
+        {onStartSmall && (
+          <Button
+            label={t.recovery.smallStart}
+            size={size}
+            variant="secondary"
+            onPress={onStartSmall}
+          />
+        )}
         <Button label={t.focus.resetSetup} size={size} variant="ghost" onPress={onReset} />
       </View>
     );
