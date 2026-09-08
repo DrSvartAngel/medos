@@ -298,22 +298,31 @@ export default function CommitteeDetailScreen() {
       <WeakTopicsList topics={weakTopics} />
       <NeglectedTopicsList topics={neglectedTopics} />
       <CommitteeLearningEvidence key={`evidence-${committee.id}`} committeeId={committee.id} />
-      <Button label={t.examPlan.title} variant="secondary"
-        onPress={() => router.push(`/committees/exam-plan/${encodeURIComponent(committee.id)}` as Href)} />
-      <Button
-        label={t.studyPlan.studyPlanButton}
-        variant="secondary"
-        onPress={() => router.push(`/committees/${encodeURIComponent(committee.id)}/study-plan` as Href)}
-        style={{ marginTop: spacing.sm }}
-      />
+      <Card style={{ marginTop: spacing.md, gap: spacing.sm }}>
+        <AppText variant="subhead">{t.studyPlan.studyPlanButton}</AppText>
+        <Button
+          label={t.examPlan.title}
+          variant="secondary"
+          onPress={() => router.push(`/committees/exam-plan/${encodeURIComponent(committee.id)}` as Href)}
+        />
+        <Button
+          label={t.studyPlan.studyPlanButton}
+          variant="secondary"
+          onPress={() => router.push(`/committees/${encodeURIComponent(committee.id)}/study-plan` as Href)}
+        />
+      </Card>
 
-      <Button
-        label={t.sweep.removeCommittee}
-        accessibilityLabel={t.sweep.removeNamed(committee.name)}
-        variant="danger"
-        onPress={handleDelete}
-        style={{ marginTop: spacing.md, marginBottom: spacing.lg }}
-      />
+      <Card style={{ marginTop: spacing.md, marginBottom: spacing.xl, borderColor: colors.errorMuted, borderWidth: 1 }}>
+        <AppText variant="label" color={colors.error} style={{ marginBottom: spacing.xs }}>
+          {t.subjects.committeeDeleteTitle}
+        </AppText>
+        <Button
+          label={t.sweep.removeCommittee}
+          accessibilityLabel={t.sweep.removeNamed(committee.name)}
+          variant="danger"
+          onPress={handleDelete}
+        />
+      </Card>
     </ScreenWrapper>
   );
 }

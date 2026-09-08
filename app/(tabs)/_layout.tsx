@@ -2,9 +2,9 @@ import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
-import { Colors } from '@/theme/colors';
 import { Typography } from '@/theme/typography';
 import { Spacing } from '@/theme/spacing';
+import { useTheme } from '@/hooks/useTheme';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTranslation } from '@/i18n';
 
@@ -26,6 +26,7 @@ const TAB_CONFIGS: TabConfig[] = [
 ];
 
 export default function TabLayout() {
+  const { colors } = useTheme();
   const { isTablet } = useResponsive();
   const insets = useSafeAreaInsets();
   const t = useTranslation();
@@ -59,15 +60,15 @@ export default function TabLayout() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: Colors.tabBar,
-          borderTopColor: Colors.border,
+          backgroundColor: colors.tabBar,
+          borderTopColor: colors.border,
           borderTopWidth: 1,
           height: tabBarHeight,
           paddingBottom: tabBarPaddingBottom,
           paddingTop: Spacing.xs,
         },
-        tabBarActiveTintColor: Colors.tabActive,
-        tabBarInactiveTintColor: Colors.tabInactive,
+        tabBarActiveTintColor: colors.tabActive,
+        tabBarInactiveTintColor: colors.tabInactive,
         tabBarLabelStyle: {
           fontSize: labelSize,
           fontWeight: Typography.weight.medium,

@@ -113,7 +113,17 @@ export default function CalendarScreen() {
       </View>
 
       {error !== null && (
-        <View style={[styles.error, { borderColor: colors.error, marginTop: spacing.md, padding: spacing.md }]}>
+        <View
+          style={[
+            styles.error,
+            {
+              borderColor: colors.error,
+              backgroundColor: colors.errorMuted,
+              marginTop: spacing.md,
+              padding: spacing.md,
+            },
+          ]}
+        >
           <Feather name="alert-circle" size={18} color={colors.error} />
           <AppText variant="bodySmall" color={colors.error} style={styles.errorText}>
             {translateError(error, t)}

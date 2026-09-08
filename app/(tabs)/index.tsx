@@ -25,7 +25,7 @@ import {
 import { useTranslation } from '@/i18n';
 
 export default function DashboardScreen() {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, radius } = useTheme();
   const { isTablet, isLargeTablet } = useResponsive();
   const t = useTranslation();
   const isDBReady = useAppStore((state) => state.isDBReady);
@@ -195,9 +195,9 @@ export default function DashboardScreen() {
       </View>
 
       {partialErrorCount > 0 && (
-        <View style={[styles.partialError, { borderColor: colors.border, marginTop: spacing.md, padding: spacing.sm }]}>
+        <View style={[styles.partialError, { borderColor: colors.border, borderRadius: radius.md, backgroundColor: colors.surfaceElevated, marginTop: spacing.md, padding: spacing.sm }]}>
           <Feather name="alert-circle" size={17} color={colors.textMuted} />
-          <AppText variant="bodySmall" color={colors.textSecondary} style={styles.partialErrorText}>
+          <AppText variant="bodySmall" color={colors.textSecondary} style={[styles.partialErrorText, { marginLeft: spacing.sm }]}>
             {t.dashboard.partialError}
           </AppText>
           <Button label={t.common.retry} variant="ghost" size="sm" onPress={refresh} loading={isRefreshing} />
@@ -208,20 +208,20 @@ export default function DashboardScreen() {
         <View style={[styles.twoPane, { gap: spacing.lg, marginTop: spacing.lg }]}>
           <View style={[styles.column, { gap: spacing.lg }]}>
             {quickStart}
-            <MomentumCard />
+            {metrics}
             {committee}
           </View>
           <View style={[styles.column, { gap: spacing.lg }]}>
-            {metrics}
+            <MomentumCard />
             {agenda}
           </View>
         </View>
       ) : (
         <View style={[styles.stacked, { gap: spacing.lg, marginTop: spacing.lg }]}>
           {quickStart}
-          <MomentumCard />
-          {committee}
           {metrics}
+          {committee}
+          <MomentumCard />
           {agenda}
         </View>
       )}
@@ -232,8 +232,8 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   centered: { alignItems: 'center', justifyContent: 'center' },
   header: { paddingBottom: 4, paddingTop: 8 },
-  partialError: { alignItems: 'center', borderRadius: 12, borderWidth: 1, flexDirection: 'row' },
-  partialErrorText: { flex: 1, marginLeft: 8 },
+  partialError: { alignItems: 'center', borderWidth: 1, flexDirection: 'row' },
+  partialErrorText: { flex: 1 },
   stacked: { width: '100%' },
   twoPane: { alignItems: 'flex-start', flexDirection: 'row', width: '100%' },
   column: { flex: 1, minWidth: 0 },

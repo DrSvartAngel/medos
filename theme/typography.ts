@@ -39,4 +39,20 @@ export const Typography = {
     normal: 1.5,
     relaxed: 1.75,
   },
+
+  // Semantic variants
+  variants: {
+    display: { fontSize: 36, fontWeight: '800' as const, lineHeight: 44 },
+    h1: { fontSize: 28, fontWeight: '700' as const, lineHeight: 34 },
+    h2: { fontSize: 22, fontWeight: '700' as const, lineHeight: 28 },
+    h3: { fontSize: 18, fontWeight: '600' as const, lineHeight: 24 },
+    subhead: { fontSize: 15, fontWeight: '600' as const, lineHeight: 20 },
+    body: { fontSize: 15, fontWeight: '400' as const, lineHeight: 22 },
+    bodySmall: { fontSize: 13, fontWeight: '400' as const, lineHeight: 18 },
+    label: { fontSize: 13, fontWeight: '600' as const, lineHeight: 18 },
+    caption: { fontSize: 11, fontWeight: '400' as const, lineHeight: 14 },
+    stat: { fontSize: 32, fontWeight: '800' as const, lineHeight: 38 },
+  },
 } as const;
+
+export type TypographyVariant = keyof typeof Typography.variants;

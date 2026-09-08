@@ -83,7 +83,7 @@ export default function CommitteesScreen() {
                 },
               ]}
             >
-              <Feather name="plus" size={22} color="#fff" />
+              <Feather name="plus" size={22} color={colors.textInverse} />
             </TouchableOpacity>
           )}
         </View>

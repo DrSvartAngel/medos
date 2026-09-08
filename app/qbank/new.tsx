@@ -11,6 +11,9 @@ import { Feather } from '@expo/vector-icons';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
+import { Badge } from '@/components/ui/Badge';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { FormField } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/Input';
 import { TopicLinkPicker } from '@/components/memory/TopicLinkPicker';
@@ -33,6 +36,17 @@ export default function NewQBankSessionScreen() {
   const [durationMin, setDurationMin] = useState('');
   const [sourceName, setSourceName] = useState('');
   const [topicId, setTopicId] = useState<string | null>(null);
+
+  const totalNum = parseInt(totalQuestions.trim(), 10);
+  const correctNum = parseInt(correctCount.trim(), 10);
+  const hasLiveStats =
+    !isNaN(totalNum) &&
+    totalNum > 0 &&
+    !isNaN(correctNum) &&
+    correctNum >= 0 &&
+    correctNum <= totalNum;
+  const incorrectNum = hasLiveStats ? totalNum - correctNum : 0;
+  const accuracyPct = hasLiveStats ? Math.round((correctNum / totalNum) * 100) : 0;
 
   const [totalError, setTotalError] = useState<string | null>(null);
   const [correctError, setCorrectError] = useState<string | null>(null);
@@ -200,75 +214,123 @@ export default function NewQBankSessionScreen() {
 
         {/* Form fields */}
         <View style={[styles.formContainer, { marginTop: spacing.lg, gap: spacing.lg }]}>
-          {/* Total Questions */}
-          <FormField label={t.qbank.totalQuestions} error={totalError}>
-            <Input
-              accessibilityLabel={t.qbank.totalQuestions}
-              value={totalQuestions}
-              onChangeText={(text) => {
-                setTotalQuestions(text);
-                if (totalError) setTotalError(null);
-                if (formError) setFormError(null);
-              }}
-              placeholder={t.qbank.totalQuestionsPlaceholder}
-              placeholderTextColor={colors.textMuted}
-              keyboardType="number-pad"
-              invalid={!!totalError}
-              editable={!saving}
-              autoFocus
-            />
-          </FormField>
+          <Card style={{ padding: spacing.lg, gap: spacing.md }}>
+            {/* Total Questions */}
+            <FormField label={t.qbank.totalQuestions} error={totalError}>
+              <Input
+                accessibilityLabel={t.qbank.totalQuestions}
+                value={totalQuestions}
+                onChangeText={(text) => {
+                  setTotalQuestions(text);
+                  if (totalError) setTotalError(null);
+                  if (formError) setFormError(null);
+                }}
+                placeholder={t.qbank.totalQuestionsPlaceholder}
+                placeholderTextColor={colors.textMuted}
+                keyboardType="number-pad"
+                invalid={!!totalError}
+                editable={!saving}
+                autoFocus
+              />
+            </FormField>
 
-          {/* Correct Count */}
-          <FormField label={t.qbank.correctCount} error={correctError}>
-            <Input
-              accessibilityLabel={t.qbank.correctCount}
-              value={correctCount}
-              onChangeText={(text) => {
-                setCorrectCount(text);
-                if (correctError) setCorrectError(null);
-                if (formError) setFormError(null);
-              }}
-              placeholder={t.qbank.correctCountPlaceholder}
-              placeholderTextColor={colors.textMuted}
-              keyboardType="number-pad"
-              invalid={!!correctError}
-              editable={!saving}
-            />
-          </FormField>
+            {/* Correct Count */}
+            <FormField label={t.qbank.correctCount} error={correctError}>
+              <Input
+                accessibilityLabel={t.qbank.correctCount}
+                value={correctCount}
+                onChangeText={(text) => {
+                  setCorrectCount(text);
+                  if (correctError) setCorrectError(null);
+                  if (formError) setFormError(null);
+                }}
+                placeholder={t.qbank.correctCountPlaceholder}
+                placeholderTextColor={colors.textMuted}
+                keyboardType="number-pad"
+                invalid={!!correctError}
+                editable={!saving}
+              />
+            </FormField>
 
-          {/* Duration in minutes (Optional) */}
-          <FormField label={t.qbank.durationMinutes} error={durationError}>
-            <Input
-              accessibilityLabel={t.qbank.durationMinutes}
-              value={durationMin}
-              onChangeText={(text) => {
-                setDurationMin(text);
-                if (durationError) setDurationError(null);
-                if (formError) setFormError(null);
-              }}
-              placeholder={t.qbank.durationMinutesPlaceholder}
-              placeholderTextColor={colors.textMuted}
-              keyboardType="number-pad"
-              invalid={!!durationError}
-              editable={!saving}
-            />
-          </FormField>
+            {/* Live Performance Preview */}
+            {hasLiveStats ? (
+              <View
+                style={[
+                  styles.previewCard,
+                  {
+                    backgroundColor: colors.surfaceElevated,
+                    borderColor: colors.border,
+                    borderRadius: 8,
+                    padding: spacing.md,
+                    marginTop: spacing.xs,
+                  },
+                ]}
+              >
+                <View style={styles.previewHeader}>
+                  <AppText variant="label" color={colors.textSecondary}>
+                    {t.qbank.evidence.accuracy(accuracyPct)}
+                  </AppText>
+                  <Badge
+                    label={`${accuracyPct}%`}
+                    variant={accuracyPct >= 70 ? 'success' : accuracyPct >= 50 ? 'warning' : 'error'}
+                    size="sm"
+                  />
+                </View>
+                <View style={{ marginTop: spacing.xs }}>
+                  <ProgressBar
+                    value={correctNum}
+                    max={totalNum > 0 ? totalNum : 100}
+                    color={accuracyPct >= 70 ? colors.success : accuracyPct >= 50 ? colors.warning : colors.error}
+                    height={6}
+                  />
+                </View>
+                <View style={[styles.previewBreakdown, { marginTop: spacing.xs }]}>
+                  <AppText variant="caption" color={colors.success}>
+                    ✓ {correctNum}
+                  </AppText>
+                  <AppText variant="caption" color={colors.error}>
+                    ✗ {incorrectNum}
+                  </AppText>
+                  <AppText variant="caption" color={colors.textMuted}>
+                    Σ {totalNum}
+                  </AppText>
+                </View>
+              </View>
+            ) : null}
 
-          {/* Source Name (Optional) */}
-          <FormField label={t.qbank.sourceName}>
-            <Input
-              accessibilityLabel={t.qbank.sourceName}
-              value={sourceName}
-              onChangeText={(text) => {
-                setSourceName(text);
-                if (formError) setFormError(null);
-              }}
-              placeholder={t.qbank.sourceNamePlaceholder}
-              placeholderTextColor={colors.textMuted}
-              editable={!saving}
-            />
-          </FormField>
+            {/* Duration in minutes (Optional) */}
+            <FormField label={t.qbank.durationMinutes} error={durationError}>
+              <Input
+                accessibilityLabel={t.qbank.durationMinutes}
+                value={durationMin}
+                onChangeText={(text) => {
+                  setDurationMin(text);
+                  if (durationError) setDurationError(null);
+                  if (formError) setFormError(null);
+                }}
+                placeholder={t.qbank.durationMinutesPlaceholder}
+                placeholderTextColor={colors.textMuted}
+                keyboardType="number-pad"
+                invalid={!!durationError}
+                editable={!saving}
+              />
+            </FormField>
+
+            {/* Source Name (Optional) */}
+            <FormField label={t.qbank.sourceName}>
+              <Input
+                accessibilityLabel={t.qbank.sourceName}
+                value={sourceName}
+                onChangeText={(text) => {
+                  setSourceName(text);
+                  if (formError) setFormError(null);
+                }}
+                placeholder={t.qbank.sourceNamePlaceholder}
+                placeholderTextColor={colors.textMuted}
+                editable={!saving}
+              />
+            </FormField>
+          </Card>
 
           {/* Topic Link (Optional) */}
           <TopicLinkPicker
@@ -325,6 +387,19 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     width: '100%',
+  },
+  previewCard: {
+    borderWidth: 1,
+  },
+  previewHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  previewBreakdown: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
   },
   actions: {
     width: '100%',

@@ -233,7 +233,26 @@ export default function FocusScreen() {
             sessionMode={sessionMode}
             lowStimulation={lowStimulationMode}
           />
-          {selectedTopicName !== null && <AppText>{t.topics.focusContext(selectedTopicName)}</AppText>}
+          {selectedTopicName !== null && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: spacing.xs,
+                backgroundColor: colors.surfaceElevated,
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.xs,
+                borderRadius: 20,
+                alignSelf: 'center',
+              }}
+            >
+              <Feather name="book-open" size={14} color={colors.primary} />
+              <AppText variant="caption" color={colors.textSecondary}>
+                {t.topics.focusContext(selectedTopicName)}
+              </AppText>
+            </View>
+          )}
 
           {error !== null && <FocusError message={error} />}
 

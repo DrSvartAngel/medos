@@ -255,7 +255,7 @@ export default function ProfileScreen() {
 
       <Card style={{ marginTop: spacing.lg }}>
         <View style={styles.sectionHeading}>
-          <View style={[styles.iconWrap, { backgroundColor: colors.surfaceElevated }]}>
+          <View style={[styles.iconWrap, { backgroundColor: colors.primaryMuted }]}>
             <Feather name="cpu" size={20} color={colors.primary} />
           </View>
           <View style={styles.headingText}>
@@ -272,7 +272,7 @@ export default function ProfileScreen() {
         />
       </Card>
 
-      <Card style={{ marginTop: spacing.lg }}>
+      <Card style={{ marginTop: spacing.lg, marginBottom: spacing.xl }}>
         <View style={styles.localRow}>
           <Feather name="database" size={20} color={colors.textSecondary} />
           <View style={styles.headingText}>

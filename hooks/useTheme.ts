@@ -1,18 +1,21 @@
 import { useAppStore } from '@/store/useAppStore';
-import { Colors } from '@/theme/colors';
+import { DarkColors, LightColors, type ThemeColors } from '@/theme/colors';
 import { Spacing, Radius } from '@/theme/spacing';
 import { Typography } from '@/theme/typography';
 
 /**
  * Returns theme tokens resolved for the current color scheme.
- * Currently always dark; extends to light mode via colorScheme toggle in Phase 2.
+ * Supports dark mode (primary) and accessible light mode.
  */
 export function useTheme() {
   const colorScheme = useAppStore((s) => s.colorScheme);
+  const isDark = colorScheme !== 'light';
+  const colors: ThemeColors = isDark ? DarkColors : (LightColors as unknown as ThemeColors);
 
   return {
     colorScheme,
-    colors: Colors,   // Phase 2 will swap to a light palette when colorScheme === 'light'
+    isDark,
+    colors,
     spacing: Spacing,
     radius: Radius,
     typography: Typography,
