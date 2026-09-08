@@ -20,6 +20,7 @@ import { subjectRouteId } from '@/utils/subjectRoutes';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
 import { Badge } from '@/components/ui/Badge';
+import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useTheme } from '@/hooks/useTheme';
@@ -176,33 +177,51 @@ export default function CommitteeDetailScreen() {
 
   return (
     <ScreenWrapper includeBottomSafeArea>
-      <View style={[styles.topBar, { marginBottom: spacing.lg }]}>
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={t.common.back}
-          onPress={back}
-          style={styles.iconButton}
-        >
-          <Feather name="arrow-left" size={24} color={colors.textPrimary} />
-        </TouchableOpacity>
+      <View style={[styles.topBar, { marginBottom: spacing.md }]}>
+        <View style={{ flex: 1, marginRight: spacing.sm }}>
+          <Breadcrumb
+            items={[
+              {
+                label: t.committees.title,
+                onPress: back,
+              },
+              {
+                label: committee.name,
+                isCurrent: true,
+              },
+            ]}
+          />
+        </View>
 
-        <TouchableOpacity
-          accessibilityRole="button"
-          accessibilityLabel={t.sweep.editNamed(committee.name)}
-          onPress={() => router.push(`/committees/edit/${encodeURIComponent(committee.id)}` as Href)}
-          style={[
-            styles.editButton,
-            {
-              backgroundColor: colors.surface,
-              borderColor: colors.border,
-              borderRadius: radius.md,
-            },
-          ]}
-        >
-          <Feather name="edit-2" size={16} color={colors.primary} />
-          <AppText variant="label" color={colors.primary} style={{ marginLeft: 6 }}>
-            {t.sweep.edit}</AppText>
-        </TouchableOpacity>
+        <View style={styles.topActions}>
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t.common.back}
+            onPress={back}
+            style={styles.iconButton}
+          >
+            <Feather name="arrow-left" size={20} color={colors.textSecondary} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            accessibilityRole="button"
+            accessibilityLabel={t.sweep.editNamed(committee.name)}
+            onPress={() => router.push(`/committees/edit/${encodeURIComponent(committee.id)}` as Href)}
+            style={[
+              styles.editButton,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.border,
+                borderRadius: radius.md,
+              },
+            ]}
+          >
+            <Feather name="edit-2" size={14} color={colors.primary} />
+            <AppText variant="label" color={colors.primary} style={{ marginLeft: 6 }}>
+              {t.sweep.edit}
+            </AppText>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {mutationError ? (
@@ -347,6 +366,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingTop: 8,
+  },
+  topActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
   },
   iconButton: {
     minWidth: 44,

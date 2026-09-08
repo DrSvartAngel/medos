@@ -291,6 +291,80 @@ for (const comp of dashboardComponents) {
 
 console.log('PASS: Dashboard redesign satisfies Phase 11 Step 5 hierarchy and design invariants');
 
+// 3.7 Curriculum Redesign & Hierarchy
+console.log('\n--- Checking Curriculum Redesign ---');
+
+const curriculumScreens = [
+  'app/(tabs)/committees.tsx',
+  'app/committees/new.tsx',
+  'app/committees/[id].tsx',
+  'app/subjects/[id].tsx',
+  'app/topics/[id].tsx',
+];
+
+for (const screen of curriculumScreens) {
+  assert.ok(exists(screen), `Curriculum screen must exist: ${screen}`);
+}
+
+// Check Breadcrumb navigation in hierarchy
+assert.ok(
+  read('app/committees/[id].tsx').includes('Breadcrumb'),
+  'Committee detail screen must use Breadcrumb navigation'
+);
+assert.ok(
+  read('app/subjects/[id].tsx').includes('Breadcrumb'),
+  'Subject detail screen must use Breadcrumb navigation'
+);
+assert.ok(
+  read('app/topics/[id].tsx').includes('Breadcrumb'),
+  'Topic detail screen must use Breadcrumb navigation'
+);
+
+// Check Curriculum localization label in both EN and TR
+const enSrc = read('i18n/en.ts');
+const trSrc = read('i18n/tr.ts');
+assert.ok(
+  enSrc.includes("title: 'Curriculum'"),
+  'i18n/en.ts must use "Curriculum" for committees.title'
+);
+assert.ok(
+  trSrc.includes("title: 'Müfredat'"),
+  'i18n/tr.ts must use "Müfredat" for committees.title'
+);
+
+// Check legacy #6C63FF removed from app/committees/new.tsx
+const newCommitteeSrc = read('app/committees/new.tsx');
+assert.ok(
+  !newCommitteeSrc.includes('#6C63FF'),
+  'app/committees/new.tsx must not contain legacy violet #6C63FF'
+);
+assert.ok(
+  newCommitteeSrc.includes('#0D9488'),
+  'app/committees/new.tsx must default to clinical teal #0D9488'
+);
+
+// Check curriculum presentation files do not contain legacy violet
+const curriculumPresentationFiles = [
+  'app/(tabs)/committees.tsx',
+  'app/committees/new.tsx',
+  'app/committees/[id].tsx',
+  'components/committees/CommitteeCard.tsx',
+  'components/curriculum/SubjectList.tsx',
+  'components/curriculum/TopicList.tsx',
+];
+
+for (const file of curriculumPresentationFiles) {
+  if (exists(file)) {
+    const fileCode = read(file);
+    assert.ok(
+      !fileCode.includes('#6C63FF') && !fileCode.includes('#5850EC'),
+      `${file} must not contain legacy violet hex colors`
+    );
+  }
+}
+
+console.log('PASS: Curriculum redesign satisfies Phase 11 Step 6 hierarchy and design invariants');
+
 // 4. Architectural Safeguards
 console.log('\n--- Checking Architectural Integrity ---');
 

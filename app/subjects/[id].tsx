@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
+import { Section } from '@/components/ui/Section';
 import { AppText } from '@/components/ui/Typography';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
@@ -139,7 +140,8 @@ export default function SubjectDetailScreen() {
       )}
 
       {data.status === 'ready' && (
-        <View style={{ gap: spacing.lg }}>
+        <Section>
+          <View style={{ gap: spacing.lg }}>
           {/* Breadcrumb Hierarchy Navigation */}
           <Breadcrumb
             items={[
@@ -232,7 +234,8 @@ export default function SubjectDetailScreen() {
               onPress={remove}
             />
           </Card>
-        </View>
+          </View>
+        </Section>
       )}
     </ScreenWrapper>
   );

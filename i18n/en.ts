@@ -594,7 +594,7 @@ quickStart: 'Quick Start',
 
   // ── Committees tab ────────────────────────────────────────────────────────────
   committees: {
-    title: 'Committees',
+    title: 'Curriculum',
     subtitle: 'Your study areas.',
     newCommittee: 'New committee',
     empty: 'No committees yet.',

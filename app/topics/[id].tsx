@@ -18,6 +18,7 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Breadcrumb } from '@/components/ui/Breadcrumb';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Section } from '@/components/ui/Section';
 import { AppText } from '@/components/ui/Typography';
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
@@ -231,26 +232,11 @@ export default function TopicDetailScreen() {
               />
             </View>
 
-            {data.topic.learningObjectives.trim() !== '' && (
-              <View
-                style={[
-                  styles.objectivesBox,
-                  {
-                    backgroundColor: colors.surfaceHighlight,
-                    borderColor: colors.border,
-                    borderRadius: radius.md,
-                    padding: spacing.md,
-                  },
-                ]}
-              >
-                <AppText variant="label" color={colors.textPrimary} style={{ marginBottom: spacing.xs }}>
-                  {t.topics.learningObjectives}
-                </AppText>
-                <AppText variant="bodySmall" color={colors.textSecondary}>
-                  {data.topic.learningObjectives}
-                </AppText>
-              </View>
-            )}
+            {data.topic.learningObjectives.trim() !== '' && <Section title={t.topics.learningObjectives}>
+              <AppText variant="bodySmall" color={colors.textSecondary}>
+                {data.topic.learningObjectives}
+              </AppText>
+            </Section>}
           </Card>
 
           {/* Focus Action Card */}

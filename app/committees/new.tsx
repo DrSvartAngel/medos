@@ -35,8 +35,8 @@ function thirtyDaysLaterString(): string {
   return shiftLocalDateKey(todayLocalDateKey(), 30);
 }
 
-// Default color for new committees
-const DEFAULT_COLOR = '#6C63FF';
+// Default color for new committees (clinical teal)
+const DEFAULT_COLOR = '#0D9488';
 
 // ---------------------------------------------------------------------------
 // Screen

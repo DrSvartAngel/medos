@@ -600,7 +600,7 @@ quickStart: 'Hızlı başlangıç',
 
   // ── Komiteler sekmesi ────────────────────────────────────────────────────────
   committees: {
-    title: 'Komiteler',
+    title: 'Müfredat',
     subtitle: 'Çalışma alanların.',
     newCommittee: 'Yeni komite',
     empty: 'Henüz komite yok.',
