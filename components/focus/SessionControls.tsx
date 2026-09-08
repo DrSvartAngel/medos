@@ -43,12 +43,18 @@ export function SessionControls({
     <View style={{ gap: spacing.sm }}>
       <View style={[styles.primaryRow, { gap: spacing.sm }]}>
         {status === 'paused' ? (
-          <Button label={t.focus.controls.resume} size={size} onPress={onResume} style={styles.flexButton} />
+          <Button
+            label={t.focus.controls.resume}
+            size={size}
+            variant="primary"
+            onPress={onResume}
+            style={styles.flexButton}
+          />
         ) : (
           <Button
             label={t.focus.controls.pause}
             size={size}
-            variant="secondary"
+            variant="primary"
             onPress={onPause}
             style={styles.flexButton}
           />
@@ -56,6 +62,7 @@ export function SessionControls({
         <Button
           label={t.focus.controls.finish}
           size={size}
+          variant="secondary"
           onPress={onFinish}
           style={styles.flexButton}
         />

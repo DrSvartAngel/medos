@@ -649,6 +649,9 @@ quickStart: 'Hızlı başlangıç',
     subtitle: 'Destelerin, kartların ve cihazda saklanan tekrarların.',
     decksLabel: (n: number) => (n === 1 ? 'Deste' : 'Deste'),
     cardsLabel: (n: number) => (n === 1 ? 'Kart' : 'Kart'),
+    reviewDueCards: 'Süresi Gelen Kartları Tekrarla',
+    noReviewsDue: 'Bekleyen tekrar yok',
+    dueCount: (n: number) => `${n} bekleyen`,
   },
 
   // ── Deste oluştur ─────────────────────────────────────────────────────────────

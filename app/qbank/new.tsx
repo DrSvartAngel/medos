@@ -172,7 +172,12 @@ export default function NewQBankSessionScreen() {
     >
       <ScreenWrapper includeBottomSafeArea>
         {/* Header */}
-        <View style={styles.headerRow}>
+        <View
+          style={[
+            styles.headerRow,
+            { maxWidth: isTablet ? 600 : undefined, alignSelf: 'center', width: '100%' },
+          ]}
+        >
           <TouchableOpacity
             accessibilityRole="button"
             accessibilityLabel={t.sweep.back}
@@ -202,6 +207,9 @@ export default function NewQBankSessionScreen() {
                 padding: spacing.md,
                 marginTop: spacing.md,
                 borderRadius: 8,
+                maxWidth: isTablet ? 600 : undefined,
+                alignSelf: 'center',
+                width: '100%',
               },
             ]}
           >
@@ -213,7 +221,17 @@ export default function NewQBankSessionScreen() {
         ) : null}
 
         {/* Form fields */}
-        <View style={[styles.formContainer, { marginTop: spacing.lg, gap: spacing.lg }]}>
+        <View
+          style={[
+            styles.formContainer,
+            {
+              marginTop: spacing.lg,
+              gap: spacing.lg,
+              maxWidth: isTablet ? 600 : undefined,
+              alignSelf: 'center',
+            },
+          ]}
+        >
           <Card style={{ padding: spacing.lg, gap: spacing.md }}>
             {/* Total Questions */}
             <FormField label={t.qbank.totalQuestions} error={totalError}>

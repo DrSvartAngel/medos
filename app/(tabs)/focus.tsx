@@ -342,6 +342,27 @@ export default function FocusScreen() {
       >
         <View style={[styles.workspace, { gap: spacing.md }]}>
           {showVictory && <MiniVictory kind="focus" lowStimulation={lowStimulationMode} />}
+          {selectedTopicName !== null && (
+            <View
+              style={{
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: spacing.xs,
+                backgroundColor: colors.surfaceElevated,
+                borderColor: colors.border,
+                borderWidth: 1,
+                paddingHorizontal: spacing.md,
+                paddingVertical: spacing.xs + 2,
+                borderRadius: 20,
+                alignSelf: 'flex-start',
+              }}
+            >
+              <Feather name="book-open" size={14} color={colors.primary} />
+              <AppText variant="caption" color={colors.textSecondary}>
+                {t.topics.focusContext(selectedTopicName)}
+              </AppText>
+            </View>
+          )}
           <DurationPicker plannedSec={plannedSec} onSelect={setPlannedSec} />
           <CommitteePicker
             committees={committees}

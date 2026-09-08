@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { AppText } from '@/components/ui/Typography';
+import { FormField } from '@/components/ui/FormField';
+import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -139,9 +141,8 @@ export function CalendarEventForm({
         </View>
       )}
 
-      <View>
-        <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.titleRequired}</AppText>
-        <TextInput
+      <FormField label={t.sweep.titleRequired} error={titleError ? translateError(titleError, t) : undefined}>
+        <Input
           value={title}
           accessibilityLabel={t.sweep.titleRequired}
           onChangeText={(value) => { setTitle(value); if (titleError) setTitleError(''); }}
@@ -149,14 +150,12 @@ export function CalendarEventForm({
           placeholderTextColor={colors.textMuted}
           autoFocus={initialTitle.length === 0}
           maxLength={140}
-          style={inputStyle}
+          invalid={titleError.length > 0}
         />
-        {titleError.length > 0 && <FieldError message={titleError} />}
-      </View>
+      </FormField>
 
-      <View>
-        <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.dateRequired}</AppText>
-        <TextInput
+      <FormField label={t.sweep.dateRequired} error={dateError ? translateError(dateError, t) : undefined}>
+        <Input
           value={date}
           accessibilityLabel={t.sweep.dateRequired}
           onChangeText={(value) => { setDate(value); if (dateError) setDateError(''); }}
@@ -164,50 +163,48 @@ export function CalendarEventForm({
           placeholderTextColor={colors.textMuted}
           keyboardType="numeric"
           maxLength={10}
-          style={inputStyle}
+          invalid={dateError.length > 0}
         />
-        {dateError.length > 0 && <FieldError message={dateError} />}
-      </View>
+      </FormField>
 
       <View style={[styles.timeRow, { gap: spacing.sm }]}> 
         <View style={styles.timeField}>
-          <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.optionalStart}</AppText>
-          <TextInput
-            value={startTime}
-            accessibilityLabel={t.sweep.optionalStart}
-            onChangeText={(value) => {
-              setStartTime(value);
-              if (value.trim().length === 0) setEndTime('');
-              if (timeError) setTimeError('');
-            }}
-            placeholder={t.sweep.timePlaceholder}
-            placeholderTextColor={colors.textMuted}
-            keyboardType="numbers-and-punctuation"
-            maxLength={5}
-            style={inputStyle}
-          />
-        </View>
-        {startTime.trim().length > 0 && (
-          <View style={styles.timeField}>
-            <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.optionalEnd}</AppText>
-            <TextInput
-              value={endTime}
-              accessibilityLabel={t.sweep.optionalEnd}
-              onChangeText={(value) => { setEndTime(value); if (timeError) setTimeError(''); }}
+          <FormField label={t.sweep.optionalStart} error={timeError ? translateError(timeError, t) : undefined}>
+            <Input
+              value={startTime}
+              accessibilityLabel={t.sweep.optionalStart}
+              onChangeText={(value) => {
+                setStartTime(value);
+                if (value.trim().length === 0) setEndTime('');
+                if (timeError) setTimeError('');
+              }}
               placeholder={t.sweep.timePlaceholder}
               placeholderTextColor={colors.textMuted}
               keyboardType="numbers-and-punctuation"
               maxLength={5}
-              style={inputStyle}
+              invalid={timeError.length > 0}
             />
+          </FormField>
+        </View>
+        {startTime.trim().length > 0 && (
+          <View style={styles.timeField}>
+            <FormField label={t.sweep.optionalEnd}>
+              <Input
+                value={endTime}
+                accessibilityLabel={t.sweep.optionalEnd}
+                onChangeText={(value) => { setEndTime(value); if (timeError) setTimeError(''); }}
+                placeholder={t.sweep.timePlaceholder}
+                placeholderTextColor={colors.textMuted}
+                keyboardType="numbers-and-punctuation"
+                maxLength={5}
+              />
+            </FormField>
           </View>
         )}
       </View>
-      {timeError.length > 0 && <FieldError message={timeError} />}
 
-      <View>
-        <AppText variant="label" color={colors.textSecondary} style={styles.label}>{t.sweep.optionalDescription}</AppText>
-        <TextInput
+      <FormField label={t.sweep.optionalDescription}>
+        <Input
           value={description}
           accessibilityLabel={t.sweep.optionalDescription}
           onChangeText={setDescription}
@@ -215,11 +212,9 @@ export function CalendarEventForm({
           placeholderTextColor={colors.textMuted}
           multiline
           numberOfLines={3}
-          textAlignVertical="top"
           maxLength={600}
-          style={[inputStyle, styles.descriptionInput]}
         />
-      </View>
+      </FormField>
 
       <Card>
         <AppText variant="label">{t.sweep.optionalCommittee}</AppText>
@@ -241,13 +236,14 @@ export function CalendarEventForm({
         </ScrollView>
         {missingCommittee && (
           <AppText variant="caption" color={colors.warning} style={{ marginTop: spacing.sm }}>
-            {t.sweep.missingCommitteeHelp}</AppText>
+            {t.sweep.missingCommitteeHelp}
+          </AppText>
         )}
       </Card>
 
       <View style={[styles.actions, isTablet && styles.actionsTablet, { gap: spacing.sm }]}> 
-        <Button label={t.sweep.cancel} variant="secondary" onPress={onCancel} disabled={saving} style={styles.action} />
-        <Button label={submitLabel} onPress={handleSubmit} loading={saving} style={styles.action} />
+        <Button label={submitLabel} onPress={handleSubmit} loading={saving} size={isTablet ? 'lg' : 'md'} style={styles.action} />
+        <Button label={t.sweep.cancel} variant="ghost" onPress={onCancel} disabled={saving} size={isTablet ? 'lg' : 'md'} style={styles.action} />
       </View>
     </View>
   );
@@ -315,7 +311,7 @@ const styles = StyleSheet.create({
   option: { alignItems: 'center', borderWidth: 1, flexDirection: 'row', maxWidth: 240 },
   optionText: { fontWeight: '600' },
   colorDot: { borderRadius: 5, height: 10, marginRight: 8, width: 10 },
-  actions: { flexDirection: 'column-reverse' },
-  actionsTablet: { flexDirection: 'row', justifyContent: 'flex-end' },
-  action: { minWidth: 160 },
+  actions: { flexDirection: 'column' },
+  actionsTablet: { flexDirection: 'row-reverse', justifyContent: 'flex-start' },
+  action: { flex: 1 },
 });

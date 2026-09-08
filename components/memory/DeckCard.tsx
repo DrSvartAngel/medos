@@ -8,12 +8,13 @@ import type { Deck } from '@/store/useMemoryStore';
 
 interface DeckCardProps {
   deck: Deck;
+  dueCount?: number;
   committeeName?: string;
   onPress: () => void;
   style?: ViewStyle;
 }
 
-export function DeckCard({ deck, committeeName, onPress, style }: DeckCardProps) {
+export function DeckCard({ deck, dueCount, committeeName, onPress, style }: DeckCardProps) {
   const t = useTranslation();
   const { colors, spacing, radius } = useTheme();
 
@@ -51,13 +52,21 @@ export function DeckCard({ deck, committeeName, onPress, style }: DeckCardProps)
         </AppText>
       )}
 
-      <View style={[styles.metaRow, { marginTop: spacing.md }]}> 
+      <View style={[styles.metaRow, { marginTop: spacing.md }]}>
         <View style={styles.metaItem}>
-          <Feather name="copy" size={14} color={colors.accent} />
+          <Feather name="layers" size={14} color={colors.primary} />
           <AppText variant="bodySmall" color={colors.textSecondary} style={{ marginLeft: 6 }}>
             {t.recovery.cards(deck.cardCount)}
           </AppText>
         </View>
+        {dueCount !== undefined && dueCount > 0 && (
+          <View style={styles.metaItem}>
+            <Feather name="clock" size={14} color={colors.warning} />
+            <AppText variant="caption" color={colors.warning} style={{ marginLeft: 4, fontWeight: '600' }}>
+              {t.memory.dueCount(dueCount)}
+            </AppText>
+          </View>
+        )}
         {committeeName !== undefined && (
           <View style={[styles.metaItem, styles.committee]}>
             <Feather name="book-open" size={14} color={colors.textMuted} />

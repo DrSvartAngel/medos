@@ -85,7 +85,7 @@ export default function DeckDetailScreen() {
   if (!isDBReady || !prepared) {
     return (
       <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </ScreenWrapper>
     );
   }
@@ -186,11 +186,11 @@ export default function DeckDetailScreen() {
 
       {isLoadingCards ? (
         <View style={[styles.centered, { paddingVertical: spacing.xl }]}> 
-          <ActivityIndicator size="small" color={colors.accent} />
+          <ActivityIndicator size="small" color={colors.primary} />
         </View>
       ) : deckCards.length === 0 ? (
         <Card elevated style={[styles.emptyCards, { paddingVertical: spacing.xl }]}> 
-          <Feather name="plus-square" size={36} color={colors.accent} />
+          <Feather name="plus-square" size={36} color={colors.primary} />
           <AppText variant="h3" style={{ marginTop: spacing.md }}>{t.sweep.firstCard}</AppText>
           <AppText variant="bodySmall" color={colors.textSecondary} style={styles.emptyText}>
             {t.sweep.firstCardHint}</AppText>

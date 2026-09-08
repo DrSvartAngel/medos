@@ -378,6 +378,135 @@ for (const file of curriculumPresentationFiles) {
 
 console.log('PASS: Curriculum redesign satisfies Phase 11 Step 6 hierarchy and design invariants');
 
+// 3.8 Study Workflows Redesign (Phase 11 Step 7)
+console.log('\n--- Checking Study Workflows Redesign ---');
+
+// 1. Focus Workflow
+const focusSrc = read('app/(tabs)/focus.tsx');
+assert.ok(focusSrc.includes('TimerDisplay'), 'Focus must include TimerDisplay');
+assert.ok(focusSrc.includes('SessionControls'), 'Focus must include SessionControls');
+assert.ok(focusSrc.includes('DurationPicker'), 'Focus must include DurationPicker');
+assert.ok(focusSrc.includes('GentleReturnCard'), 'Focus must include GentleReturnCard');
+assert.ok(focusSrc.includes('SessionHistoryList'), 'Focus must include SessionHistoryList');
+
+// Focus Hooks discipline: all hooks before component early return
+const focusScreenBody = focusSrc.slice(
+  focusSrc.indexOf('export default function FocusScreen'),
+  focusSrc.indexOf('function FocusError') > 0 ? focusSrc.indexOf('function FocusError') : undefined
+);
+const focusEarlyReturnMatch = focusScreenBody.match(/if\s*\(!isDBReady\)\s*\{\s*return/);
+assert.ok(focusEarlyReturnMatch && focusEarlyReturnMatch.index > 0, 'FocusScreen must contain !isDBReady early return');
+const focusEarlyReturn = focusEarlyReturnMatch.index;
+const focusHookMatches = [...focusScreenBody.matchAll(/\b(useMemo|useEffect|useCallback|useState|useTheme|useResponsive|useTranslation|useAppStore|useCommitteeStore|useFocusStore|useTimer|useFocusEffect)\b/g)];
+for (const match of focusHookMatches) {
+  if (match.index !== undefined && match.index > 0) {
+    assert.ok(
+      match.index < focusEarlyReturn,
+      `Hook ${match[0]} at index ${match.index} must be called before !isDBReady early return in FocusScreen`
+    );
+  }
+}
+
+// SessionControls hierarchy: active Pause/Resume primary, Finish secondary
+const sessionControlsSrc = read('components/focus/SessionControls.tsx');
+assert.ok(sessionControlsSrc.includes('variant="secondary"'), 'SessionControls finish button must be secondary');
+assert.ok(sessionControlsSrc.includes('variant="primary"'), 'SessionControls resume/pause must be primary');
+
+// 2. Memory Workflow
+const memorySrc = read('app/(tabs)/memory.tsx');
+assert.ok(memorySrc.includes('reviewDueCards'), 'Memory screen must include reviewDueCards primary action');
+assert.ok(memorySrc.includes('noReviewsDue'), 'Memory screen must include noReviewsDue zero state');
+assert.ok(memorySrc.includes('DeckCard'), 'Memory screen must render DeckCard');
+
+// Memory Hooks discipline: all hooks before component early return
+const memoryEarlyReturnMatch = memorySrc.match(/if\s*\(!isDBReady\)\s*\{\s*return/);
+assert.ok(memoryEarlyReturnMatch && memoryEarlyReturnMatch.index > 0, 'MemoryScreen must contain !isDBReady early return');
+const memoryEarlyReturn = memoryEarlyReturnMatch.index;
+const memoryHookMatches = [...memorySrc.matchAll(/\b(useMemo|useEffect|useCallback|useState|useTheme|useResponsive|useTranslation|useAppStore|useCommitteeStore|useMemoryStore)\b/g)];
+for (const match of memoryHookMatches) {
+  if (match.index !== undefined && match.index > 0) {
+    assert.ok(
+      match.index < memoryEarlyReturn,
+      `Hook ${match[0]} at index ${match.index} must be called before !isDBReady in MemoryScreen`
+    );
+  }
+}
+
+// DeckCard must support dueCount
+const deckCardSrc = read('components/memory/DeckCard.tsx');
+assert.ok(deckCardSrc.includes('dueCount?: number'), 'DeckCardProps must support optional dueCount');
+
+// Review Screen: compact ProgressBar and dominant card
+const reviewSrc = read('app/decks/[id]/review.tsx');
+assert.ok(reviewSrc.includes('ProgressBar'), 'DeckReviewScreen must use ProgressBar');
+assert.ok(reviewSrc.includes('ReviewCard'), 'DeckReviewScreen must use ReviewCard');
+assert.ok(reviewSrc.includes('ReviewControls'), 'DeckReviewScreen must use ReviewControls');
+
+// 3. Q-Bank Workflow
+const qbankSrc = read('app/qbank/new.tsx');
+assert.ok(qbankSrc.includes('FormField'), 'Q-Bank screen must use FormField');
+assert.ok(qbankSrc.includes('Input'), 'Q-Bank screen must use Input');
+assert.ok(qbankSrc.includes('Button'), 'Q-Bank screen must use Button');
+assert.ok(qbankSrc.includes('TopicLinkPicker'), 'Q-Bank screen must include TopicLinkPicker');
+
+// 4. Calendar Workflow
+const calendarScreenSrc = read('app/(tabs)/calendar.tsx');
+assert.ok(calendarScreenSrc.includes('DayAgenda'), 'CalendarScreen must use DayAgenda');
+assert.ok(calendarScreenSrc.includes('CalendarMonthGrid'), 'CalendarScreen must use CalendarMonthGrid');
+const eventFormSrc = read('components/calendar/CalendarEventForm.tsx');
+assert.ok(eventFormSrc.includes('FormField'), 'CalendarEventForm must use FormField');
+assert.ok(eventFormSrc.includes('Input'), 'CalendarEventForm must use Input');
+
+// Calendar repo fallback check (must remain untouched per Step 7 Section 13)
+const calendarRepoSrc = read('db/repositories/calendarRepo.ts');
+assert.ok(calendarRepoSrc.includes('#6C63FF'), 'calendarRepo.ts must retain historical fallback #6C63FF without modification');
+
+// 5. Check-In / Recovery
+const checkInSrc = read('app/study-support/check-in.tsx');
+assert.ok(checkInSrc.includes('AdaptiveRecommendationCard'), 'Check-in must include AdaptiveRecommendationCard');
+assert.ok(checkInSrc.includes('CheckInChoiceGroup'), 'Check-in must include CheckInChoiceGroup');
+const recoverySrc = read('app/study-support/recovery.tsx');
+assert.ok(recoverySrc.includes('RecoveryActionCard'), 'Recovery must include RecoveryActionCard');
+
+// 6. Presentation files clean scan: zero legacy violet in touched presentation
+const studyWorkflowPresentationFiles = [
+  'app/(tabs)/focus.tsx',
+  'components/focus/TimerDisplay.tsx',
+  'components/focus/SessionControls.tsx',
+  'components/focus/DurationPicker.tsx',
+  'components/focus/CommitteePicker.tsx',
+  'components/focus/GentleReturnCard.tsx',
+  'components/focus/SessionHistoryList.tsx',
+  'app/(tabs)/memory.tsx',
+  'app/decks/[id]/index.tsx',
+  'app/decks/[id]/review.tsx',
+  'components/memory/DeckCard.tsx',
+  'components/memory/ReviewCard.tsx',
+  'components/memory/ReviewControls.tsx',
+  'components/memory/ReviewSummary.tsx',
+  'app/qbank/new.tsx',
+  'app/(tabs)/calendar.tsx',
+  'app/calendar/new.tsx',
+  'app/calendar/[id].tsx',
+  'app/calendar/[id]/edit.tsx',
+  'components/calendar/CalendarEventForm.tsx',
+  'components/calendar/DayAgenda.tsx',
+  'app/study-support/check-in.tsx',
+  'app/study-support/recovery.tsx',
+];
+
+for (const file of studyWorkflowPresentationFiles) {
+  if (exists(file)) {
+    const content = read(file);
+    assert.ok(
+      !content.includes('#6C63FF') && !content.includes('#5850EC'),
+      `${file} must not contain legacy violet hex colors`
+    );
+  }
+}
+
+console.log('PASS: Study workflows satisfy Phase 11 Step 7 hierarchy and design invariants');
+
 // 4. Architectural Safeguards
 console.log('\n--- Checking Architectural Integrity ---');
 
@@ -428,10 +557,17 @@ try {
 }
 
 try {
-  execSync('node scripts/validate-phase10.cjs', { stdio: 'inherit', cwd: ROOT });
-  console.log('PASS: Phase 10 master validation passed');
+  execSync('node scripts/validate-phase4.cjs', { stdio: 'inherit', cwd: ROOT });
+  console.log('PASS: Phase 4 validation passed');
 } catch {
-  assert.fail('Phase 10 validation failed');
+  assert.fail('Phase 4 validation failed');
+}
+
+try {
+  execSync('node scripts/validate-phase5.cjs', { stdio: 'inherit', cwd: ROOT });
+  console.log('PASS: Phase 5 validation passed');
+} catch {
+  assert.fail('Phase 5 validation failed');
 }
 
 console.log('\n=== ALL PHASE 11 VALIDATION CHECKS PASSED ===\n');

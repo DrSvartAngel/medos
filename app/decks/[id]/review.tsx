@@ -9,6 +9,7 @@ import { ReviewSummary } from '@/components/memory/ReviewSummary';
 import { MiniVictory } from '@/components/ui/MiniVictory';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Card } from '@/components/ui/Card';
+import { ProgressBar } from '@/components/ui/ProgressBar';
 import { AppText } from '@/components/ui/Typography';
 import { Button } from '@/components/ui/Button';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -88,7 +89,7 @@ export default function DeckReviewScreen() {
   if (!isDBReady || reviewStatus === 'loading' || (reviewStatus === 'idle' && !attemptedStart)) {
     return (
       <ScreenWrapper scrollable={false} includeBottomSafeArea contentStyle={styles.centered}>
-        <ActivityIndicator size="large" color={colors.accent} />
+        <ActivityIndicator size="large" color={colors.primary} />
         <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.md }}>
           {t.common.loading}
         </AppText>
@@ -135,7 +136,7 @@ export default function DeckReviewScreen() {
                 importantForAccessibility="no-hide-descendants"
                 name="inbox"
                 size={42}
-                color={colors.accent}
+                color={colors.primary}
               />
               <AppText variant="h2" style={{ marginTop: spacing.md, textAlign: 'center' }}>
                 {dueMode ? t.scheduling.noneDue : deck ? t.review.noCards : t.review.deckUnavailable}
@@ -222,14 +223,13 @@ export default function DeckReviewScreen() {
           <View style={styles.closeSpacer} />
         </View>
 
-        <View style={[styles.progressTrack, { backgroundColor: colors.surface, marginTop: spacing.md }]}> 
-          <View
-            style={[
-              styles.progressFill,
-              { backgroundColor: colors.accent, width: `${progress}%` as const },
-            ]}
-          />
-        </View>
+        <ProgressBar
+          value={progress}
+          max={100}
+          height={6}
+          color={colors.primary}
+          style={{ marginTop: spacing.md }}
+        />
 
         <View style={{ marginTop: spacing.lg }}>
           <ReviewCard card={card} revealed={revealed} />

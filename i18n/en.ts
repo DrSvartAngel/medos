@@ -643,6 +643,9 @@ quickStart: 'Quick Start',
     subtitle: 'Your decks, cards, and locally saved reviews.',
     decksLabel: (n: number): string => (n === 1 ? 'Deck' : 'Decks'),
     cardsLabel: (n: number): string => (n === 1 ? 'Card' : 'Cards'),
+    reviewDueCards: 'Review Due Cards',
+    noReviewsDue: 'No reviews due',
+    dueCount: (n: number): string => `${n} due`,
   },
 
   // ── Deck create ───────────────────────────────────────────────────────────────

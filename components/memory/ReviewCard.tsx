@@ -20,7 +20,7 @@ export function ReviewCard({ card, revealed }: ReviewCardProps) {
   return (
     <Card elevated style={[styles.card, { minHeight: isTablet ? 360 : 300, padding: spacing.lg }]}> 
       <View style={styles.section}>
-        <AppText variant="caption" color={colors.accent} style={styles.eyebrow}>
+        <AppText variant="caption" color={colors.primary} style={styles.eyebrow}>
           {revealed ? t.review.prompt : t.review.recallThis}
         </AppText>
         <AppText
