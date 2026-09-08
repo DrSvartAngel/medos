@@ -47,6 +47,7 @@ export default function ImportDocumentScreen() {
   const [content, setContent] = useState('');
   const [isExtracting, setIsExtracting] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [extractionMetadata, setExtractionMetadata] = useState<import('@/models/ingestion').SourceIngestionMetadata | null>(null);
   const [extractionNotice, setExtractionNotice] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -124,6 +125,9 @@ export default function ImportDocumentScreen() {
       setIsExtracting(true);
       try {
         const extraction = await documentExtractor.extract(docInput);
+        if (extraction.metadata) {
+          setExtractionMetadata(extraction.metadata);
+        }
 
         if (extraction.status === 'success') {
           setContent(extraction.text);
@@ -191,6 +195,15 @@ export default function ImportDocumentScreen() {
         title: trimmedTitle,
         content: trimmedContent,
         sourceType: 'document',
+        metadata: extractionMetadata ?? (selectedFile ? {
+          originalFileName: selectedFile.name,
+          mimeType: selectedFile.mimeType,
+          fileSizeBytes: selectedFile.size,
+          origin: 'file_import',
+          canonicalType: selectedFile.name.toLowerCase().endsWith('.pdf') ? 'pdf' : 'text',
+          processingStatus: 'ready',
+          lastProcessedAt: Date.now(),
+        } : undefined),
       });
       handleBack();
     } catch {

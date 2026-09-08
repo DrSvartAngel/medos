@@ -3,6 +3,9 @@
 
 export type StudySourceType = 'text' | 'note' | 'document';
 
+export * from './ingestion';
+import type { SourceIngestionMetadata, SourceProvenance } from './ingestion';
+
 export interface StudySource {
   id: string;
   topicId: string;
@@ -11,6 +14,12 @@ export interface StudySource {
   sourceType: StudySourceType;
   createdAt: number;
   updatedAt: number;
+  /**
+   * Phase 12.1 Ingestion Foundation: optional metadata describing provenance,
+   * original file details, and processing status.
+   */
+  metadata?: SourceIngestionMetadata;
+  provenance?: SourceProvenance;
 }
 
 export interface CreateStudySourceInput {
@@ -18,10 +27,15 @@ export interface CreateStudySourceInput {
   title: string;
   content: string;
   sourceType?: StudySourceType;
+  metadata?: SourceIngestionMetadata;
+  provenance?: SourceProvenance;
 }
 
 export interface UpdateStudySourceInput {
   title?: string;
   content?: string;
   sourceType?: StudySourceType;
+  metadata?: SourceIngestionMetadata;
+  provenance?: SourceProvenance;
 }
+

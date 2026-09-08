@@ -46,6 +46,17 @@ export class PdfExtractor implements DocumentExtractor {
     return {
       status: 'unavailable',
       text: '',
+      canonicalType: 'pdf',
+      metadata: {
+        originalFileName: input.name,
+        mimeType: input.mimeType ?? 'application/pdf',
+        fileSizeBytes: input.size,
+        origin: 'file_import',
+        canonicalType: 'pdf',
+        processingStatus: 'partial',
+        lastProcessedAt: Date.now(),
+        warnings: ['on_device_pdf_extraction_unavailable_in_expo_go'],
+      },
       warnings: ['on_device_pdf_extraction_unavailable_in_expo_go'],
       errorMessage:
         'On-device PDF text extraction is unavailable in the current Expo/Hermes runtime. Please use manual text import or paste the content below.',

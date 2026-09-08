@@ -20,13 +20,18 @@ export interface DocumentInput {
   size?: number;
 }
 
+import type { CanonicalSourceType, SourceIngestionMetadata } from '@/models/ingestion';
+
 export interface DocumentExtractionResult {
   status: ExtractionStatus;
   text: string;
   pageCount?: number;
+  canonicalType?: CanonicalSourceType;
+  metadata?: SourceIngestionMetadata;
   warnings?: string[];
   errorMessage?: string;
 }
+
 
 export interface DocumentExtractor {
   extract(input: DocumentInput): Promise<DocumentExtractionResult>;

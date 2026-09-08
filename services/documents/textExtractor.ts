@@ -77,9 +77,22 @@ export class TextExtractor implements DocumentExtractor {
         };
       }
 
+      const isMd = input.name?.toLowerCase().endsWith('.md') || input.mimeType?.includes('markdown');
+      const canonicalType = isMd ? 'markdown' : 'text';
+
       return {
         status: 'success',
         text: normalized,
+        canonicalType,
+        metadata: {
+          originalFileName: input.name,
+          mimeType: input.mimeType,
+          fileSizeBytes: input.size,
+          origin: 'file_import',
+          canonicalType,
+          processingStatus: 'ready',
+          lastProcessedAt: Date.now(),
+        },
       };
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Unknown extraction error';
