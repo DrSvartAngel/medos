@@ -6,7 +6,7 @@ import {
   type DocumentInput,
   type DocumentExtractionResult,
   MAX_DOCUMENT_FILE_SIZE_BYTES,
-} from './documentExtractor';
+} from './documentTypes';
 
 export class PdfExtractor implements DocumentExtractor {
   /**

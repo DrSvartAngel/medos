@@ -56,7 +56,18 @@ function load(file, mocks = {}, source = read(file)) {
     { filename: file }
   );
   wrapped(
-    (key) => (Object.hasOwn(mocks, key) ? mocks[key] : require(key)),
+    (key) => {
+      if (Object.hasOwn(mocks, key)) return mocks[key];
+      if (key.startsWith('.')) {
+        const dir = path.dirname(path.join(root, file));
+        const candidate = path.join(dir, key.endsWith('.ts') ? key : key + '.ts');
+        if (fs.existsSync(candidate)) {
+          const relCandidate = path.relative(root, candidate).replace(/\\/g, '/');
+          return load(relCandidate, mocks);
+        }
+      }
+      return require(key);
+    },
     module,
     module.exports,
     file,
@@ -174,7 +185,9 @@ console.log('=== PHASE 10 STEP 8: PDF / DOCUMENT INGESTION PIPELINE SUITE ===\n'
 
 // 3. Document Extractor Types, Limits & Utilities
 {
+  const docTypes = load('services/documents/documentTypes.ts');
   const docModule = load('services/documents/documentExtractor.ts', {
+    './documentTypes': docTypes,
     './pdfExtractor': { pdfExtractor: { isSupported: () => false, extract: async () => ({ status: 'unavailable', text: '' }) } },
     './textExtractor': { textExtractor: { isSupported: () => true, extract: async () => ({ status: 'success', text: 'Clean text' }) } },
   });
@@ -204,11 +217,10 @@ console.log('=== PHASE 10 STEP 8: PDF / DOCUMENT INGESTION PIPELINE SUITE ===\n'
 
 // 4. PDF Extractor Truthful Runtime Capability
 {
+  const docTypes = load('services/documents/documentTypes.ts');
   const pdfModule = load('services/documents/pdfExtractor.ts', {
-    './documentExtractor': {
-      MAX_DOCUMENT_FILE_SIZE_BYTES: 5 * 1024 * 1024,
-      MAX_DOCUMENT_TEXT_LENGTH: 100_000,
-    },
+    './documentTypes': docTypes,
+    './documentExtractor': docTypes,
   });
 
   const pdfExtractor = pdfModule.pdfExtractor;
@@ -250,10 +262,14 @@ console.log('=== PHASE 10 STEP 8: PDF / DOCUMENT INGESTION PIPELINE SUITE ===\n'
 
 // 5. Text Extractor Functionality & Limits
 {
+  const docTypes = load('services/documents/documentTypes.ts');
   const textModule = load('services/documents/textExtractor.ts', {
+    './documentTypes': {
+      ...docTypes,
+      normalizeExtractedText: (str) => str.trim(),
+    },
     './documentExtractor': {
-      MAX_DOCUMENT_FILE_SIZE_BYTES: 5 * 1024 * 1024,
-      MAX_DOCUMENT_TEXT_LENGTH: 100_000,
+      ...docTypes,
       normalizeExtractedText: (str) => str.trim(),
     },
     'expo-file-system': {

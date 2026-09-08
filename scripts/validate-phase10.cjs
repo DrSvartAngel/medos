@@ -54,7 +54,18 @@ function load(file, mocks = {}, source = read(file)) {
     { filename: file }
   );
   wrapped(
-    (key) => (Object.hasOwn(mocks, key) ? mocks[key] : require(key)),
+    (key) => {
+      if (Object.hasOwn(mocks, key)) return mocks[key];
+      if (key.startsWith('.')) {
+        const dir = path.dirname(path.join(root, file));
+        const candidate = path.join(dir, key.endsWith('.ts') ? key : key + '.ts');
+        if (fs.existsSync(candidate)) {
+          const relCandidate = path.relative(root, candidate).replace(/\\/g, '/');
+          return load(relCandidate, mocks);
+        }
+      }
+      return require(key);
+    },
     module,
     module.exports,
     file,
@@ -669,7 +680,9 @@ async function main() {
 
   // 10. Document Ingestion Integrity (Step 8 PARTIAL)
   await check('Document Ingestion Integrity: Text/markdown extraction, PDF picker boundary, max 5MB/100k limits, zero cloud upload, Step 8 truthful PARTIAL status', async () => {
+    const docTypes = load('services/documents/documentTypes.ts');
     const docModule = load('services/documents/documentExtractor.ts', {
+      './documentTypes': docTypes,
       './pdfExtractor': { pdfExtractor: { isSupported: () => false, extract: async () => ({ status: 'unavailable', text: '' }) } },
       './textExtractor': { textExtractor: { isSupported: () => true, extract: async () => ({ status: 'success', text: 'Clean text' }) } },
     });
@@ -679,10 +692,8 @@ async function main() {
 
     // PDF extractor capability boundary
     const pdfModule = load('services/documents/pdfExtractor.ts', {
-      './documentExtractor': {
-        MAX_DOCUMENT_FILE_SIZE_BYTES: 5 * 1024 * 1024,
-        MAX_DOCUMENT_TEXT_LENGTH: 100000,
-      },
+      './documentTypes': docTypes,
+      './documentExtractor': docTypes,
     });
     const pdfExtractor = pdfModule.pdfExtractor;
     assert.equal(pdfExtractor.isSupported('application/pdf', 'test.pdf'), false, 'PDF extraction must report unsupported in Hermes/Expo Go');
@@ -693,9 +704,12 @@ async function main() {
 
     // Text extractor functionality
     const textModule = load('services/documents/textExtractor.ts', {
+      './documentTypes': {
+        ...docTypes,
+        normalizeExtractedText: (str) => str.trim(),
+      },
       './documentExtractor': {
-        MAX_DOCUMENT_FILE_SIZE_BYTES: 5 * 1024 * 1024,
-        MAX_DOCUMENT_TEXT_LENGTH: 100000,
+        ...docTypes,
         normalizeExtractedText: (str) => str.trim(),
       },
       'expo-file-system': {

@@ -8,7 +8,7 @@ import {
   MAX_DOCUMENT_FILE_SIZE_BYTES,
   MAX_DOCUMENT_TEXT_LENGTH,
   normalizeExtractedText,
-} from './documentExtractor';
+} from './documentTypes';
 
 export class TextExtractor implements DocumentExtractor {
   isSupported(mimeType?: string, fileName?: string): boolean {
