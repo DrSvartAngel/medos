@@ -1,6 +1,47 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 10: AI Study Engine (Step 12: Master QA / AI Integrity Gate)
+## Current — Phase 12.6: Retrieval Layer
+
+- Phase 12.6 — Retrieval Layer: **COMPLETE**
+- Branch: `localization-en-tr-sweep`
+- Schema: **v13** (unchanged — no schema migration required)
+- Commit checkpoint: 61170ea (Phase 12.5 base)
+
+### Delivered Scope
+
+- **Domain Model** (`models/retrieval.ts`):
+  - `RetrievalScope`: hierarchical scope filter with `committeeId`, `subjectId`, `topicId`, `sourceId`.
+  - `RetrievalQuery`: structured query with `query`, `scope`, `topK` (clamped 1–50, default 10), `minScore`, `chunkType`, `extractionMethod`.
+  - `RetrievalResult`: ranked result with `chunkId`, `text`, `chunkType`, `score`, `matchTerms`, `provenance`, `ordinal`.
+  - `RetrievalResponse`: wraps results with `total`, `queryTerms`, `scope`, `usedFts`, `usedTermIndex` diagnostics.
+  - `RetrievalError`: typed error class with stable `code` field (`invalid_query`, `scope_required`, `index_unavailable`, `limit_exceeded`).
+  - Constants: `RETRIEVAL_DEFAULT_TOP_K=10`, `RETRIEVAL_MAX_TOP_K=50`, `RETRIEVAL_MIN_TOP_K=1`.
+
+- **Retrieval Service** (`services/retrieval/retrievalService.ts`):
+  - `retrieve(query, allowedTopicIds?)`: primary entry point. Delegates to `sourceChunkRepo.search()` (FTS5 → term index → list fallback). Applies higher-order scope (committee/subject) via `allowedTopicIds` set in-process. Applies `minScore` filter when query terms present. Deterministic tie-breaking: score DESC → sourceId ASC → ordinal ASC. Clamps to `topK`.
+  - `listByTopic(topicId, limit?)`: listing mode (empty query, scope = topicId).
+  - `listBySource(sourceId, limit?)`: listing mode (empty query, scope = sourceId).
+  - `searchInTopic(topicId, query, topK?)`: convenience wrapper.
+  - `searchInSource(sourceId, query, topK?)`: convenience wrapper.
+  - Zero network calls. Zero Gemini/OpenAI SDK imports. Zero SQLite writes. Zero schema changes.
+
+- **Validation** (`scripts/validate-phase12-step6.cjs`):
+  - 56 checks across 12 suites: domain contracts, service structure, basic retrieval, scope filtering, topK clamping, minScore filtering, tie-breaking, listing modes, convenience wrappers, error handling, zero-write verification, and schema v13 integrity.
+
+### Regression Status
+- TypeScript (`tsc --noEmit`): **PASS (0 errors)**
+- Phase 12.5 suite (`validate-phase12-step5.cjs`): **ALL 15 PASS**
+- Phase 12.6 suite (`validate-phase12-step6.cjs`): **56/56 PASS**
+- Schema: **v13 unchanged**
+- Dependencies: **unchanged** (zero `package.json` modifications)
+
+### Architecture Invariants Preserved
+- Retrieval is strictly read-only; zero writes to `source_chunks`, `source_chunk_terms`, or any other table.
+- No AI provider calls; no final answer generation.
+- Hierarchical scope (committee/subject) resolved by caller passing `allowedTopicIds`; topicId/sourceId scope delegated to SQLite.
+- Compatible with both FTS5 and fallback term-index backends from Phase 12.5.
+
+## Historical — Phase 10: AI Study Engine (Step 12: Master QA / AI Integrity Gate)
 
 - Phase 10 — AI Study Engine: **COMPLETE WITH KNOWN DOCUMENT LIMITATION**
   - Step 1 (AI Foundation & Contracts): PASS

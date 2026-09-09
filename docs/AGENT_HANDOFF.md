@@ -1,6 +1,15 @@
 # MedOS — compact handoff
 
-## Current — Phase 10: AI Study Engine (Step 12: Master QA / AI Integrity Gate)
+## Current — Phase 12.6: Retrieval Layer
+
+- Phase 12.6 — Retrieval Layer: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)
+- New files: `models/retrieval.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step6.cjs`
+- TypeScript: PASS | Phase 12.5 regression: 15 PASS | Phase 12.6 suite: 56/56 PASS
+- Zero network calls, zero SQLite writes, zero schema changes, zero package.json modifications.
+- Next: Phase 12.7 (RAG answer generation connecting retrieval → AI provider).
+
+## Historical — Phase 10: AI Study Engine (Step 12: Master QA / AI Integrity Gate)
 
 - Phase 10 — AI Study Engine: **COMPLETE WITH KNOWN DOCUMENT LIMITATION**
   - Step 1 (AI Foundation & Contracts): PASS

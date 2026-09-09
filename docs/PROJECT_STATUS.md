@@ -1,6 +1,13 @@
 # MedOS — Project Status
 
-## Current — Phase 10: AI Study Engine (Step 12: Master QA / AI Integrity Gate)
+## Current — Phase 12.6: Retrieval Layer
+
+- Phase 12.6 — Retrieval Layer: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)
+- Delivered: `models/retrieval.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step6.cjs`
+- Phase 12.6 suite: **56/56 PASS** | TypeScript: **PASS** | Phase 12.5 regression: **15 PASS**
+
+## Historical — Phase 10: AI Study Engine (Step 12: Master QA / AI Integrity Gate)
 
 - Phase 10 — AI Study Engine: **COMPLETE WITH KNOWN DOCUMENT LIMITATION**
   - Step 1 (AI Foundation & Contracts): PASS
