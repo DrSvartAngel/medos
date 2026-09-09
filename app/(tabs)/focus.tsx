@@ -1,10 +1,11 @@
 import { translateError } from '@/i18n/errors';
 import React, { useCallback, useEffect, useState } from 'react';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams, type Href } from 'expo-router';
 import { MiniVictory } from '@/components/ui/MiniVictory';
 import {
   AccessibilityInfo,
   ActivityIndicator,
+  BackHandler,
   StyleSheet,
   TouchableOpacity,
   View,
@@ -31,12 +32,25 @@ import { normalizeFocusDurationSec } from '@/utils/preferences';
 import { useTranslation } from '@/i18n';
 
 export default function FocusScreen() {
+  const params = useLocalSearchParams<{ returnTo?: string; topicId?: string }>();
+  const returnTo = params.returnTo;
+  
   const { colors, spacing } = useTheme();
   const { isTablet, isLargeTablet } = useResponsive();
   const t = useTranslation();
   const [gentleReturnOpen, setGentleReturnOpen] = useState(false);
   const [showVictory, setShowVictory] = useState(false);
   useFocusEffect(useCallback(() => () => setShowVictory(false), []));
+  useFocusEffect(
+    useCallback(() => {
+      if (!returnTo) return;
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        router.dismissTo(returnTo as Href);
+        return true;
+      });
+      return () => sub.remove();
+    }, [returnTo])
+  );
   const [gentleReturnError, setGentleReturnError] = useState<string | null>(null);
   const isDBReady = useAppStore((state) => state.isDBReady);
   const defaultFocusSec = useAppStore((state) => state.defaultFocusSec);
@@ -217,7 +231,7 @@ export default function FocusScreen() {
   if (isActive) {
     return (
       <ScreenWrapper contentStyle={styles.activeScreen}>
-        <TabTopHeader />
+        <TabTopHeader returnTo={returnTo} returnLabel={t.common.back || 'Back to Topic'} />
         <View
           style={[
             styles.activeShell,
@@ -323,7 +337,7 @@ export default function FocusScreen() {
 
   return (
     <ScreenWrapper>
-      <TabTopHeader />
+      <TabTopHeader returnTo={returnTo} returnLabel={t.common.back || 'Back to Topic'} />
       <View style={styles.header}>
         <AppText variant={isTablet ? 'h1' : 'h2'}>{t.focus.title}</AppText>
         <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>

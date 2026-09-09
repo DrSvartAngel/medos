@@ -48,6 +48,7 @@ export default function TopicDetailScreen() {
   const [memoryEvidence, setMemoryEvidence] = useState<{ linkedCards: number; dueCards: number } | null>(null);
   const [qbankEvidence, setQBankEvidence] = useState<{ totalQuestions: number; accuracyPercent: number | null } | null>(null);
   const timerStatus = useFocusStore((state) => state.timerStatus);
+  const [activeTab, setActiveTab] = useState<'overview' | 'materials' | 'practice' | 'memory'>('overview');
 
   function loadEvidence() {
     try {
@@ -84,13 +85,14 @@ export default function TopicDetailScreen() {
 
   function startFocus() {
     setStartError(false);
+    const returnUrl = `/(tabs)/focus?returnTo=${encodeURIComponent(`/topics/${id}`)}` as Href;
     if (useFocusStore.getState().timerStatus !== 'idle') {
-      router.push('/(tabs)/focus');
+      router.push(returnUrl);
       return;
     }
     try {
-      if (useFocusStore.getState().startTopicSession(id)) router.push('/(tabs)/focus');
-      else if (useFocusStore.getState().timerStatus !== 'idle') router.push('/(tabs)/focus');
+      if (useFocusStore.getState().startTopicSession(id)) router.push(returnUrl);
+      else if (useFocusStore.getState().timerStatus !== 'idle') router.push(returnUrl);
       else setStartError(true);
     } catch {
       setStartError(true);
@@ -265,278 +267,202 @@ export default function TopicDetailScreen() {
             </Section>}
           </Card>
 
-          {/* ── 3. Primary Action: Focus ────────────────────── */}
-          <Card elevated style={{ padding: spacing.md, gap: spacing.sm, backgroundColor: colors.surface }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-                <Feather name="clock" size={16} color={colors.primary} style={{ marginRight: 6 }} />
-                <AppText variant="label" style={{ fontWeight: '600' }}>
-                  {t.focus.title.toUpperCase()}
-                </AppText>
-              </View>
+          <View style={{ flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: colors.border }}>
+            {(['overview', 'materials', 'practice', 'memory'] as const).map(tab => {
+              const isActive = activeTab === tab;
+              let label = '';
+              if (tab === 'overview') label = 'Overview';
+              else if (tab === 'materials') label = t.studySources.title;
+              else if (tab === 'practice') label = t.qbank.title;
+              else if (tab === 'memory') label = t.memory.title;
 
-              {studyEvidence !== null && (
-                <Badge
-                  label={studyEvidence ? t.topics.studyRecorded : t.topics.studyUnrecorded}
-                  variant={studyEvidence ? 'success' : 'default'}
-                  size="sm"
-                  dot
-                />
-              )}
-            </View>
-
-            {studyEvidence === null ? (
-              <FeedbackState
-                kind="error"
-                message={t.topics.studyEvidenceError}
-                action={{ label: t.common.retry, onPress: loadEvidence }}
-              />
-            ) : (
-              <AppText variant="bodySmall" color={colors.textSecondary}>
-                {t.topics.studyEvidenceHelp}
-              </AppText>
-            )}
-
-            <Button
-              label={
-                timerStatus === 'idle'
-                  ? t.topics.startFocus
-                  : t.topics.continueFocus
-              }
-              onPress={startFocus}
-              size="lg"
-              icon={<Feather name="play" size={18} color={colors.textInverse} />}
-              style={{ marginTop: spacing.xs }}
-            />
-            {startError && (
-              <FeedbackState kind="error" message={t.topics.focusStartError} />
-            )}
-          </Card>
-
-          {/* ── 4. Study Tools (2x2 Grid) ───────────────────── */}
-          <View style={{ gap: spacing.sm }}>
-            <SectionHeader
-              title={t.dashboard.quickStart}
-            />
-
-            <View style={styles.toolsGrid}>
-              {/* Tool: Study Sources */}
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel={t.studySources.title}
-                onPress={() => router.push(`/topics/${encodeURIComponent(id)}/sources/new` as Href)}
-                activeOpacity={0.75}
-                style={[
-                  styles.toolCard,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                    borderRadius: radius.md,
-                    padding: spacing.md,
-                  },
-                ]}
-              >
-                <View style={styles.toolIconRow}>
-                  <Feather name="file-text" size={20} color={colors.primary} />
-                  <Badge label={`${sources.length}`} variant="default" size="sm" />
-                </View>
-                <AppText variant="subhead" style={{ fontWeight: '600', marginTop: spacing.xs }}>
-                  {t.studySources.title}
-                </AppText>
-                <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
-                  {sources.length === 0 ? t.studySources.empty : `${sources.length} sources`}
-                </AppText>
-              </TouchableOpacity>
-
-              {/* Tool: Memory / Flashcards */}
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel={t.memory.title}
-                onPress={() => router.push('/(tabs)/memory' as Href)}
-                activeOpacity={0.75}
-                style={[
-                  styles.toolCard,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                    borderRadius: radius.md,
-                    padding: spacing.md,
-                  },
-                ]}
-              >
-                <View style={styles.toolIconRow}>
-                  <Feather name="layers" size={20} color={colors.primary} />
-                  {(memoryEvidence?.dueCards ?? 0) > 0 ? (
-                    <Badge label={`${memoryEvidence?.dueCards}`} variant="warning" size="sm" />
-                  ) : null}
-                </View>
-                <AppText variant="subhead" style={{ fontWeight: '600', marginTop: spacing.xs }}>
-                  {t.memory.title}
-                </AppText>
-                <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
-                  {(memoryEvidence?.dueCards ?? 0) > 0
-                    ? t.topicEvidence.due(memoryEvidence!.dueCards)
-                    : (memoryEvidence?.linkedCards ?? 0) > 0
-                    ? t.topicEvidence.cards(memoryEvidence!.linkedCards)
-                    : t.memory.noReviewsDue}
-                </AppText>
-              </TouchableOpacity>
-
-              {/* Tool: Q-Bank */}
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel={t.qbank.title}
-                onPress={() => router.push('/qbank/new' as Href)}
-                activeOpacity={0.75}
-                style={[
-                  styles.toolCard,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                    borderRadius: radius.md,
-                    padding: spacing.md,
-                  },
-                ]}
-              >
-                <View style={styles.toolIconRow}>
-                  <Feather name="check-circle" size={20} color={colors.primary} />
-                  {(qbankEvidence?.totalQuestions ?? 0) > 0 ? (
-                    <Badge label={`${qbankEvidence?.totalQuestions}`} variant="default" size="sm" />
-                  ) : null}
-                </View>
-                <AppText variant="subhead" style={{ fontWeight: '600', marginTop: spacing.xs }}>
-                  {t.qbank.title}
-                </AppText>
-                <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
-                  {(qbankEvidence?.totalQuestions ?? 0) > 0
-                    ? `${t.qbank.evidence.questions(qbankEvidence!.totalQuestions)}` + (qbankEvidence?.accuracyPercent !== null ? ` · ${qbankEvidence!.accuracyPercent}%` : '')
-                    : t.qbank.evidence.noPractice}
-                </AppText>
-              </TouchableOpacity>
-
-              {/* Tool: AI Assistant */}
-              <TouchableOpacity
-                accessibilityRole="button"
-                accessibilityLabel={t.studyAi.assistant}
-                onPress={() => router.push(`/topics/${encodeURIComponent(id)}/assistant` as Href)}
-                activeOpacity={0.75}
-                style={[
-                  styles.toolCard,
-                  {
-                    backgroundColor: colors.surface,
-                    borderColor: colors.border,
-                    borderRadius: radius.md,
-                    padding: spacing.md,
-                  },
-                ]}
-              >
-                <View style={styles.toolIconRow}>
-                  <Feather name="cpu" size={20} color={colors.primary} />
-                  <Badge label="AI" variant="info" size="sm" />
-                </View>
-                <AppText variant="subhead" style={{ fontWeight: '600', marginTop: spacing.xs }}>
-                  {t.studyAi.assistant}
-                </AppText>
-                <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
-                  {t.dashboard.quickStart}
-                </AppText>
-              </TouchableOpacity>
-            </View>
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  onPress={() => setActiveTab(tab)}
+                  style={{
+                    flex: 1,
+                    paddingVertical: spacing.sm,
+                    alignItems: 'center',
+                    borderBottomWidth: isActive ? 2 : 0,
+                    borderBottomColor: colors.primary,
+                  }}
+                >
+                  <AppText variant="subhead" style={{ color: isActive ? colors.primary : colors.textSecondary, fontWeight: isActive ? '600' : '400' }}>
+                    {label}
+                  </AppText>
+                </TouchableOpacity>
+              );
+            })}
           </View>
 
-          {/* ── 5. Study Sources (Phase 12 Preparation) ──────── */}
-          <Card style={{ padding: spacing.lg, gap: spacing.md, backgroundColor: colors.surface }}>
-            <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <View style={{ flex: 1, marginRight: spacing.sm }}>
-                <SectionHeader
-                  title={t.studySources.title}
-                  subtitle={t.studySources.description}
+          {activeTab === 'overview' && (
+            <>
+              {/* ── 3. Primary Action: Focus ────────────────────── */}
+              <Card elevated style={{ padding: spacing.md, gap: spacing.sm, backgroundColor: colors.surface }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Feather name="clock" size={16} color={colors.primary} style={{ marginRight: 6 }} />
+                    <AppText variant="label" style={{ fontWeight: '600' }}>
+                      {t.focus.title.toUpperCase()}
+                    </AppText>
+                  </View>
+
+                  {studyEvidence !== null && (
+                    <Badge
+                      label={studyEvidence ? t.topics.studyRecorded : t.topics.studyUnrecorded}
+                      variant={studyEvidence ? 'success' : 'default'}
+                      size="sm"
+                      dot
+                    />
+                  )}
+                </View>
+
+                {studyEvidence === null ? (
+                  <FeedbackState
+                    kind="error"
+                    message={t.topics.studyEvidenceError}
+                    action={{ label: t.common.retry, onPress: loadEvidence }}
+                  />
+                ) : (
+                  <AppText variant="bodySmall" color={colors.textSecondary}>
+                    {t.topics.studyEvidenceHelp}
+                  </AppText>
+                )}
+
+                <Button
+                  label={
+                    timerStatus === 'idle'
+                      ? t.topics.startFocus
+                      : t.topics.continueFocus
+                  }
+                  onPress={startFocus}
+                  size="lg"
+                  icon={<Feather name="play" size={18} color={colors.textInverse} />}
+                  style={{ marginTop: spacing.xs }}
+                />
+                {startError && (
+                  <FeedbackState kind="error" message={t.topics.focusStartError} />
+                )}
+              </Card>
+
+              {/* ── Ask MedOS ───────────────────────────────── */}
+              <Card style={{ padding: spacing.lg, gap: spacing.md, backgroundColor: colors.surface }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <View style={{ flex: 1, marginRight: spacing.sm }}>
+                    <SectionHeader title={t.studyAi.assistant} />
+                  </View>
+                  <Button
+                    label={t.studyAi.assistant}
+                    variant="primary"
+                    size="sm"
+                    icon={<Feather name="cpu" size={14} color={colors.textInverse} />}
+                    onPress={() => router.push(`/topics/${encodeURIComponent(id)}/assistant` as Href)}
+                  />
+                </View>
+              </Card>
+            </>
+          )}
+
+          {activeTab === 'materials' && (
+            <Card style={{ padding: spacing.lg, gap: spacing.md, backgroundColor: colors.surface }}>
+              {/* ── 5. Study Sources (Phase 12 Preparation) ──────── */}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                <View style={{ flex: 1, marginRight: spacing.sm }}>
+                  <SectionHeader
+                    title={t.studySources.title}
+                    subtitle={t.studySources.description}
+                  />
+                </View>
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
+                <Button
+                  label={t.studySources.addSource}
+                  variant="secondary"
+                  size="sm"
+                  icon={<Feather name="plus" size={14} color={colors.primary} />}
+                  onPress={() =>
+                    router.push(`/topics/${encodeURIComponent(id)}/sources/new` as Href)
+                  }
+                />
+                <Button
+                  label={t.studySources.importDocument}
+                  variant="secondary"
+                  size="sm"
+                  icon={<Feather name="upload" size={14} color={colors.primary} />}
+                  onPress={() =>
+                    router.push(
+                      `/topics/${encodeURIComponent(id)}/sources/import-document` as Href
+                    )
+                  }
                 />
               </View>
-              <Button
-                label={t.studyAi.assistant}
-                variant="primary"
-                size="sm"
-                icon={<Feather name="cpu" size={14} color={colors.textInverse} />}
-                onPress={() =>
-                  router.push(`/topics/${encodeURIComponent(id)}/assistant` as Href)
-                }
-              />
+
+              {sourcesError ? (
+                <FeedbackState
+                  kind="error"
+                  message={t.studySources.loadError}
+                  action={{ label: t.common.retry, onPress: loadSources }}
+                />
+              ) : sources.length === 0 ? (
+                <FeedbackState kind="empty" message={t.studySources.empty} />
+              ) : (
+                <View
+                  style={{
+                    borderRadius: radius.md,
+                    borderColor: colors.border,
+                    borderWidth: 1,
+                    overflow: 'hidden',
+                    backgroundColor: colors.surfaceElevated,
+                  }}
+                >
+                  {sources.map((source, idx) => (
+                    <ListRow
+                      key={source.id}
+                      title={source.title}
+                      subtitle={t.studySources.updatedAt(
+                        new Date(source.updatedAt).toLocaleDateString(t.dashboard.locale, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })
+                      )}
+                      leading={<Feather name="file-text" size={16} color={colors.primary} />}
+                      trailing={<Badge label={t.studySources[source.sourceType]} variant="default" size="sm" />}
+                      chevron
+                      borderBottom={idx < sources.length - 1}
+                      accessibilityRole="button"
+                      accessibilityLabel={t.studySources.openSource(source.title)}
+                      onPress={() =>
+                        router.push(
+                          `/topics/${encodeURIComponent(id)}/sources/${encodeURIComponent(
+                            source.id
+                          )}` as Href
+                        )
+                      }
+                    />
+                  ))}
+                </View>
+              )}
+            </Card>
+          )}
+
+          {activeTab === 'practice' && (
+            <Card style={{ padding: spacing.lg, gap: spacing.md, backgroundColor: colors.surface }}>
+              <SectionHeader title={t.qbank.title} subtitle={(qbankEvidence?.totalQuestions ?? 0) > 0
+                    ? `${t.qbank.evidence.questions(qbankEvidence!.totalQuestions)}` + (qbankEvidence?.accuracyPercent !== null ? ` · ${qbankEvidence!.accuracyPercent}%` : '')
+                    : t.qbank.evidence.noPractice} />
+              <Button label={t.qbank.logSession || "Start Practice"} onPress={() => router.push(`/qbank/new?topicId=${id}&returnTo=${encodeURIComponent(`/topics/${id}`)}` as Href)} />
+            </Card>
+          )}
+
+          {activeTab === 'memory' && (
+            <View style={{ gap: spacing.md }}>
+              <TopicReviewEvidence topicId={id} />
+              <Button label={t.memory.reviewDueCards || "Review"} onPress={() => router.push(`/(tabs)/memory?topicId=${id}&returnTo=${encodeURIComponent(`/topics/${id}`)}` as Href)} />
             </View>
-
-            <View style={{ flexDirection: 'row', gap: spacing.sm, flexWrap: 'wrap' }}>
-              <Button
-                label={t.studySources.addSource}
-                variant="secondary"
-                size="sm"
-                icon={<Feather name="plus" size={14} color={colors.primary} />}
-                onPress={() =>
-                  router.push(`/topics/${encodeURIComponent(id)}/sources/new` as Href)
-                }
-              />
-              <Button
-                label={t.studySources.importDocument}
-                variant="secondary"
-                size="sm"
-                icon={<Feather name="upload" size={14} color={colors.primary} />}
-                onPress={() =>
-                  router.push(
-                    `/topics/${encodeURIComponent(id)}/sources/import-document` as Href
-                  )
-                }
-              />
-            </View>
-
-            {sourcesError ? (
-              <FeedbackState
-                kind="error"
-                message={t.studySources.loadError}
-                action={{ label: t.common.retry, onPress: loadSources }}
-              />
-            ) : sources.length === 0 ? (
-              <FeedbackState kind="empty" message={t.studySources.empty} />
-            ) : (
-              <View
-                style={{
-                  borderRadius: radius.md,
-                  borderColor: colors.border,
-                  borderWidth: 1,
-                  overflow: 'hidden',
-                  backgroundColor: colors.surfaceElevated,
-                }}
-              >
-                {sources.map((source, idx) => (
-                  <ListRow
-                    key={source.id}
-                    title={source.title}
-                    subtitle={t.studySources.updatedAt(
-                      new Date(source.updatedAt).toLocaleDateString(t.dashboard.locale, {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric',
-                      })
-                    )}
-                    leading={<Feather name="file-text" size={16} color={colors.primary} />}
-                    trailing={<Badge label={t.studySources[source.sourceType]} variant="default" size="sm" />}
-                    chevron
-                    borderBottom={idx < sources.length - 1}
-                    accessibilityRole="button"
-                    accessibilityLabel={t.studySources.openSource(source.title)}
-                    onPress={() =>
-                      router.push(
-                        `/topics/${encodeURIComponent(id)}/sources/${encodeURIComponent(
-                          source.id
-                        )}` as Href
-                      )
-                    }
-                  />
-                ))}
-              </View>
-            )}
-          </Card>
-
-          {/* ── 6. Learning Status / Activity ───────────────── */}
-          <TopicReviewEvidence topicId={id} />
+          )}
 
           {/* ── 7. Danger Zone ───────────────────────────────── */}
           <Card

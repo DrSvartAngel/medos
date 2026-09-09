@@ -7,9 +7,6 @@ import { CommitteeOverviewCard } from '@/components/dashboard/CommitteeOverviewC
 import { QuickStartCard } from '@/components/dashboard/QuickStartCard';
 import { TodayAgenda } from '@/components/dashboard/TodayAgenda';
 import { TodayMetrics } from '@/components/dashboard/TodayMetrics';
-import { WeeklyFocusChart } from '@/components/dashboard/WeeklyFocusChart';
-import { MomentumCard } from '@/components/dashboard/MomentumCard';
-import { WeakTopicsList } from '@/components/analytics/WeakTopicsList';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { TabTopHeader } from '@/components/layout/TabTopHeader';
 import { Button } from '@/components/ui/Button';
@@ -64,15 +61,7 @@ export default function DashboardScreen() {
     );
   }, [snapshot?.quickStart, timerStatus, t]);
 
-  const needsAttentionTopics = useMemo(() => {
-    if (!isDBReady || !snapshot?.committee?.id) return [];
-    try {
-      const topicEvidences = analyticsRepo.getCommitteeTopicAnalytics(snapshot.committee.id);
-      return getWeakTopics(topicEvidences, 3);
-    } catch {
-      return [];
-    }
-  }, [isDBReady, snapshot?.committee?.id]);
+
 
   function handleQuickStart() {
     const focusState = useFocusStore.getState();
@@ -190,10 +179,7 @@ export default function DashboardScreen() {
     />
   );
 
-  const needsAttention =
-    needsAttentionTopics.length > 0 ? (
-      <WeakTopicsList topics={needsAttentionTopics} />
-    ) : null;
+
 
   const agenda = (
     <TodayAgenda
@@ -324,26 +310,20 @@ export default function DashboardScreen() {
       {isLargeTablet || (isTablet && isLandscape) ? (
         <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.lg }]}>
           <View style={[styles.column, { gap: spacing.lg }]}>
-            {quickStart}
-            <WeeklyFocusChart />
             {committee}
+            {quickStart}
+            {metrics}
           </View>
           <View style={[styles.column, { gap: spacing.lg }]}>
-            {metrics}
-            {needsAttention}
-            <MomentumCard />
             {agenda}
             {aiContextual}
           </View>
         </View>
       ) : (
         <View style={[styles.stacked, { gap: spacing.lg, marginTop: spacing.lg }]}>
-          {quickStart}
-          <WeeklyFocusChart />
-          {metrics}
           {committee}
-          {needsAttention}
-          <MomentumCard />
+          {quickStart}
+          {metrics}
           {agenda}
           {aiContextual}
         </View>

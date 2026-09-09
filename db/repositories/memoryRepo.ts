@@ -212,6 +212,52 @@ export const memoryRepo = {
       ORDER BY CASE WHEN schedule_state = 'unscheduled' THEN 1 ELSE 0 END,
         CASE WHEN schedule_state != 'unscheduled' THEN next_review END ASC, created_at ASC, id ASC`, [deckId,now]).map(rowToFlashcard);
   },
+
+  getCardsByTopic(topicId: string): Flashcard[] {
+    const db = getDB();
+    const rows = db.getAllSync<FlashcardRow>(
+      `${CARD_SELECT} WHERE topic_id = ? ORDER BY created_at ASC, id ASC`,
+      [topicId]
+    );
+    return rows.map(rowToFlashcard);
+  },
+
+  getTopicScheduleSummary(topicId: string, now = Date.now()): { due: number; newCards: number; unscheduled: number; total: number; nextReviewAt: number | null } {
+    const row = getDB().getFirstSync<{due:number;newCards:number;unscheduled:number;total:number;nextReviewAt:number|null}>(
+      `SELECT
+         COUNT(*) AS total,
+         COALESCE(SUM(CASE WHEN schedule_state != 'unscheduled' AND next_review <= ? THEN 1 ELSE 0 END),0) AS due,
+         COALESCE(SUM(CASE WHEN schedule_state = 'unscheduled' AND NOT EXISTS(SELECT 1 FROM flashcard_reviews r WHERE r.card_id=f.id) THEN 1 ELSE 0 END),0) AS newCards,
+         COALESCE(SUM(CASE WHEN schedule_state = 'unscheduled' AND EXISTS(SELECT 1 FROM flashcard_reviews r WHERE r.card_id=f.id) THEN 1 ELSE 0 END),0) AS unscheduled,
+         MIN(CASE WHEN schedule_state != 'unscheduled' AND next_review > ? THEN next_review END) AS nextReviewAt
+       FROM flashcards f WHERE topic_id = ?`, [now, now, topicId]);
+    if (!row) return { due: 0, newCards: 0, unscheduled: 0, total: 0, nextReviewAt: null };
+    return row;
+  },
+
+  getTopicDueReviewQueue(topicId: string, now = Date.now()): Flashcard[] {
+    return getDB().getAllSync<FlashcardRow>(`${CARD_SELECT}
+      WHERE topic_id = ? AND (schedule_state = 'unscheduled' OR next_review <= ?)
+      ORDER BY CASE WHEN schedule_state = 'unscheduled' THEN 1 ELSE 0 END,
+        CASE WHEN schedule_state != 'unscheduled' THEN next_review END ASC, created_at ASC, id ASC`, [topicId, now]).map(rowToFlashcard);
+  },
+
+  getTopicReviewQueue(topicId: string, limit?: number): Flashcard[] {
+    if (limit === undefined) return this.getCardsByTopic(topicId);
+
+    const db = getDB();
+    const safeLimit = Number.isFinite(limit)
+      ? Math.max(1, Math.floor(limit))
+      : 1;
+    const rows = db.getAllSync<FlashcardRow>(
+      `${CARD_SELECT}
+       WHERE topic_id = ?
+       ORDER BY created_at ASC, id ASC
+       LIMIT ?`,
+      [topicId, safeLimit]
+    );
+    return rows.map(rowToFlashcard);
+  },
   getAllDecks(): Deck[] {
     const db = getDB();
     const rows = db.getAllSync<DeckRow>(`${DECK_SELECT} ORDER BY d.updated_at DESC, d.id ASC`);

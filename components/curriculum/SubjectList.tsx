@@ -15,7 +15,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { useTranslation } from '@/i18n';
 import { useTheme } from '@/hooks/useTheme';
-import { Interaction } from '@/theme/interaction';
+import { TopicList } from './TopicList';
 
 const PAGE_SIZE = 50;
 
@@ -104,55 +104,46 @@ export function SubjectList({ committeeId }: { committeeId: string }) {
       )}
 
       {!loading && !error && items.length > 0 && (
-        <View
-          style={{
-            backgroundColor: colors.surface,
-            borderColor: colors.border,
-            borderWidth: 1,
-            borderRadius: radius.md,
-            overflow: 'hidden',
-          }}
-        >
-          {items.map((subject, idx) => {
-            const isLast = idx === items.length - 1;
+        <View style={{ marginTop: spacing.md }}>
+          {items.map((subject) => {
             const summary = analyticsMap.get(subject.id);
             const total = summary?.totalTopics ?? 0;
             const practiced = summary?.practicedTopics ?? 0;
 
             return (
-              <Pressable
-                key={subject.id}
-                accessibilityRole="button"
-                accessibilityLabel={t.subjects.open(subject.name)}
-                onPress={() => router.push(`/subjects/${encodeURIComponent(subject.id)}` as Href)}
-                style={({ pressed }) => ({
-                  minHeight: 48,
-                  paddingVertical: spacing.md,
-                  paddingHorizontal: spacing.md,
-                  borderBottomWidth: isLast ? 0 : 1,
-                  borderBottomColor: colors.cardBorder,
-                  backgroundColor: pressed ? colors.surfaceHighlight : colors.surface,
-                  opacity: pressed ? Interaction.pressedOpacity : 1,
-                })}
-              >
-                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <View style={{ flex: 1, marginRight: spacing.md }}>
-                    <AppText variant="subhead" style={{ color: colors.textPrimary, fontWeight: '600' }}>
-                      {subject.name}
-                    </AppText>
+              <View key={subject.id} style={{ marginBottom: spacing.xl }}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.sm }}>
+                  <Pressable
+                    accessibilityRole="button"
+                    accessibilityLabel={t.subjects.open(subject.name)}
+                    onPress={() => router.push(`/subjects/${encodeURIComponent(subject.id)}` as Href)}
+                    style={{ flex: 1, marginRight: spacing.md, minHeight: 48, justifyContent: 'center' }}
+                  >
+                    <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                      <AppText variant="h3" style={{ color: colors.textPrimary }}>
+                        {subject.name}
+                      </AppText>
+                      <Feather name="chevron-right" size={16} color={colors.textMuted} style={{ marginLeft: 4 }} />
+                    </View>
 
                     {total > 0 && (
-                      <AppText variant="caption" style={{ color: colors.textSecondary, marginTop: 2 }}>
+                      <AppText variant="caption" style={{ color: colors.textSecondary, marginTop: 4 }}>
                         {t.dashboard.topicsComplete(practiced, total)}
                       </AppText>
                     )}
-                  </View>
+                  </Pressable>
 
-                  <Feather name="chevron-right" size={18} color={colors.textMuted} />
+                  <Button
+                    label={t.topics.add}
+                    variant="ghost"
+                    size="sm"
+                    icon={<Feather name="plus" size={14} color={colors.primary} />}
+                    onPress={() => router.push(`/topics/new?subjectId=${encodeURIComponent(subject.id)}` as Href)}
+                  />
                 </View>
 
                 {total > 0 && (
-                  <View style={{ marginTop: spacing.xs }}>
+                  <View style={{ marginBottom: spacing.md }}>
                     <ProgressBar
                       value={practiced}
                       max={total}
@@ -161,7 +152,9 @@ export function SubjectList({ committeeId }: { committeeId: string }) {
                     />
                   </View>
                 )}
-              </Pressable>
+
+                <TopicList subjectId={subject.id} hideHeader={true} />
+              </View>
             );
           })}
         </View>

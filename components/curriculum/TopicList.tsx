@@ -19,7 +19,7 @@ import { Interaction } from '@/theme/interaction';
 
 const PAGE_SIZE = 50;
 
-export function TopicList({ subjectId }: { subjectId: string }) {
+export function TopicList({ subjectId, hideHeader }: { subjectId: string; hideHeader?: boolean }) {
   const t = useTranslation();
   const { colors, spacing, radius } = useTheme();
   const [items, setItems] = useState<Topic[]>([]);
@@ -85,20 +85,22 @@ export function TopicList({ subjectId }: { subjectId: string }) {
 
   return (
     <View style={{ gap: spacing.md, marginBottom: spacing.lg }}>
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-        <SectionHeader
-          title={t.topics.title}
-          badge={items.length > 0 ? `${items.length}` : undefined}
-          badgeVariant="default"
-        />
-        <Button
-          label={t.topics.add}
-          variant="secondary"
-          size="sm"
-          icon={<Feather name="plus" size={14} color={colors.primary} />}
-          onPress={() => router.push(`/topics/new?subjectId=${encodeURIComponent(subjectId)}` as Href)}
-        />
-      </View>
+      {!hideHeader && (
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <SectionHeader
+            title={t.topics.title}
+            badge={items.length > 0 ? `${items.length}` : undefined}
+            badgeVariant="default"
+          />
+          <Button
+            label={t.topics.add}
+            variant="secondary"
+            size="sm"
+            icon={<Feather name="plus" size={14} color={colors.primary} />}
+            onPress={() => router.push(`/topics/new?subjectId=${encodeURIComponent(subjectId)}` as Href)}
+          />
+        </View>
+      )}
 
       {loading && (
         <LoadingState message={t.common.loading} size="small" />

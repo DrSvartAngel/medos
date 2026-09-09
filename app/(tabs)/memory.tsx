@@ -1,7 +1,7 @@
 import { translateError } from '@/i18n/errors';
-import React, { useEffect, useMemo } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
-import { router, type Href } from 'expo-router';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, BackHandler, StyleSheet, View } from 'react-native';
+import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { DeckCard } from '@/components/memory/DeckCard';
 import { DeckEmptyState } from '@/components/memory/DeckEmptyState';
@@ -12,18 +12,36 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { AppText } from '@/components/ui/Typography';
+import { ListRow } from '@/components/ui/ListRow';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTheme } from '@/hooks/useTheme';
 import { useAppStore } from '@/store/useAppStore';
 import { useCommitteeStore } from '@/store/useCommitteeStore';
 import { useMemoryStore } from '@/store/useMemoryStore';
 import { memoryRepo } from '@/db/repositories/memoryRepo';
+import { topicRepo } from '@/db/repositories/topicRepo';
 import { useTranslation } from '@/i18n';
 
 export default function MemoryScreen() {
-  const { colors, spacing } = useTheme();
+  const params = useLocalSearchParams<{ returnTo?: string; topicId?: string }>();
+  const returnTo = params.returnTo;
+  const topicId = params.topicId ? (Array.isArray(params.topicId) ? params.topicId[0] : params.topicId) : undefined;
+
+  const { colors, spacing, radius } = useTheme();
   const { isTablet, columns } = useResponsive();
   const t = useTranslation();
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!returnTo) return;
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        router.dismissTo(returnTo as Href);
+        return true;
+      });
+      return () => sub.remove();
+    }, [returnTo])
+  );
+
   const isDBReady = useAppStore((state) => state.isDBReady);
   const committees = useCommitteeStore((state) => state.committees);
   const loadCommittees = useCommitteeStore((state) => state.loadCommittees);
@@ -37,13 +55,56 @@ export default function MemoryScreen() {
   const loadRecentReviews = useMemoryStore((state) => state.loadRecentReviews);
   const setError = useMemoryStore((state) => state.setError);
 
+  const [topicContextData, setTopicContextData] = useState<{
+    topicName: string;
+    hierarchyContext: string;
+    summary: ReturnType<typeof memoryRepo.getTopicScheduleSummary>;
+    evidence: ReturnType<typeof memoryRepo.getTopicLearningEvidence>;
+    cards: ReturnType<typeof memoryRepo.getCardsByTopic>;
+  } | null>(null);
+
+  const loadTopicContext = useCallback(() => {
+    if (!topicId || !isDBReady) {
+      setTopicContextData(null);
+      return;
+    }
+    try {
+      const topic = topicRepo.getById(topicId);
+      const link = memoryRepo.getTopicLinkContext(topicId);
+      const summary = memoryRepo.getTopicScheduleSummary(topicId);
+      const evidence = memoryRepo.getTopicLearningEvidence(topicId);
+      const cards = memoryRepo.getCardsByTopic(topicId);
+
+      setTopicContextData({
+        topicName: topic?.name ?? link?.topic ?? 'Topic',
+        hierarchyContext: link ? `${link.committee} · ${link.subject}` : '',
+        summary,
+        evidence,
+        cards,
+      });
+    } catch {
+      setTopicContextData(null);
+    }
+  }, [isDBReady, topicId]);
+
   useEffect(() => {
     if (!isDBReady) return;
     setError(null);
     loadCommittees();
     loadDecks();
     loadRecentReviews(10);
-  }, [isDBReady, loadCommittees, loadDecks, loadRecentReviews, setError]);
+    if (topicId) {
+      loadTopicContext();
+    }
+  }, [isDBReady, loadCommittees, loadDecks, loadRecentReviews, loadTopicContext, setError, topicId]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (topicId && isDBReady) {
+        loadTopicContext();
+      }
+    }, [isDBReady, loadTopicContext, topicId])
+  );
 
   const deckSchedules = useMemo(() => {
     if (!isDBReady || decks.length === 0) return [];
@@ -81,11 +142,16 @@ export default function MemoryScreen() {
     loadCommittees();
     loadDecks();
     loadRecentReviews(10);
+    if (topicId) loadTopicContext();
   }
 
   function committeeName(committeeId: string | null): string | undefined {
     if (committeeId === null) return undefined;
     return committees.find((committee) => committee.id === committeeId)?.name ?? t.sweep.committeeRemoved;
+  }
+
+  function deckName(cardDeckId: string): string {
+    return decks.find((d) => d.id === cardDeckId)?.name ?? 'Deck';
   }
 
   if (!isDBReady) {
@@ -99,9 +165,208 @@ export default function MemoryScreen() {
     );
   }
 
+  // ══════════════════════════════════════════════════════════════════════════
+  // CONTEXTUAL TOPIC MEMORY VIEW
+  // ══════════════════════════════════════════════════════════════════════════
+  if (topicId) {
+    const topicSummary = topicContextData?.summary ?? {
+      due: 0,
+      newCards: 0,
+      unscheduled: 0,
+      total: 0,
+      nextReviewAt: null,
+    };
+    const topicEvidence = topicContextData?.evidence ?? {
+      linkedCards: 0,
+      linkedReviews: 0,
+      dueCards: 0,
+      nextReviewAt: null,
+    };
+    const topicCards = topicContextData?.cards ?? [];
+
+    return (
+      <ScreenWrapper>
+        <TabTopHeader returnTo={returnTo} returnLabel={t.common.back || 'Back to Topic'} />
+
+        {/* Topic Context Header */}
+        <View style={styles.headerRow}>
+          <View style={styles.headerText}>
+            {topicContextData?.hierarchyContext ? (
+              <AppText variant="caption" color={colors.textMuted} style={{ marginBottom: 2 }}>
+                {topicContextData.hierarchyContext}
+              </AppText>
+            ) : null}
+            <AppText variant={isTablet ? 'h1' : 'h2'}>
+              {topicContextData?.topicName ?? t.memory.title}
+            </AppText>
+            <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>
+              {t.memory.subtitle}
+            </AppText>
+          </View>
+        </View>
+
+        {/* Topic-Scoped Factual Metrics */}
+        <View style={[styles.stats, { gap: spacing.sm, marginTop: spacing.md }]}>
+          <Card style={styles.stat}>
+            <AppText variant="h3" color={colors.textPrimary} style={styles.statValue}>
+              {topicSummary.total}
+            </AppText>
+            <AppText variant="caption" color={colors.textSecondary} style={styles.statLabel}>
+              {t.memory.cardsLabel(topicSummary.total)}
+            </AppText>
+          </Card>
+          <Card style={styles.stat}>
+            <AppText
+              variant="h3"
+              color={topicSummary.due > 0 ? colors.warning : colors.textPrimary}
+              style={styles.statValue}
+            >
+              {topicSummary.due}
+            </AppText>
+            <AppText variant="caption" color={colors.textSecondary} style={styles.statLabel}>
+              {t.memory.dueCount(topicSummary.due)}
+            </AppText>
+          </Card>
+          <Card style={styles.stat}>
+            <AppText variant="h3" color={colors.textPrimary} style={styles.statValue}>
+              {topicEvidence.linkedReviews}
+            </AppText>
+            <AppText variant="caption" color={colors.textSecondary} style={styles.statLabel}>
+              Reviews
+            </AppText>
+          </Card>
+        </View>
+
+        {/* Primary Action / Zero State */}
+        {topicSummary.due > 0 ? (
+          <Card elevated style={[styles.dueActionCard, { marginTop: spacing.md, padding: spacing.md }]}>
+            <View style={styles.dueActionHeader}>
+              <Badge label={t.memory.dueCount(topicSummary.due)} variant="warning" size="sm" />
+              <AppText variant="h3" style={{ marginTop: spacing.xs }}>
+                {t.memory.reviewDueCards}
+              </AppText>
+            </View>
+            <Button
+              label={`${t.memory.reviewDueCards} (${topicSummary.due})`}
+              accessibilityLabel={`${t.memory.reviewDueCards} (${topicSummary.due})`}
+              size={isTablet ? 'lg' : 'md'}
+              variant="primary"
+              onPress={() =>
+                router.push(
+                  `/memory/review?topicId=${encodeURIComponent(topicId)}&mode=due&returnTo=${encodeURIComponent(
+                    returnTo ?? `/topics/${topicId}`
+                  )}` as Href
+                )
+              }
+              style={{ marginTop: spacing.md }}
+            />
+          </Card>
+        ) : topicSummary.total > 0 ? (
+          <Card
+            style={[
+              styles.zeroDueCard,
+              { marginTop: spacing.md, padding: spacing.md, backgroundColor: colors.surfaceElevated },
+            ]}
+          >
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing.sm }}>
+              <Feather name="check-circle" size={20} color={colors.success} />
+              <View style={{ flex: 1 }}>
+                <AppText variant="label" color={colors.textPrimary}>
+                  {t.memory.noReviewsDue}
+                </AppText>
+                <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                  {t.scheduling.noneDue}
+                </AppText>
+              </View>
+            </View>
+            <Button
+              label={`Review All (${topicSummary.total})`}
+              variant="secondary"
+              size="sm"
+              onPress={() =>
+                router.push(
+                  `/memory/review?topicId=${encodeURIComponent(topicId)}&returnTo=${encodeURIComponent(
+                    returnTo ?? `/topics/${topicId}`
+                  )}` as Href
+                )
+              }
+              style={{ marginTop: spacing.md }}
+            />
+          </Card>
+        ) : (
+          <Card
+            elevated
+            style={[
+              styles.emptyCard,
+              { marginTop: spacing.md, padding: spacing.xl, backgroundColor: colors.surface },
+            ]}
+          >
+            <Feather name="layers" size={36} color={colors.primary} />
+            <AppText variant="h3" style={{ marginTop: spacing.md, textAlign: 'center' }}>
+              No Memory cards for this topic yet.
+            </AppText>
+            <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.xs, textAlign: 'center' }}>
+              Create or generate cards linked to this topic to start reviewing.
+            </AppText>
+            <Button
+              label={t.studyAi.assistant}
+              variant="secondary"
+              size="sm"
+              icon={<Feather name="cpu" size={14} color={colors.primary} />}
+              onPress={() => router.push(`/topics/${encodeURIComponent(topicId)}/assistant` as Href)}
+              style={{ marginTop: spacing.md }}
+            />
+          </Card>
+        )}
+
+        {/* Topic-Linked Cards List */}
+        {topicCards.length > 0 && (
+          <View style={{ marginTop: spacing.lg }}>
+            <AppText variant="subhead" style={{ marginBottom: spacing.xs }}>
+              Topic Cards ({topicCards.length})
+            </AppText>
+            <View
+              style={{
+                borderRadius: radius.md,
+                borderColor: colors.border,
+                borderWidth: 1,
+                overflow: 'hidden',
+                backgroundColor: colors.surfaceElevated,
+              }}
+            >
+              {topicCards.map((c, idx) => (
+                <ListRow
+                  key={c.id}
+                  title={c.front}
+                  subtitle={`${deckName(c.deckId)} · ${c.schedule?.state ?? 'new'}`}
+                  leading={<Feather name="credit-card" size={16} color={colors.primary} />}
+                  borderBottom={idx < topicCards.length - 1}
+                  accessibilityRole="text"
+                />
+              ))}
+            </View>
+          </View>
+        )}
+
+        {/* Global Memory Option */}
+        <View style={{ marginTop: spacing.xl, marginBottom: spacing.xl, alignItems: 'center' }}>
+          <Button
+            label="View All Memory"
+            variant="ghost"
+            size="sm"
+            onPress={() => router.push('/(tabs)/memory' as Href)}
+          />
+        </View>
+      </ScreenWrapper>
+    );
+  }
+
+  // ══════════════════════════════════════════════════════════════════════════
+  // GLOBAL MEMORY VIEW
+  // ══════════════════════════════════════════════════════════════════════════
   return (
     <ScreenWrapper>
-      <TabTopHeader />
+      <TabTopHeader returnTo={returnTo} returnLabel={t.common.back || 'Back to Topic'} />
       {/* 1. Memory Title */}
       <View style={styles.headerRow}>
         <View style={styles.headerText}>
@@ -261,13 +526,6 @@ const styles = StyleSheet.create({
   headerText: {
     flex: 1,
   },
-  addButton: {
-    minWidth: 44,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginLeft: 12,
-  },
   stats: {
     flexDirection: 'row',
   },
@@ -312,6 +570,11 @@ const styles = StyleSheet.create({
   zeroDueCard: {
     borderWidth: 1,
     borderColor: 'transparent',
+    width: '100%',
+  },
+  emptyCard: {
+    alignItems: 'center',
+    borderRadius: 16,
     width: '100%',
   },
   secondaryActions: {

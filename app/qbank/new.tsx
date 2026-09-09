@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
+  BackHandler,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   TouchableOpacity,
   View,
 } from 'react-native';
-import { router, type Href } from 'expo-router';
+import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { AppText } from '@/components/ui/Typography';
@@ -31,11 +32,14 @@ export default function NewQBankSessionScreen() {
   const addSession = useQBankStore((state) => state.addSession);
   const clearStoreError = useQBankStore((state) => state.clearError);
 
+  const params = useLocalSearchParams<{ returnTo?: string; topicId?: string }>();
+  const returnTo = params.returnTo;
+
   const [totalQuestions, setTotalQuestions] = useState('');
   const [correctCount, setCorrectCount] = useState('');
   const [durationMin, setDurationMin] = useState('');
   const [sourceName, setSourceName] = useState('');
-  const [topicId, setTopicId] = useState<string | null>(null);
+  const [topicId, setTopicId] = useState<string | null>(params.topicId || null);
 
   const totalNum = parseInt(totalQuestions.trim(), 10);
   const correctNum = parseInt(correctCount.trim(), 10);
@@ -59,12 +63,24 @@ export default function NewQBankSessionScreen() {
   }, [clearStoreError]);
 
   function handleBack() {
-    if (router.canGoBack()) {
+    if (returnTo) {
+      router.dismissTo(returnTo as Href);
+    } else if (router.canGoBack()) {
       router.back();
     } else {
       router.replace('/(tabs)/memory' as Href);
     }
   }
+
+  useFocusEffect(
+    useCallback(() => {
+      const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+        handleBack();
+        return true;
+      });
+      return () => sub.remove();
+    }, [returnTo])
+  );
 
   function validate(): {
     isValid: boolean;

@@ -206,8 +206,8 @@ console.log('\n--- Checking Global Shell & Navigation ---');
 assert.ok(exists('app/(tabs)/_layout.tsx'), 'app/(tabs)/_layout.tsx must exist');
 const tabLayoutSrc = read('app/(tabs)/_layout.tsx');
 
-// Check 5 visible tabs for Phase 11 V2.2 Locked Navigation IA
-const visibleTabs = ['committees', 'focus', 'calendar', 'memory', 'ai'];
+// Check 5 visible tabs for Phase 11.5 IA
+const visibleTabs = ['index', 'committees', 'focus', 'memory', 'calendar'];
 for (const tab of visibleTabs) {
   assert.ok(
     tabLayoutSrc.includes(`name: '${tab}'`),
@@ -215,10 +215,10 @@ for (const tab of visibleTabs) {
   );
 }
 
-// Check index and profile are hidden via href: null
+// Check ai and profile are hidden via href: null
 assert.ok(
-  tabLayoutSrc.includes("name=\"index\"") && tabLayoutSrc.includes("href: null"),
-  'Dashboard/Home must be hidden from tab bar via href: null'
+  tabLayoutSrc.includes("name=\"ai\"") && tabLayoutSrc.includes("href: null"),
+  'AI must be hidden from tab bar via href: null'
 );
 assert.ok(
   tabLayoutSrc.includes("name=\"profile\"") && tabLayoutSrc.includes("href: null"),
@@ -260,12 +260,10 @@ console.log('\n--- Checking Dashboard Redesign ---');
 
 const dashboardSrc = read('app/(tabs)/index.tsx');
 
-// Check that Dashboard has the required hierarchy components
+// Check that Dashboard has the required hierarchy components (Phase 11.5 IA simplified Today screen)
 assert.ok(dashboardSrc.includes('CommitteeOverviewCard'), 'Dashboard must include CommitteeOverviewCard');
 assert.ok(dashboardSrc.includes('QuickStartCard'), 'Dashboard must include QuickStartCard');
 assert.ok(dashboardSrc.includes('TodayMetrics'), 'Dashboard must include TodayMetrics');
-assert.ok(dashboardSrc.includes('WeakTopicsList'), 'Dashboard must include WeakTopicsList');
-assert.ok(dashboardSrc.includes('MomentumCard'), 'Dashboard must include MomentumCard');
 assert.ok(dashboardSrc.includes('TodayAgenda'), 'Dashboard must include TodayAgenda');
 
 // Check that Calendar remains reachable via onOpenCalendar
@@ -466,10 +464,10 @@ const deckCardSrc = read('components/memory/DeckCard.tsx');
 assert.ok(deckCardSrc.includes('dueCount?: number'), 'DeckCardProps must support optional dueCount');
 
 // Review Screen: compact ProgressBar and dominant card
-const reviewSrc = read('app/decks/[id]/review.tsx');
-assert.ok(reviewSrc.includes('ProgressBar'), 'DeckReviewScreen must use ProgressBar');
-assert.ok(reviewSrc.includes('ReviewCard'), 'DeckReviewScreen must use ReviewCard');
-assert.ok(reviewSrc.includes('ReviewControls'), 'DeckReviewScreen must use ReviewControls');
+const reviewSrc = exists('components/memory/ReviewSession.tsx') ? read('components/memory/ReviewSession.tsx') : read('app/decks/[id]/review.tsx');
+assert.ok(reviewSrc.includes('ProgressBar'), 'Review screen must use ProgressBar');
+assert.ok(reviewSrc.includes('ReviewCard'), 'Review screen must use ReviewCard');
+assert.ok(reviewSrc.includes('ReviewControls'), 'Review screen must use ReviewControls');
 
 // 3. Q-Bank Workflow
 const qbankSrc = read('app/qbank/new.tsx');

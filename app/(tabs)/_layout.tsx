@@ -17,11 +17,11 @@ interface TabConfig {
 }
 
 const VISIBLE_TABS: TabConfig[] = [
+  { name: 'index',       titleKey: 'home',       icon: 'home' },
   { name: 'committees',  titleKey: 'committees', icon: 'book-open' },
   { name: 'focus',       titleKey: 'focus',      icon: 'clock' },
-  { name: 'calendar',    titleKey: 'calendar',   icon: 'calendar' },
   { name: 'memory',      titleKey: 'memory',     icon: 'layers' },
-  { name: 'ai',          titleKey: 'ai',         icon: 'message-circle' },
+  { name: 'calendar',    titleKey: 'calendar',   icon: 'calendar' },
 ];
 
 export const unstable_settings = {
@@ -89,10 +89,10 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="ai"
         options={{
           href: null,
-          title: t.tabs.home,
+          title: t.tabs.ai,
         }}
       />
       {VISIBLE_TABS.map((tab) => (

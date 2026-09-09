@@ -79,6 +79,7 @@ interface MemoryState {
 
   reviewStatus: ReviewStatus;
   reviewDeckId: string | null;
+  reviewTopicId: string | null;
   reviewQueue: Flashcard[];
   reviewIndex: number;
   reviewSummary: ReviewSummaryData;
@@ -93,6 +94,7 @@ interface MemoryState {
   deleteCard: (id: string) => boolean;
   loadRecentReviews: (limit?: number) => void;
   startReview: (deckId: string, limit?: number, queueMode?: 'all' | 'due') => void;
+  startTopicReview: (topicId: string, limit?: number, queueMode?: 'all' | 'due') => void;
   revealAnswer: () => void;
   rateCurrentCard: (rating: ReviewRating) => boolean;
   exitReview: () => void;
@@ -127,6 +129,7 @@ export const useMemoryStore = create<MemoryState>()((set, get) => ({
 
   reviewStatus: 'idle',
   reviewDeckId: null,
+  reviewTopicId: null,
   reviewQueue: [],
   reviewIndex: 0,
   reviewSummary: { ...EMPTY_SUMMARY },
@@ -349,6 +352,7 @@ export const useMemoryStore = create<MemoryState>()((set, get) => ({
     set({
       reviewStatus: 'loading',
       reviewDeckId: deckId,
+      reviewTopicId: null,
       reviewQueue: [],
       reviewIndex: 0,
       reviewSummary: { ...EMPTY_SUMMARY },
@@ -361,12 +365,50 @@ export const useMemoryStore = create<MemoryState>()((set, get) => ({
         set({
           reviewStatus: 'idle',
           reviewDeckId: null,
+          reviewTopicId: null,
           error: 'This deck is no longer available.',
         });
         return;
       }
 
       const reviewQueue = queueMode === 'due' ? memoryRepo.getDueReviewQueue(deckId) : memoryRepo.getReviewQueue(deckId, limit);
+      set({
+        reviewQueue,
+        reviewStatus: reviewQueue.length === 0 ? 'complete' : 'question',
+      });
+    } catch (error) {
+      set({
+        reviewStatus: 'idle',
+        error: errorMessage(error, 'Could not start this review.'),
+      });
+    }
+  },
+
+  startTopicReview: (topicId, limit, queueMode = 'all') => {
+    set({
+      reviewStatus: 'loading',
+      reviewDeckId: null,
+      reviewTopicId: topicId,
+      reviewQueue: [],
+      reviewIndex: 0,
+      reviewSummary: { ...EMPTY_SUMMARY },
+      error: null,
+    });
+
+    try {
+      const topicContext = memoryRepo.getTopicLinkContext(topicId);
+      if (topicContext === null) {
+        set({
+          reviewStatus: 'idle',
+          reviewTopicId: null,
+          error: 'This topic is no longer available.',
+        });
+        return;
+      }
+
+      const reviewQueue = queueMode === 'due'
+        ? memoryRepo.getTopicDueReviewQueue(topicId)
+        : memoryRepo.getTopicReviewQueue(topicId, limit);
       set({
         reviewQueue,
         reviewStatus: reviewQueue.length === 0 ? 'complete' : 'question',
@@ -441,6 +483,7 @@ export const useMemoryStore = create<MemoryState>()((set, get) => ({
     set({
       reviewStatus: 'idle',
       reviewDeckId: null,
+      reviewTopicId: null,
       reviewQueue: [],
       reviewIndex: 0,
       reviewSummary: { ...EMPTY_SUMMARY },
