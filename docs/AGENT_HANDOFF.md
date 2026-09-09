@@ -2,17 +2,36 @@
 
 ## CURRENT CHECKPOINT
 
-- **Phase 12.9 — Vector Store Integration: COMPLETE**
+- **Master Phase 12 — Learning Material Intelligence & RAG Pipeline: COMPLETE / CLOSED**
 - **Branch:** `localization-en-tr-sweep`
+- **Current HEAD:** `e5b3896`
 - **Schema:** `v14` (deterministic migration v13 → v14, `chunk_embeddings` with 4 indexes)
-- **Phase 12.5 regression:** PASS (`validate-phase12-step5.cjs`)
-- **Phase 12.6 regression:** PASS (`validate-phase12-step6.cjs`)
-- **Phase 12.7 regression:** PASS (`validate-phase12-step7.cjs`)
-- **Phase 12.8 regression:** PASS (`validate-phase12-step8.cjs`)
-- **Phase 12.9 validator:** PASS (`validate-phase12-step9.cjs`, 40/40)
-- **TypeScript:** PASS (`tsc --noEmit`, 0 errors)
-- **Physical QA:** Phone PENDING | Tablet PENDING
-- **Next:** Phase 12 Closure & Physical QA Gate
+- **Delivered Sequence:**
+  - Phase 12.1 — Source Ingestion Foundation: **COMPLETE**
+  - Phase 12.2 — PDF Extraction Pipeline: **COMPLETE**
+  - Phase 12.3 — PPTX / Slide Ingestion: **COMPLETE**
+  - Phase 12.4 — OCR & Visual Understanding: **COMPLETE**
+  - Phase 12.5 — Chunking & Source Indexing: **COMPLETE**
+  - Phase 12.6 — Retrieval Layer: **COMPLETE**
+  - Phase 12.7 — RAG Answer Generation: **COMPLETE**
+  - Phase 12.8 — RAG UI: **COMPLETE**
+  - Phase 12.9 — Vector Store Integration: **COMPLETE**
+- **Verification Gates:**
+  - Phase 12 Static Closure Gate: **PASS** (TypeScript, Phase 12.2–12.9 suites 100% pass)
+  - Phone Physical QA: **PASS** (Confirmed by user on real Android phone)
+  - Tablet Physical QA: **PASS** (Confirmed by user on real Android tablet)
+  - Bugs found during Phase 12 closure: **NONE**
+
+### Canonical Project Position
+
+- **LAST COMPLETED:** Master Phase 12 — Learning Material Intelligence & RAG Pipeline
+- **CURRENT:** Retroactive Gap Closure Audit (Historical review of Phase 3, 6, 8, 9, 10, 11 QA debt)
+- **NEXT AFTER RETROACTIVE CLOSURE:** Phase 13 — UX Architecture & Ergonomic Reorganization (PLANNED / NOT STARTED)
+
+### Future Planned Roadmap Sequence:
+- **Phase 13 — UX Architecture & Ergonomic Reorganization:** ⬜ PLANNED / NOT STARTED
+- **Phase 14 — Design System & Application Shell Rebuild:** ⬜ PLANNED / NOT STARTED
+- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
 
 ### Architecture Pipeline Summary
 
@@ -24,10 +43,17 @@ Sources
 → Deterministic Hybrid Ranking (Phase 12.9)
 → Grounded RAG Answer Generation (Phase 12.7)
 → RAG UI / Ask MedOS Mode (Phase 12.8)
-→ NEXT: Phase 12 Closure & Physical QA Gate
+→ Master Phase 12: CLOSED
+→ CURRENT: Retroactive Gap Closure Audit
+→ NEXT AFTER GAP CLOSURE: Phase 13 — UX Architecture & Ergonomic Reorganization
 ```
 
 ---
+
+## Historical — Master Phase 12 Closure Gate (2026-09-09)
+
+- Master Phase 12 formally closed after full automated validation and explicit user physical phone and tablet QA confirmation.
+- Next activity: Retroactive Gap Closure Audit across historical phases before beginning Phase 13.
 
 ## Historical — Phase 12.9: Vector Store Integration
 
@@ -35,7 +61,7 @@ Sources
 - Branch: `localization-en-tr-sweep` | Schema: **v14**
 - Delivered: `models/embedding.ts`, `models/retrieval.ts`, `db/migrations.ts`, `db/repositories/chunkEmbeddingRepo.ts`, `services/embedding/*`, `services/chunking/indexingService.ts`, `services/retrieval/hybridRanker.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step9.cjs`
 - Full hybrid retrieval pipeline, bounded similarity search, safe Gemini embedding adapter, guaranteed lexical fallback, source ingestion lifecycle integration.
-- Next: Phase 12 Closure & Physical QA Gate.
+- Master Phase 12: CLOSED. Next: Retroactive Gap Closure Audit.
 
 ---
 
@@ -1151,8 +1177,8 @@ Verified against canonical/user-confirmed physical statuses; never promote emula
 | Phase 3.6 Android phone QA | PENDING |
 | Phase 3.6 Android tablet QA | PENDING |
 | Consolidated post-Phase-3.6 safe-area regression | PENDING |
-| Phase 12.8 Android phone QA | PENDING |
-| Phase 12.8 Android tablet QA | PENDING |
+| Phase 12 Phone Physical QA | PASSED |
+| Phase 12 Tablet Physical QA | PASSED |
 
 Localization phone/tablet QA: DEFERRED with the rest of whole-app localization. Historical emulator evidence is separate and cannot close physical QA.
 
@@ -1163,7 +1189,8 @@ Localization phone/tablet QA: DEFERRED with the rest of whole-app localization. 
 > [!NOTE]
 > Historical status from early development:
 > Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Phase 4 complete; Phase 5 legacy foundation complete.
-> Active canonical development is now **Phase 12 (AI Study / RAG Pipeline)**.
-> Current status: Phase 12.8 COMPLETE; Next: Phase 12.9 — Vector Store Integration.
+> Master Phase 12 (Learning Material Intelligence & RAG Pipeline) is **COMPLETE / CLOSED**.
+> Current Active Stage is: **Retroactive Gap Closure Audit** (reviewing historical QA debt in Phases 3, 6, 8, 9, 10, 11).
+> Next after gap closure: **Phase 13 — UX Architecture & Ergonomic Reorganization** (PLANNED / NOT STARTED).
 
 (Legacy archive summary from early development: Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Master Phase 3 ACTIVE for remaining explicit QA gaps; Phase 4.1/4.2 COMPLETE; Phase 4.2 phone/tablet QA PASS; Phase 5 NOT STARTED at schema v6).

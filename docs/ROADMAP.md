@@ -1,25 +1,44 @@
 # MedOS — Development Roadmap
 
-## Current Development Sequence — Phase 12: AI Study / RAG Pipeline
+## Master Phase 12 — Learning Material Intelligence & RAG Pipeline ✅ COMPLETE / CLOSED
 
-### Canonical Phase 12 AI Study/RAG Sequence:
-- Phase 12.5 — Chunking and Source Indexing: **COMPLETE**
-- Phase 12.6 — Retrieval Layer: **COMPLETE**
-- Phase 12.7 — RAG Answer Generation: **COMPLETE**
-- Phase 12.8 — RAG UI: **COMPLETE**
-- Phase 12.9 — Vector Store Integration: **COMPLETE**
-
-### Current Checkpoint:
-- **Phase 12.9 — Vector Store Integration: COMPLETE**
-- Branch: `localization-en-tr-sweep` | Schema: **v14**
-- Delivered: `models/embedding.ts`, `models/retrieval.ts`, `db/migrations.ts`, `db/repositories/chunkEmbeddingRepo.ts`, `services/embedding/*`, `services/chunking/indexingService.ts`, `services/retrieval/hybridRanker.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step9.cjs`
-- Validation: `scripts/validate-phase12-step9.cjs` PASS (40/40) | TypeScript PASS (0 errors) | Phase 12.5–12.8 regression PASS
-- Physical QA: Phone PENDING | Tablet PENDING
-
-### Next Phase:
-- **Phase 12 Closure & Physical QA Gate**
+- **Phase Status:** Master Phase 12: **COMPLETE / CLOSED**
+- **Branch:** `localization-en-tr-sweep` | **Schema:** `v14`
+- **Delivered Sequence:**
+  - Phase 12.1 — Source Ingestion Foundation: **COMPLETE**
+  - Phase 12.2 — PDF Extraction Pipeline: **COMPLETE**
+  - Phase 12.3 — PPTX / Slide Ingestion: **COMPLETE**
+  - Phase 12.4 — OCR & Visual Understanding: **COMPLETE**
+  - Phase 12.5 — Chunking & Source Indexing: **COMPLETE**
+  - Phase 12.6 — Retrieval Layer: **COMPLETE**
+  - Phase 12.7 — RAG Answer Generation: **COMPLETE**
+  - Phase 12.8 — RAG UI: **COMPLETE**
+  - Phase 12.9 — Vector Store Integration: **COMPLETE**
+- **Verification Gates:**
+  - Phase 12 Static Closure Gate: **PASS** (TypeScript, Phase 12.2–12.9 suites 100% pass)
+  - Phone Physical QA: **PASS** (User confirmed on real Android phone)
+  - Tablet Physical QA: **PASS** (User confirmed on real Android tablet)
+  - Bugs found during Phase 12 closure: **NONE**
 
 ---
+
+## Canonical Project Position
+
+- **LAST COMPLETED:** Master Phase 12 — Learning Material Intelligence & RAG Pipeline
+- **CURRENT:** Retroactive Gap Closure Audit (Historical review of Phase 3, 6, 8, 9, 10, 11 QA debt)
+- **NEXT AFTER RETROACTIVE CLOSURE:** Phase 13 — UX Architecture & Ergonomic Reorganization (PLANNED / NOT STARTED)
+
+### Future Planned Roadmap Sequence:
+- **Phase 13 — UX Architecture & Ergonomic Reorganization:** ⬜ PLANNED / NOT STARTED
+- **Phase 14 — Design System & Application Shell Rebuild:** ⬜ PLANNED / NOT STARTED
+- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
+
+---
+
+## Historical — Master Phase 12 Closure Gate (2026-09-09)
+
+- Master Phase 12 formally closed after full automated validation and explicit user physical phone and tablet QA confirmation.
+- Next activity: Retroactive Gap Closure Audit across historical phases before beginning Phase 13.
 
 ## Historical — Phase 12.9: Vector Store Integration
 
@@ -27,7 +46,6 @@
 - Branch: `localization-en-tr-sweep` | Schema: **v14**
 - Delivered: `models/embedding.ts`, `models/retrieval.ts`, `db/migrations.ts`, `db/repositories/chunkEmbeddingRepo.ts`, `services/embedding/*`, `services/chunking/indexingService.ts`, `services/retrieval/hybridRanker.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step9.cjs`
 - Phase 12.9 suite: **40/40 PASS** | TypeScript: **PASS (0 errors)** | Phase 12.5–12.8 regression: **PASS**
-- Next: Phase 12 Closure & Physical QA Gate
 
 ---
 
@@ -1378,8 +1396,8 @@ These groupings preserve the original advanced Phase 4 goals, not implementation
 > [!NOTE]
 > The sections below represent early historical roadmap context (Phases 4 through 5, schema v6–v9).
 > They are retained for archival reference only.
-> Canonical active roadmap development is **Phase 12 (AI Study / RAG Pipeline)** at the top of this document.
-> Current Next Phase is strictly: **Phase 12.9 — Vector Store Integration**.
+> Canonical active roadmap development has closed **Master Phase 12 (Learning Material Intelligence & RAG Pipeline)** at the top of this document.
+> Current Active Stage is: **Retroactive Gap Closure Audit**, followed by **Phase 13 — UX Architecture & Ergonomic Reorganization (PLANNED / NOT STARTED)**.
 > The historical entries below (such as Phase 5.1/5.2 or earlier Next Required Actions) are archived records from previous milestones and do NOT represent the current next step.
 
 ## Historical / Legacy — Phase 5: Memory & Learning Engine Context (Archive)
