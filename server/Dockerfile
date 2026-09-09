@@ -12,7 +12,7 @@ RUN apk add --no-cache poppler-utils tesseract-ocr tesseract-ocr-data-tur tesser
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY ocrEngine.js pdfParser.js pptxParser.js pdfServer.js ./
+COPY ocrEngine.js pdfParser.js pptxParser.js visualEngine.js pdfServer.js ./
 
 EXPOSE 3001
 

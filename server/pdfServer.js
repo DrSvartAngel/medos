@@ -5,6 +5,7 @@ const http = require('http');
 const { parsePdfBuffer, MAX_PDF_SIZE_BYTES } = require('./pdfParser');
 const { parsePptxBuffer } = require('./pptxParser');
 const { recognizeImage } = require('./ocrEngine');
+const { analyzeVisual } = require('./visualEngine');
 
 function parseMultipartBody(buffer, boundary) {
   const boundaryBuffer = Buffer.from(`--${boundary}`);
@@ -56,8 +57,124 @@ function createPdfServer() {
 
     // Health check endpoint
     if (req.method === 'GET' && (req.url === '/health' || req.url === '/api/v1/health')) {
+      const visualConfigured = Boolean(
+        process.env.GEMINI_API_KEY &&
+        process.env.GEMINI_API_KEY.trim().length > 0 &&
+        !process.env.GEMINI_API_KEY.includes('your_')
+      );
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', service: 'medos-pdf-extraction' }));
+      res.end(JSON.stringify({ status: 'ok', service: 'medos-pdf-extraction', visualConfigured }));
+      return;
+    }
+
+    // Visual Understanding endpoint
+    if (
+      req.method === 'POST' &&
+      (req.url === '/analyze-visual' ||
+        req.url === '/api/v1/analyze-visual')
+    ) {
+      const chunks = [];
+      let totalLength = 0;
+      let tooLarge = false;
+
+      req.on('data', (chunk) => {
+        totalLength += chunk.length;
+        if (totalLength > MAX_PDF_SIZE_BYTES) {
+          tooLarge = true;
+          req.resume();
+          return;
+        }
+        chunks.push(chunk);
+      });
+
+      req.on('end', async () => {
+        if (tooLarge) {
+          res.writeHead(413, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              status: 'failed',
+              errorMessage: 'Payload exceeds maximum 5 MB limit',
+              uncertaintyWarnings: ['payload_too_large'],
+            })
+          );
+          return;
+        }
+
+        try {
+          const bodyBuffer = Buffer.concat(chunks);
+          if (bodyBuffer.length === 0) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(
+              JSON.stringify({
+                status: 'failed',
+                errorMessage: 'Empty request body',
+                uncertaintyWarnings: ['empty_request_body'],
+              })
+            );
+            return;
+          }
+
+          const contentType = req.headers['content-type'] || '';
+          let params = {};
+
+          if (contentType.includes('application/json')) {
+            try {
+              params = JSON.parse(bodyBuffer.toString('utf8'));
+            } catch {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(
+                JSON.stringify({
+                  status: 'failed',
+                  errorMessage: 'Malformed JSON in request body',
+                  uncertaintyWarnings: ['invalid_json'],
+                })
+              );
+              return;
+            }
+          } else if (contentType.includes('multipart/form-data')) {
+            const boundaryMatch = contentType.match(/boundary=([^;]+)/);
+            if (!boundaryMatch) {
+              res.writeHead(400, { 'Content-Type': 'application/json' });
+              res.end(
+                JSON.stringify({
+                  status: 'failed',
+                  errorMessage: 'Missing multipart boundary',
+                  uncertaintyWarnings: ['missing_boundary'],
+                })
+              );
+              return;
+            }
+            const boundary = boundaryMatch[1].replace(/["']/g, '');
+            const imageBuffer = parseMultipartBody(bodyBuffer, boundary);
+            params = {
+              imageBuffer,
+              mimeType: 'image/png',
+              task: 'explain_diagram',
+            };
+          } else {
+            // Direct binary image bytes
+            params = {
+              imageBuffer: bodyBuffer,
+              mimeType: contentType || 'image/png',
+              task: 'explain_diagram',
+            };
+          }
+
+          const result = await analyzeVisual(params);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(result));
+        } catch (err) {
+          const message = err instanceof Error ? err.message : 'Unknown visual analysis failure';
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(
+            JSON.stringify({
+              status: 'failed',
+              errorMessage: message,
+              uncertaintyWarnings: ['server_internal_error'],
+            })
+          );
+        }
+      });
       return;
     }
 

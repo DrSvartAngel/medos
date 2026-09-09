@@ -29,13 +29,25 @@ export interface VisualAnalysisRequest {
 }
 
 export interface VisualAnalysisResult {
-  status: 'success' | 'partial' | 'uncertain' | 'failed' | 'blocked_by_provider_configuration';
+  status:
+    | 'success'
+    | 'partial'
+    | 'uncertain'
+    | 'failed'
+    | 'blocked_by_provider_configuration'
+    | 'visual_provider_not_configured'
+    | 'provider_not_configured'
+    | 'network_unavailable'
+    | 'analysis_failed'
+    | 'ready';
   description: string;
   labels: string[];
+  visibleLabels?: string[];
   relationships?: string;
   educationalExplanation: string;
   uncertaintyWarnings?: string[];
   provenance: SourceProvenance;
+  model?: string;
 }
 
 export interface VisualUnderstandingProvider {

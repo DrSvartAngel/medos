@@ -16,6 +16,8 @@ import { StudySourceEditor, type StudySourceFormValues } from '@/components/stud
 import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
 import { topicRouteId } from '@/utils/topicRoutes';
+import { visualUnderstandingService } from '@/services/ai/visualUnderstandingService';
+import type { VisualAnalysisResult } from '@/models/visualUnderstanding';
 
 export default function StudySourceDetailScreen() {
   const params = useLocalSearchParams<{ id?: string | string[]; sourceId?: string | string[] }>();
@@ -32,6 +34,9 @@ export default function StudySourceDetailScreen() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [analyzingAssetKey, setAnalyzingAssetKey] = useState<string | null>(null);
+  const [visualResults, setVisualResults] = useState<Record<string, VisualAnalysisResult>>({});
+  const [visualErrors, setVisualErrors] = useState<Record<string, string>>({});
   const deleting = useRef(false);
 
   const loadSource = useCallback(() => {
@@ -105,6 +110,72 @@ export default function StudySourceDetailScreen() {
       setSaveError(t.studySources.saveError);
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleAnalyzeVisual(
+    assetKey: string,
+    params: {
+      pageNumber?: number;
+      slideNumber?: number;
+      imageIndex?: number;
+      mediaId?: string;
+      ocrText?: string;
+      imageBase64?: string;
+      imageUri?: string;
+    }
+  ) {
+    if (!source) return;
+    setAnalyzingAssetKey(assetKey);
+    setVisualErrors((prev) => ({ ...prev, [assetKey]: '' }));
+
+    try {
+      const res = await visualUnderstandingService.analyzeVisual({
+        task: 'explain_diagram',
+        mimeType: 'image/png',
+        imageBase64: params.imageBase64,
+        imageUri: params.imageUri,
+        ocrText: params.ocrText,
+        surroundingText: source.content.slice(0, 500),
+        sourceMetadata: {
+          sourceId: source.id,
+          sourceTitle: source.title,
+          topicName: topic?.name || '',
+          pageNumber: params.pageNumber,
+          slideNumber: params.slideNumber,
+          mediaId: params.mediaId,
+          imageIndex: params.imageIndex || 1,
+        },
+      });
+
+      if (
+        res.status === 'visual_provider_not_configured' ||
+        res.status === 'blocked_by_provider_configuration'
+      ) {
+        setVisualErrors((prev) => ({
+          ...prev,
+          [assetKey]: 'Visual intelligence provider is not configured (requires server GEMINI_API_KEY).',
+        }));
+      } else if (res.status === 'network_unavailable') {
+        setVisualErrors((prev) => ({
+          ...prev,
+          [assetKey]: 'Unable to connect to extraction server. Please check connection.',
+        }));
+      } else if (res.status === 'failed' || res.status === 'analysis_failed') {
+        setVisualErrors((prev) => ({
+          ...prev,
+          [assetKey]: res.uncertaintyWarnings?.[0] || 'Visual analysis failed.',
+        }));
+      } else {
+        setVisualResults((prev) => ({ ...prev, [assetKey]: res }));
+      }
+    } catch (err) {
+      setVisualErrors((prev) => ({
+        ...prev,
+        [assetKey]: err instanceof Error ? err.message : 'Visual analysis failed.',
+      }));
+    } finally {
+      setAnalyzingAssetKey(null);
     }
   }
 
@@ -273,6 +344,70 @@ export default function StudySourceDetailScreen() {
                 <AppText variant="body" style={styles.contentText}>
                   {source.content}
                 </AppText>
+
+                {source.metadata?.canonicalType === 'image' ? (
+                  <View style={{ marginTop: spacing.md, borderTopWidth: 1, borderTopColor: colors.cardBorder, paddingTop: spacing.sm }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <AppText variant="label">Visual Explanation</AppText>
+                      {!visualResults['standalone-image'] ? (
+                        <Button
+                          label={analyzingAssetKey === 'standalone-image' ? 'Analyzing...' : 'Analyze visual'}
+                          variant="secondary"
+                          size="sm"
+                          disabled={analyzingAssetKey === 'standalone-image'}
+                          onPress={() =>
+                            handleAnalyzeVisual('standalone-image', {
+                              imageIndex: 1,
+                              ocrText: source.content,
+                            })
+                          }
+                        />
+                      ) : null}
+                    </View>
+
+                    {visualErrors['standalone-image'] ? (
+                      <AppText variant="caption" color={colors.error} style={{ marginTop: 4 }}>
+                        {visualErrors['standalone-image']}
+                      </AppText>
+                    ) : null}
+
+                    {visualResults['standalone-image'] ? (
+                      <View style={{ marginTop: spacing.xs, gap: 4 }}>
+                        {visualResults['standalone-image'].description ? (
+                          <AppText variant="bodySmall">
+                            <AppText variant="caption" style={{ fontWeight: '600' }}>Description: </AppText>
+                            {visualResults['standalone-image'].description}
+                          </AppText>
+                        ) : null}
+                        {visualResults['standalone-image'].visibleLabels &&
+                        visualResults['standalone-image'].visibleLabels!.length > 0 ? (
+                          <AppText variant="bodySmall">
+                            <AppText variant="caption" style={{ fontWeight: '600' }}>Labels: </AppText>
+                            {visualResults['standalone-image'].visibleLabels!.join(', ')}
+                          </AppText>
+                        ) : null}
+                        {visualResults['standalone-image'].relationships ? (
+                          <AppText variant="bodySmall">
+                            <AppText variant="caption" style={{ fontWeight: '600' }}>Relationships: </AppText>
+                            {visualResults['standalone-image'].relationships}
+                          </AppText>
+                        ) : null}
+                        {visualResults['standalone-image'].educationalExplanation ? (
+                          <AppText variant="bodySmall">
+                            <AppText variant="caption" style={{ fontWeight: '600' }}>Explanation: </AppText>
+                            {visualResults['standalone-image'].educationalExplanation}
+                          </AppText>
+                        ) : null}
+                        {visualResults['standalone-image'].uncertaintyWarnings &&
+                        visualResults['standalone-image'].uncertaintyWarnings!.length > 0 ? (
+                          <AppText variant="caption" color={colors.warning} style={{ marginTop: 2 }}>
+                            ⚠️ {visualResults['standalone-image'].uncertaintyWarnings!.join('; ')}
+                          </AppText>
+                        ) : null}
+                      </View>
+                    ) : null}
+                  </View>
+                ) : null}
               </Card>
             )}
 
@@ -283,33 +418,108 @@ export default function StudySourceDetailScreen() {
                   Visuals & Figures ({source.metadata.visualAssets.length})
                 </AppText>
                 <View style={{ gap: spacing.sm }}>
-                  {source.metadata.visualAssets.map((asset, idx) => (
-                    <Card
-                      key={asset.id || idx}
-                      style={[
-                        styles.contentCard,
-                        { backgroundColor: colors.surfaceElevated, borderColor: colors.cardBorder, borderWidth: 1, padding: spacing.sm },
-                      ]}
-                    >
-                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <AppText variant="label">
-                          {asset.slideNumber ? `Slide ${asset.slideNumber}` : asset.pageNumber ? `Page ${asset.pageNumber}` : `Figure ${idx + 1}`}
-                          {asset.imageIndex ? ` • Image ${asset.imageIndex}` : ''}
-                        </AppText>
-                        <Badge label={asset.ocrText ? 'OCR available' : 'Visual figure'} variant="default" />
-                      </View>
-                      {asset.altText ? (
-                        <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
-                          {asset.altText}
-                        </AppText>
-                      ) : null}
-                      {asset.ocrText ? (
-                        <AppText variant="caption" style={{ marginTop: 4, fontStyle: 'italic' }}>
-                          "{asset.ocrText.slice(0, 100)}{asset.ocrText.length > 100 ? '...' : ''}"
-                        </AppText>
-                      ) : null}
-                    </Card>
-                  ))}
+                  {source.metadata.visualAssets.map((asset, idx) => {
+                    const assetKey = asset.id || `asset-${asset.slideNumber || asset.pageNumber || idx + 1}-${asset.imageIndex || 1}`;
+                    const isAnalyzing = analyzingAssetKey === assetKey;
+                    const visualResult = visualResults[assetKey];
+                    const visualError = visualErrors[assetKey];
+
+                    return (
+                      <Card
+                        key={assetKey}
+                        style={[
+                          styles.contentCard,
+                          {
+                            backgroundColor: colors.surfaceElevated,
+                            borderColor: colors.cardBorder,
+                            borderWidth: 1,
+                            padding: spacing.md,
+                          },
+                        ]}
+                      >
+                        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <AppText variant="label">
+                            {asset.slideNumber ? `Slide ${asset.slideNumber}` : asset.pageNumber ? `Page ${asset.pageNumber}` : `Figure ${idx + 1}`}
+                            {asset.imageIndex ? ` • Image ${asset.imageIndex}` : ''}
+                          </AppText>
+                          <Badge label={asset.ocrText ? 'OCR available' : 'Visual figure'} variant="default" />
+                        </View>
+                        {asset.altText ? (
+                          <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                            {asset.altText}
+                          </AppText>
+                        ) : null}
+                        {asset.ocrText ? (
+                          <View style={{ marginTop: spacing.xs }}>
+                            <AppText variant="caption" color={colors.textSecondary} style={{ fontWeight: '600' }}>
+                              OCR
+                            </AppText>
+                            <AppText variant="caption" style={{ marginTop: 2, fontStyle: 'italic' }}>
+                              "{asset.ocrText.slice(0, 150)}{asset.ocrText.length > 150 ? '...' : ''}"
+                            </AppText>
+                          </View>
+                        ) : null}
+
+                        {/* On-Demand Visual Understanding Section */}
+                        <View style={{ marginTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.cardBorder, paddingTop: spacing.xs }}>
+                          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <AppText variant="caption" color={colors.textSecondary} style={{ fontWeight: '600' }}>
+                              Visual Explanation
+                            </AppText>
+                            {!visualResult ? (
+                              <Button
+                                label={isAnalyzing ? 'Analyzing...' : 'Analyze visual'}
+                                variant="secondary"
+                                size="sm"
+                                disabled={isAnalyzing}
+                                onPress={() => handleAnalyzeVisual(assetKey, asset)}
+                              />
+                            ) : null}
+                          </View>
+
+                          {visualError ? (
+                            <AppText variant="caption" color={colors.error} style={{ marginTop: 4 }}>
+                              {visualError}
+                            </AppText>
+                          ) : null}
+
+                          {visualResult ? (
+                            <View style={{ marginTop: spacing.xs, gap: 4 }}>
+                              {visualResult.description ? (
+                                <AppText variant="bodySmall">
+                                  <AppText variant="caption" style={{ fontWeight: '600' }}>Description: </AppText>
+                                  {visualResult.description}
+                                </AppText>
+                              ) : null}
+                              {visualResult.visibleLabels && visualResult.visibleLabels.length > 0 ? (
+                                <AppText variant="bodySmall">
+                                  <AppText variant="caption" style={{ fontWeight: '600' }}>Labels: </AppText>
+                                  {visualResult.visibleLabels.join(', ')}
+                                </AppText>
+                              ) : null}
+                              {visualResult.relationships ? (
+                                <AppText variant="bodySmall">
+                                  <AppText variant="caption" style={{ fontWeight: '600' }}>Relationships: </AppText>
+                                  {visualResult.relationships}
+                                </AppText>
+                              ) : null}
+                              {visualResult.educationalExplanation ? (
+                                <AppText variant="bodySmall">
+                                  <AppText variant="caption" style={{ fontWeight: '600' }}>Explanation: </AppText>
+                                  {visualResult.educationalExplanation}
+                                </AppText>
+                              ) : null}
+                              {visualResult.uncertaintyWarnings && visualResult.uncertaintyWarnings.length > 0 ? (
+                                <AppText variant="caption" color={colors.warning} style={{ marginTop: 2 }}>
+                                  ⚠️ {visualResult.uncertaintyWarnings.join('; ')}
+                                </AppText>
+                              ) : null}
+                            </View>
+                          ) : null}
+                        </View>
+                      </Card>
+                    );
+                  })}
                 </View>
               </View>
             ) : null}
