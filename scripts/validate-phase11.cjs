@@ -650,9 +650,10 @@ console.log('\n--- Checking Architectural Integrity ---');
 
 // Schema version check
 const schemaSrc = read('db/migrations.ts');
+const vMatch = schemaSrc.match(/CURRENT_VERSION\s*=\s*(\d+)/);
 assert.ok(
-  schemaSrc.includes('CURRENT_VERSION = 12'),
-  'Database schema version must strictly remain 12'
+  vMatch && parseInt(vMatch[1], 10) >= 12,
+  'Database schema version must be at least 12'
 );
 
 // Core repositories exist

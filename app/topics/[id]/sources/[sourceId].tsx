@@ -3,6 +3,8 @@ import { Alert, BackHandler, ScrollView, StyleSheet, View } from 'react-native';
 import { router, type Href, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { topicRepo } from '@/db/repositories/topicRepo';
 import { studySourceRepo } from '@/db/repositories/studySourceRepo';
+import { sourceChunkRepo } from '@/db/repositories/sourceChunkRepo';
+import { indexingService } from '@/services/chunking/indexingService';
 import type { StudySource } from '@/models/studySource';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Section } from '@/components/ui/Section';
@@ -38,6 +40,7 @@ export default function StudySourceDetailScreen() {
   const [visualResults, setVisualResults] = useState<Record<string, VisualAnalysisResult>>({});
   const [visualErrors, setVisualErrors] = useState<Record<string, string>>({});
   const deleting = useRef(false);
+  const chunkCount = source ? sourceChunkRepo.countBySourceId(source.id) : 0;
 
   const loadSource = useCallback(() => {
     setLoading(true);
@@ -101,6 +104,11 @@ export default function StudySourceDetailScreen() {
         sourceType: values.sourceType,
       });
       if (updated) {
+        try {
+          indexingService.reindexSourceSync(updated);
+        } catch {
+          // Re-indexing failure shouldn't block saving source content
+        }
         setSource(updated);
         setIsEditing(false);
       } else {
@@ -193,6 +201,11 @@ export default function StudySourceDetailScreen() {
             if (deleting.current) return;
             deleting.current = true;
             try {
+              try {
+                indexingService.removeSourceIndex(source.id);
+              } catch {
+                // Ignore cleanup error if already removed
+              }
               const success = studySourceRepo.delete(source.id);
               if (success) {
                 if (router.canGoBack()) {
@@ -277,10 +290,16 @@ export default function StudySourceDetailScreen() {
               <AppText variant="h2" style={{ flex: 1, marginRight: spacing.sm }}>
                 {source.title}
               </AppText>
-              <View style={{ flexDirection: 'row', gap: 6 }}>
+              <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
                 <Badge label={t.studySources[source.sourceType]} variant="default" />
                 {source.metadata?.canonicalType === 'image' || source.content.includes('[OCR') ? (
                   <Badge label="OCR" variant="primary" />
+                ) : null}
+                {chunkCount > 0 ? (
+                  <Badge
+                    label={chunkCount === 1 ? '1 chunk' : `${chunkCount} chunks`}
+                    variant="neutral"
+                  />
                 ) : null}
               </View>
             </View>

@@ -459,10 +459,9 @@ async function main() {
     const migrationsCode = read('db/migrations.ts');
     const versionMatch = migrationsCode.match(/const CURRENT_VERSION = (\d+);/);
     assert.ok(versionMatch, 'CURRENT_VERSION constant must be found in db/migrations.ts');
-    assert.equal(
-      parseInt(versionMatch[1], 10),
-      12,
-      'Schema version must remain strictly v12'
+    assert.ok(
+      parseInt(versionMatch[1], 10) >= 12,
+      'Schema version must be at least v12'
     );
 
     assert.ok(

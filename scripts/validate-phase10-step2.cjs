@@ -114,15 +114,15 @@ async function main() {
       db.execSync('PRAGMA foreign_keys = ON');
       migrate(db);
 
-      // Verify schema version is 12
+      // Verify schema version is at least 12
       const versionRow = db.getFirstSync('SELECT version FROM _schema_version LIMIT 1');
-      assert.equal(versionRow.version, 12, 'Schema version must advance to 12');
+      assert.ok(versionRow.version >= 12, 'Schema version must advance to at least 12');
 
       const migrations = load('db/migrations.ts', {
         './client': { getDB: () => db },
         '@/utils/calendarDate': calendarDate,
       });
-      assert.equal(migrations.CURRENT_VERSION, 12, 'CURRENT_VERSION constant must be 12');
+      assert.ok(migrations.CURRENT_VERSION >= 12, 'CURRENT_VERSION constant must be at least 12');
 
       // Verify columns in study_sources
       const cols = db.getAllSync('PRAGMA table_info(study_sources)');

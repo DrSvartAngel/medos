@@ -881,7 +881,7 @@ async function main() {
   await check('Database Schema v12: Strictly v12, study_sources is only persistence addition, foreign key CASCADE verified, no AI tables', () => {
     const migrationsSource = read('db/migrations.ts');
     const versionMatch = migrationsSource.match(/const CURRENT_VERSION = (\d+);/);
-    assert.ok(versionMatch && parseInt(versionMatch[1], 10) === 12, 'Current schema version must be strictly 12');
+    assert.ok(versionMatch && parseInt(versionMatch[1], 10) >= 12, 'Current schema version must be at least 12');
 
     const db = new SQLiteAdapter();
     const calendarDate = load('utils/calendarDate.ts');

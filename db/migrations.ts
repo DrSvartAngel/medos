@@ -1,7 +1,7 @@
 import { getDB } from './client';
 import { formatLocalDateKey } from '@/utils/calendarDate';
 
-const CURRENT_VERSION = 12;
+const CURRENT_VERSION = 13;
 
 interface TableInfoRow {
   name: string;
@@ -383,6 +383,91 @@ export async function runMigrations(): Promise<void> {
       `);
       db.runSync('UPDATE _schema_version SET version = ?', [12]);
     });
+  }
+
+  if (currentVersion < 13) {
+    // --- Version 13: persistent source knowledge chunks, inverted term index, and text search ---
+    db.withTransactionSync(() => {
+      ensureSourceChunksSchema(db);
+      db.runSync('UPDATE _schema_version SET version = ?', [13]);
+    });
+  }
+}
+
+export function ensureSourceChunksSchema(db: ReturnType<typeof getDB>): void {
+  db.execSync(`
+    CREATE TABLE IF NOT EXISTS source_chunks (
+      id TEXT PRIMARY KEY NOT NULL,
+      source_id TEXT NOT NULL
+        REFERENCES study_sources(id) ON DELETE CASCADE,
+      topic_id TEXT NOT NULL
+        REFERENCES topics(id) ON DELETE CASCADE,
+      source_title TEXT NOT NULL,
+      ordinal INTEGER NOT NULL,
+      chunk_type TEXT NOT NULL,
+      text TEXT NOT NULL,
+      page_number INTEGER,
+      slide_number INTEGER,
+      section_title TEXT,
+      media_id TEXT,
+      image_index INTEGER,
+      extraction_method TEXT NOT NULL DEFAULT 'native',
+      char_start INTEGER,
+      char_end INTEGER,
+      token_estimate INTEGER NOT NULL DEFAULT 0,
+      word_count INTEGER NOT NULL DEFAULT 0,
+      fingerprint TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_source_chunks_source_id
+      ON source_chunks(source_id);
+    CREATE INDEX IF NOT EXISTS idx_source_chunks_topic_id
+      ON source_chunks(topic_id);
+    CREATE INDEX IF NOT EXISTS idx_source_chunks_source_ordinal
+      ON source_chunks(source_id, ordinal);
+    CREATE INDEX IF NOT EXISTS idx_source_chunks_fingerprint
+      ON source_chunks(fingerprint);
+    CREATE INDEX IF NOT EXISTS idx_source_chunks_type
+      ON source_chunks(chunk_type);
+
+    CREATE TABLE IF NOT EXISTS source_chunk_terms (
+      term TEXT NOT NULL,
+      chunk_id TEXT NOT NULL
+        REFERENCES source_chunks(id) ON DELETE CASCADE,
+      source_id TEXT NOT NULL
+        REFERENCES study_sources(id) ON DELETE CASCADE,
+      topic_id TEXT NOT NULL
+        REFERENCES topics(id) ON DELETE CASCADE,
+      term_frequency INTEGER NOT NULL DEFAULT 1,
+      PRIMARY KEY (term, chunk_id)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_chunk_terms_term
+      ON source_chunk_terms(term);
+    CREATE INDEX IF NOT EXISTS idx_chunk_terms_source_term
+      ON source_chunk_terms(source_id, term);
+    CREATE INDEX IF NOT EXISTS idx_chunk_terms_topic_term
+      ON source_chunk_terms(topic_id, term);
+    CREATE INDEX IF NOT EXISTS idx_chunk_terms_chunk_id
+      ON source_chunk_terms(chunk_id);
+  `);
+
+  try {
+    db.execSync(`
+      CREATE VIRTUAL TABLE IF NOT EXISTS source_chunks_fts USING fts5(
+        chunk_id UNINDEXED,
+        text,
+        source_title,
+        section_title,
+        topic_id UNINDEXED,
+        source_id UNINDEXED,
+        tokenize = 'unicode61'
+      );
+    `);
+  } catch {
+    // FTS5 not guaranteed on all Android platforms; source_chunk_terms provides deterministic indexing
   }
 }
 

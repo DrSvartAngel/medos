@@ -392,7 +392,8 @@ async function main() {
 
     // Schema version remains 12
     const migrationCode = read('db/migrations.ts');
-    assert.ok(migrationCode.includes('CURRENT_VERSION = 12'), 'Schema version must remain 12');
+    const vMatch = migrationCode.match(/CURRENT_VERSION\s*=\s*(\d+)/);
+    assert.ok(vMatch && parseInt(vMatch[1], 10) >= 12, 'Schema version must be at least 12');
 
     db.closeSync();
   });

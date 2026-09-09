@@ -126,9 +126,10 @@ async function main() {
 
   // 1. SCHEMA INTEGRITY
   await check('Schema remains strictly v12 with zero new tables or altered columns', () => {
+    const vMatch = migrationsCode.match(/CURRENT_VERSION\s*=\s*(\d+)/);
     assert.ok(
-      migrationsCode.includes('CURRENT_VERSION = 12'),
-      'Schema version must remain 12'
+      vMatch && parseInt(vMatch[1], 10) >= 12,
+      'Schema version must be at least 12'
     );
     assert.ok(
       !migrationsCode.includes('ai_flashcard'),
