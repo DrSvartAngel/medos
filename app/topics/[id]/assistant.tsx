@@ -11,7 +11,11 @@ import type { Topic } from '@/models/curriculum';
 import type { StudySource } from '@/models/studySource';
 import { type AIFlashcardDraft, type AIQuestionDraft, AIServiceError } from '@/models/ai';
 import { getStudyAIService } from '@/services/ai/studyAIClient';
+import { getActiveAIProviderState, getStudyAIProvider } from '@/services/ai/studyAIClient';
 import { toAISourceContext } from '@/services/ai/sourceContext';
+import { ragAnswerService } from '@/services/rag/ragAnswerService';
+import type { RagAnswer } from '@/models/rag';
+import { RagAnswerCard } from '@/components/study-ai/RagAnswerCard';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
 import { Section } from '@/components/ui/Section';
 import { Card } from '@/components/ui/Card';
@@ -27,17 +31,23 @@ import { useTheme } from '@/hooks/useTheme';
 import { useTranslation } from '@/i18n';
 import { topicRouteId } from '@/utils/topicRoutes';
 
-type ActionMode = 'explain' | 'summarize' | 'flashcards' | 'questions';
+type ActionMode = 'rag' | 'explain' | 'summarize' | 'flashcards' | 'questions';
 
 type ResultState =
   | { status: 'idle' }
   | { status: 'loading'; kind: ActionMode }
+  | {
   | {
       status: 'success';
       kind: 'explain' | 'summarize';
       text: string;
       sourceId: string;
       sourceTitle: string;
+    }
+  | {
+      status: 'success';
+      kind: 'rag';
+      answer: RagAnswer;
     }
   | { status: 'error'; errorMessage: string };
 
@@ -73,7 +83,7 @@ export default function StudyAssistantScreen() {
   const [loadError, setLoadError] = useState(false);
 
   const [selectedSourceId, setSelectedSourceId] = useState<string | null>(null);
-  const [activeMode, setActiveMode] = useState<ActionMode>('explain');
+  const [activeMode, setActiveMode] = useState<ActionMode>('rag');
   const [conceptQuery, setConceptQuery] = useState('');
   const [queryError, setQueryError] = useState<string | null>(null);
   const [resultState, setResultState] = useState<ResultState>({ status: 'idle' });
@@ -185,6 +195,44 @@ export default function StudyAssistantScreen() {
 
   const selectedSource = sources.find((s) => s.id === selectedSourceId);
   const isSourceStale = selectedSourceId !== null && !selectedSource;
+
+  const handleRagQuery = async () => {
+    const trimmedQuery = conceptQuery.trim();
+    if (!trimmedQuery) {
+      setQueryError(t.studyAi.conceptRequired);
+      return;
+    }
+
+    setQueryError(null);
+    setResultState({ status: 'loading', kind: 'rag' });
+
+    try {
+      if (!topicId) throw new Error(t.topics.missing);
+
+      const provider = getStudyAIProvider();
+      const state = await getActiveAIProviderState();
+
+      const result = await ragAnswerService.generate({
+        question: trimmedQuery,
+        scope: { topicId },
+        deps: {
+          provider,
+          modelId: state.model,
+        },
+      });
+
+      setResultState({
+        status: 'success',
+        kind: 'rag',
+        answer: result,
+      });
+    } catch (err: unknown) {
+      setResultState({
+        status: 'error',
+        errorMessage: mapErrorToMessage(err, t),
+      });
+    }
+  };
 
   const handleExplain = async () => {
     if (!selectedSourceId) return;
@@ -512,7 +560,9 @@ export default function StudyAssistantScreen() {
   };
 
   const handleRetry = () => {
-    if (activeMode === 'explain') {
+    if (activeMode === 'rag') {
+      void handleRagQuery();
+    } else if (activeMode === 'explain') {
       void handleExplain();
     } else if (activeMode === 'summarize') {
       void handleSummarize();
@@ -576,7 +626,16 @@ export default function StudyAssistantScreen() {
             </View>
 
             {/* Source Selection */}
-            <Section title={t.studyAi.selectSource}>
+            {activeMode === 'rag' ? (
+              <Section title={t.studyAi.allSources}>
+                <View style={{ gap: spacing.sm }}>
+                  <AppText variant="caption" color={colors.textSecondary}>
+                    {t.studyAi.sourcesUsed}
+                  </AppText>
+                </View>
+              </Section>
+            ) : (
+              <Section title={t.studyAi.selectSource}>
               {isSourceStale && (
                 <FeedbackState kind="error" message={t.studyAi.sourceMissing} />
               )}
@@ -618,12 +677,22 @@ export default function StudyAssistantScreen() {
                 })}
               </View>
             </Section>
+            )}
 
             {/* Action Tabs & Active Workspace */}
-            {selectedSource && (
+            {(selectedSource || activeMode === 'rag') && (
               <Section>
-                <SourceContextBar source={selectedSource} style={{ marginBottom: spacing.sm }} />
+                {selectedSource && activeMode !== 'rag' && (
+                  <SourceContextBar source={selectedSource} style={{ marginBottom: spacing.sm }} />
+                )}
                 <View style={{ flexDirection: 'row', gap: spacing.xs, flexWrap: 'wrap' }}>
+                  <Button
+                    label={t.studyAi.askTab}
+                    variant={activeMode === 'rag' ? 'primary' : 'secondary'}
+                    size="sm"
+                    onPress={() => handleModeChange('rag')}
+                    style={{ flex: 1, minWidth: '47%' }}
+                  />
                   <Button
                     label={t.studyAi.explainTab}
                     variant={activeMode === 'explain' ? 'primary' : 'secondary'}
@@ -652,7 +721,41 @@ export default function StudyAssistantScreen() {
                     onPress={() => handleModeChange('questions')}
                     style={{ flex: 1, minWidth: '47%' }}
                   />
+                  />
                 </View>
+
+                {activeMode === 'rag' && (
+                  <View style={{ gap: spacing.md, marginTop: spacing.sm }}>
+                    <View style={{ gap: spacing.xs }}>
+                      <AppText variant="label">{t.studyAi.conceptLabel}</AppText>
+                      <Input
+                        value={conceptQuery}
+                        onChangeText={(val) => {
+                          setConceptQuery(val);
+                          if (queryError) setQueryError(null);
+                        }}
+                        placeholder={t.studyAi.conceptPlaceholder}
+                        placeholderTextColor={colors.textSecondary}
+                        invalid={Boolean(queryError)}
+                        accessibilityLabel={t.studyAi.conceptLabel}
+                        returnKeyType="search"
+                        onSubmitEditing={handleRagQuery}
+                      />
+                      {queryError ? (
+                        <AppText variant="caption" color={colors.error}>
+                          {queryError}
+                        </AppText>
+                      ) : null}
+                    </View>
+
+                    <Button
+                      label={t.studyAi.askAction}
+                      onPress={handleRagQuery}
+                      loading={resultState.status === 'loading' && resultState.kind === 'rag'}
+                      disabled={resultState.status === 'loading'}
+                    />
+                  </View>
+                )}
 
                 {activeMode === 'explain' && (
                   <View style={{ gap: spacing.md, marginTop: spacing.sm }}>
@@ -1368,7 +1471,9 @@ export default function StudyAssistantScreen() {
                 <FeedbackState
                   kind="loading"
                   message={
-                    resultState.kind === 'explain'
+                    resultState.kind === 'rag'
+                      ? t.studyAi.loadingAsk
+                      : resultState.kind === 'explain'
                       ? t.studyAi.loadingExplain
                       : resultState.kind === 'summarize'
                       ? t.studyAi.loadingSummarize
@@ -1390,7 +1495,19 @@ export default function StudyAssistantScreen() {
               </Section>
             )}
 
-            {resultState.status === 'success' && (
+            {resultState.status === 'success' && resultState.kind === 'rag' && (
+              <Section>
+                <RagAnswerCard answer={resultState.answer} />
+                <Button
+                  label={t.studyAi.clearResult}
+                  variant="secondary"
+                  onPress={() => setResultState({ status: 'idle' })}
+                  style={{ marginTop: spacing.sm }}
+                />
+              </Section>
+            )}
+
+            {resultState.status === 'success' && resultState.kind !== 'rag' && (
               <Section>
                 <Card elevated style={{ gap: spacing.md }}>
                   {/* Header & Mode */}

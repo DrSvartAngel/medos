@@ -972,6 +972,16 @@ const en = {
 
   // ── Study Assistant (Phase 10 Step 5) ─────────────────────────────────────────
   studyAi: {
+    askTab: 'Ask MedOS',
+    askAction: 'Ask MedOS',
+    loadingAsk: 'Searching study sources...',
+    allSources: 'All Topic Sources',
+    sourcesUsed: 'Sources Used',
+    ragInsufficientEvidence: 'Not enough information found in your study sources to answer this question.',
+    ragPartialEvidence: 'Answer may be incomplete. Based on limited evidence from sources.',
+    pageRef: 'Page',
+    slideRef: 'Slide',
+    sectionRef: 'Section',
     assistant: 'Study Assistant',
     selectSource: 'Select a study source',
     selectedSource: 'Selected source',

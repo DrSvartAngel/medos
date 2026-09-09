@@ -979,6 +979,16 @@ const tr: Strings = {
 
   // ── Çalışma Asistanı (Aşama 10 Adım 5) ───────────────────────────────────────
   studyAi: {
+    askTab: 'MedOS\'a Sor',
+    askAction: 'MedOS\'a Sor',
+    loadingAsk: 'Çalışma kaynakları aranıyor...',
+    allSources: 'Tüm Konu Kaynakları',
+    sourcesUsed: 'Kullanılan Kaynaklar',
+    ragInsufficientEvidence: 'Bu soruyu yanıtlamak için çalışma kaynaklarınızda yeterli bilgi bulunamadı.',
+    ragPartialEvidence: 'Yanıt eksik olabilir. Kaynaklardan alınan sınırlı kanıtlara dayanmaktadır.',
+    pageRef: 'Sayfa',
+    slideRef: 'Slayt',
+    sectionRef: 'Bölüm',
     assistant: 'Çalışma Asistanı',
     selectSource: 'Bir çalışma kaynağı seçin',
     selectedSource: 'Seçilen kaynak',
