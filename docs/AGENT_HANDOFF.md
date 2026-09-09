@@ -1,6 +1,15 @@
 # MedOS — compact handoff
 
-## Current — Phase 12.6: Retrieval Layer
+## Current — Phase 12.7: RAG Answer Generation
+
+- Phase 12.7 — RAG Answer Generation: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)
+- New files: `models/rag.ts`, `services/rag/contextBuilder.ts`, `services/rag/ragPrompts.ts`, `services/rag/ragAnswerService.ts`, `scripts/validate-phase12-step7.cjs`
+- TypeScript: PASS | Phase 12.6/12.5 regression: PASS | Phase 12.7 suite: 35/35 PASS
+- Zero direct provider SDK imports in RAG service, robust insufficient-evidence handling.
+- Next: Phase 12.8 (Vector Store Integration or RAG UI).
+
+## Historical — Phase 12.6: Retrieval Layer
 
 - Phase 12.6 — Retrieval Layer: **COMPLETE**
 - Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)

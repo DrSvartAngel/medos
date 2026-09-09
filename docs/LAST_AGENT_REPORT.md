@@ -1,6 +1,46 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 12.6: Retrieval Layer
+## Current — Phase 12.7: RAG Answer Generation
+
+- Phase 12.7 — RAG Answer Generation: **COMPLETE**
+- Branch: `localization-en-tr-sweep`
+- Schema: **v13** (unchanged — no schema migration required)
+- Commit checkpoint: 98be92d (Phase 12.6 base)
+
+### Delivered Scope
+
+- **Domain Model** (`models/rag.ts`):
+  - `RagAnswerRequest`, `RagAnswer`, `RagCitation`, `RagEvidenceState`, `RagError`.
+  - Machine-usable citations mapped directly back to retrieved chunk metadata.
+  - Strict evidence states: `supported`, `partial`, `insufficient`.
+- **Context Builder** (`services/rag/contextBuilder.ts`):
+  - Deduplicates retrieved chunks and applies hard character budget.
+  - Extracts and resolves `[SRC-N]` citations from generated text.
+  - Mitigates prompt-injection attacks from source material (e.g. "ignore previous instructions").
+- **Prompt Builders** (`services/rag/ragPrompts.ts`):
+  - System prompt establishes explicit authority hierarchy over source material.
+  - Defines medical safety boundaries (no diagnosis/treatment).
+  - Deterministic answer language hints (TR/EN).
+- **RAG Answer Service** (`services/rag/ragAnswerService.ts`):
+  - Orchestrates RetrievalService → ContextBuilder → Prompts → AIProvider.
+  - Truthful insufficient-evidence handling: skips provider call if no usable chunks exist.
+  - Decoupled from Gemini/OpenAI SDKs; relies strictly on `AIProvider` interface.
+
+### Regression Status
+- TypeScript (`tsc --noEmit`): **PASS (0 errors)**
+- Phase 12.5 suite (`validate-phase12-step5.cjs`): **ALL 15 PASS**
+- Phase 12.6 suite (`validate-phase12-step6.cjs`): **56/56 PASS**
+- Phase 12.7 suite (`validate-phase12-step7.cjs`): **35/35 PASS**
+- Schema: **v13 unchanged**
+- Real provider call: **NOT RUN** (Validated purely via provider-neutral MockAIProvider)
+
+### Architecture Invariants Preserved
+- No credentials hardcoded.
+- No direct provider SDK imports in the RAG service.
+- No writes to SQLite.
+- Fully compatible with both English and Turkish queries.
+
+## Historical — Phase 12.6: Retrieval Layer
 
 - Phase 12.6 — Retrieval Layer: **COMPLETE**
 - Branch: `localization-en-tr-sweep`

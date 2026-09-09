@@ -1,6 +1,14 @@
 # MedOS — Development Roadmap
 
-## Current — Phase 12.6: Retrieval Layer
+## Current — Phase 12.7: RAG Answer Generation
+
+- Phase 12.7 — RAG Answer Generation: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)
+- Delivered: `models/rag.ts`, `services/rag/contextBuilder.ts`, `services/rag/ragPrompts.ts`, `services/rag/ragAnswerService.ts`, `scripts/validate-phase12-step7.cjs`
+- Phase 12.7 suite: **35/35 PASS** | TypeScript: **PASS** | Phase 12.6/12.5 regression: **PASS**
+- Next: Phase 12.8 — Vector Store Integration or RAG UI (depending on user specification).
+
+## Historical — Phase 12.6: Retrieval Layer
 
 - Phase 12.6 — Retrieval Layer: **COMPLETE**
 - Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)
