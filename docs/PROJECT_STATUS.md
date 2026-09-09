@@ -1,6 +1,44 @@
 # MedOS — Project Status
 
-## Current — Phase 12.7: RAG Answer Generation
+## Current — Phase 12.8: RAG UI
+
+- **Current Status:** Phase 12.8 — RAG UI: **COMPLETE**
+- **Next Phase:** Phase 12.9 — Vector Store Integration: **NEXT**
+- **Branch:** `localization-en-tr-sweep`
+- **Latest Checkpoint:** `ea30253`
+- **Schema:** **v13** (unchanged)
+- **Delivered Scope:**
+  - `components/study-ai/RagAnswerCard.tsx` (grounded answer rendering, clickable citations, evidence state banners, copy to clipboard, medical disclaimer)
+  - `app/topics/[id]/assistant.tsx` (dedicated `rag` mode, topic-wide source retrieval query, `ragAnswerService.generateAnswer` wiring)
+  - `i18n/en.ts`, `i18n/tr.ts` (RAG UI localization)
+  - `scripts/validate-phase12-step8.cjs` (validation suite)
+- **Validation:**
+  - TypeScript (`tsc --noEmit`): **PASS (0 errors)**
+  - Phase 12.8 validator: **PASS**
+  - Phase 12.5–12.7 regression suites: **ALL PASS**
+- **Physical QA Status:**
+  - Physical phone QA: **PENDING** (user-owned)
+  - Physical tablet QA: **PENDING** (user-owned)
+
+---
+
+## Active Phase 12 Development Sequence
+- Phase 12.5 — Chunking and Source Indexing: **COMPLETE**
+- Phase 12.6 — Retrieval Layer: **COMPLETE**
+- Phase 12.7 — RAG Answer Generation: **COMPLETE**
+- Phase 12.8 — RAG UI: **COMPLETE**
+- Phase 12.9 — Vector Store Integration: **NEXT**
+
+---
+
+## Historical — Phase 12.8: RAG UI
+
+- Phase 12.8 — RAG UI: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Commit: `ea30253` | Schema: **v13** (unchanged)
+- Delivered: `app/topics/[id]/assistant.tsx`, `components/study-ai/RagAnswerCard.tsx`, `i18n/en.ts`, `i18n/tr.ts`, `scripts/validate-phase12-step8.cjs`
+- Validation: `scripts/validate-phase12-step8.cjs` PASS | TypeScript PASS
+
+## Historical — Phase 12.7: RAG Answer Generation
 
 - Phase 12.7 — RAG Answer Generation: **COMPLETE**
 - Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)
@@ -1407,8 +1445,21 @@ None at the time of this fix. Later Phase 4.1 advanced schema to v6. No package 
 - Android phone retest: **PASSED** (user-confirmed).
 - Android tablet retest: **PASSED** (user-confirmed).
 
-## Exact Next Recommended Action
+## Canonical Next Recommended Action
 
-**Phase 4.2 — Subject CRUD implementation planning/approval.**
+**Phase 12.9 — Vector Store Integration**
 
-Do not implement Phase 4.2 until that planning/approval step is explicit. Do not resume whole-app localization. Master Phase 3 remains active only because remaining physical phone/tablet and safe-area QA is pending and user-owned. Phase 5 has not started.
+- Integrate Vector Store capabilities to enable dense semantic retrieval alongside existing keyword/lexical chunk search.
+- Active branch: `localization-en-tr-sweep`
+- Physical phone/tablet QA for Phase 12.8 remains user-owned and pending.
+
+---
+
+## HISTORICAL / LEGACY CONTEXT (Early Phases Archive)
+
+> [!NOTE]
+> The sections below represent historical milestones from earlier development phases (Phases 3 and 4, schema v6).
+> They are retained for archival reference and must not override the active Phase 12 development status.
+
+### Historical Phase 4.2 Note (Archival Reference Only)
+- (Legacy checkpoint: Phase 4.2 Subject CRUD was completed and merged in commit `e22cf4e`. Active development has since progressed through Phase 10 and Phase 12 with schema v13).

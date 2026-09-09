@@ -1,13 +1,48 @@
 # MedOS — compact handoff
 
-## Current — Phase 12.7: RAG Answer Generation
+## CURRENT CHECKPOINT
+
+- **Phase 12.8 — RAG UI: COMPLETE**
+- **Commit:** `ea30253`
+- **Branch:** `localization-en-tr-sweep`
+- **Schema:** `v13` (unchanged)
+- **Phase 12.5 regression:** PASS (`validate-phase12-step5.cjs`)
+- **Phase 12.6 regression:** PASS (`validate-phase12-step6.cjs`)
+- **Phase 12.7 regression:** PASS (`validate-phase12-step7.cjs`)
+- **Phase 12.8 validator:** PASS (`validate-phase12-step8.cjs`)
+- **TypeScript:** PASS (`tsc --noEmit`)
+- **Physical QA:** Phone PENDING | Tablet PENDING
+- **Next:** Phase 12.9 — Vector Store Integration
+
+### Architecture Pipeline Summary
+
+```
+Sources
+→ Chunking / Indexing (Phase 12.5)
+→ Retrieval Layer (Phase 12.6)
+→ Grounded RAG Answer Generation (Phase 12.7)
+→ RAG UI / Ask MedOS Mode (Phase 12.8)
+→ NEXT: Vector Store Integration (Phase 12.9)
+```
+
+---
+
+## Historical — Phase 12.8: RAG UI
+
+- Phase 12.8 — RAG UI: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Commit: `ea30253` | Schema: **v13** (unchanged)
+- Delivered: `components/study-ai/RagAnswerCard.tsx`, `app/topics/[id]/assistant.tsx`, `i18n/en.ts`, `i18n/tr.ts`, `scripts/validate-phase12-step8.cjs`
+- Full 1:1 EN/TR localization parity, topic-wide source scope, citation markers, evidence state banners.
+- Next: Phase 12.9 — Vector Store Integration.
+
+## Historical — Phase 12.7: RAG Answer Generation
 
 - Phase 12.7 — RAG Answer Generation: **COMPLETE**
 - Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)
 - New files: `models/rag.ts`, `services/rag/contextBuilder.ts`, `services/rag/ragPrompts.ts`, `services/rag/ragAnswerService.ts`, `scripts/validate-phase12-step7.cjs`
 - TypeScript: PASS | Phase 12.6/12.5 regression: PASS | Phase 12.7 suite: 35/35 PASS
 - Zero direct provider SDK imports in RAG service, robust insufficient-evidence handling.
-- Next: Phase 12.8 (Vector Store Integration or RAG UI).
+- Next: Phase 12.8 — RAG UI.
 
 ## Historical — Phase 12.6: Retrieval Layer
 
@@ -16,7 +51,15 @@
 - New files: `models/retrieval.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step6.cjs`
 - TypeScript: PASS | Phase 12.5 regression: 15 PASS | Phase 12.6 suite: 56/56 PASS
 - Zero network calls, zero SQLite writes, zero schema changes, zero package.json modifications.
-- Next: Phase 12.7 (RAG answer generation connecting retrieval → AI provider).
+- Next: Phase 12.7 — RAG Answer Generation.
+
+## Historical — Phase 12.5: Chunking and Source Indexing
+
+- Phase 12.5 — Chunking and Source Indexing: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v13** (table `source_chunks`)
+- New files: `models/chunk.ts`, `db/repositories/sourceChunkRepo.ts`, `services/chunking/*`, `scripts/validate-phase12-step5.cjs`
+- TypeScript: PASS | Phase 12.5 suite: 15/15 PASS
+- Next: Phase 12.6 — Retrieval Layer.
 
 ## Historical — Phase 10: AI Study Engine (Step 12: Master QA / AI Integrity Gate)
 
@@ -1075,7 +1118,7 @@ Manual checklist: create, restart persistence, edit, delete warning/cascade, Top
 
 ## Working rule
 
-Product first. User performs physical/manual QA; AI runs concise static validation only. No emulator/ADB/device automation. Whole-app localization is deferred. Current branch: phase-5-1-spaced-repetition-foundation; do not merge to main.
+Product first. User performs physical/manual QA; AI runs concise static validation only. No emulator/ADB/device automation. Whole-app localization is deferred. Active branch: `localization-en-tr-sweep`; do not merge to main without instruction.
 
 ## Physical QA statuses (PRESERVED — never change these from emulator results)
 
@@ -1096,7 +1139,19 @@ Verified against canonical/user-confirmed physical statuses; never promote emula
 | Phase 3.6 Android phone QA | PENDING |
 | Phase 3.6 Android tablet QA | PENDING |
 | Consolidated post-Phase-3.6 safe-area regression | PENDING |
+| Phase 12.8 Android phone QA | PENDING |
+| Phase 12.8 Android tablet QA | PENDING |
 
 Localization phone/tablet QA: DEFERRED with the rest of whole-app localization. Historical emulator evidence is separate and cannot close physical QA.
 
-Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Master Phase 3 **ACTIVE** for remaining explicit QA gaps; Phase 4.1/4.2 **COMPLETE; Phase 4.2 phone/tablet QA PASS**; Phase 5 **NOT STARTED**.
+---
+
+## HISTORICAL / LEGACY CONTEXT (Early Phases Archive)
+
+> [!NOTE]
+> Historical status from early development:
+> Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Phase 4 complete; Phase 5 legacy foundation complete.
+> Active canonical development is now **Phase 12 (AI Study / RAG Pipeline)**.
+> Current status: Phase 12.8 COMPLETE; Next: Phase 12.9 — Vector Store Integration.
+
+(Legacy archive summary from early development: Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Master Phase 3 ACTIVE for remaining explicit QA gaps; Phase 4.1/4.2 COMPLETE; Phase 4.2 phone/tablet QA PASS; Phase 5 NOT STARTED at schema v6).

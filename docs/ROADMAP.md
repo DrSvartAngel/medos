@@ -1,12 +1,41 @@
 # MedOS — Development Roadmap
 
-## Current — Phase 12.7: RAG Answer Generation
+## Current Development Sequence — Phase 12: AI Study / RAG Pipeline
+
+### Canonical Phase 12 AI Study/RAG Sequence:
+- Phase 12.5 — Chunking and Source Indexing: **COMPLETE**
+- Phase 12.6 — Retrieval Layer: **COMPLETE**
+- Phase 12.7 — RAG Answer Generation: **COMPLETE**
+- Phase 12.8 — RAG UI: **COMPLETE**
+- Phase 12.9 — Vector Store Integration: **NEXT**
+
+### Current Checkpoint:
+- **Phase 12.8 — RAG UI: COMPLETE**
+- Branch: `localization-en-tr-sweep` | Commit: `ea30253` | Schema: **v13** (unchanged)
+- Delivered: `app/topics/[id]/assistant.tsx`, `components/study-ai/RagAnswerCard.tsx`, `i18n/en.ts`, `i18n/tr.ts`, `scripts/validate-phase12-step8.cjs`
+- Validation: `scripts/validate-phase12-step8.cjs` PASS | TypeScript PASS | Phase 12.5–12.7 regression PASS
+- Physical QA: Phone PENDING | Tablet PENDING
+
+### Next Phase:
+- **Phase 12.9 — Vector Store Integration**
+
+---
+
+## Historical — Phase 12.8: RAG UI
+
+- Phase 12.8 — RAG UI: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Commit: `ea30253` | Schema: **v13** (unchanged)
+- Delivered: `app/topics/[id]/assistant.tsx`, `components/study-ai/RagAnswerCard.tsx`, `i18n/en.ts`, `i18n/tr.ts`, `scripts/validate-phase12-step8.cjs`
+- Phase 12.8 suite: **PASS** | TypeScript: **PASS** | Phase 12.5–12.7 regression: **PASS**
+- Next: Phase 12.9 — Vector Store Integration
+
+## Historical — Phase 12.7: RAG Answer Generation
 
 - Phase 12.7 — RAG Answer Generation: **COMPLETE**
 - Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)
 - Delivered: `models/rag.ts`, `services/rag/contextBuilder.ts`, `services/rag/ragPrompts.ts`, `services/rag/ragAnswerService.ts`, `scripts/validate-phase12-step7.cjs`
 - Phase 12.7 suite: **35/35 PASS** | TypeScript: **PASS** | Phase 12.6/12.5 regression: **PASS**
-- Next: Phase 12.8 — RAG UI: COMPLETE
+- Next: Phase 12.8 — RAG UI
 
 ## Historical — Phase 12.6: Retrieval Layer
 
@@ -14,7 +43,15 @@
 - Branch: `localization-en-tr-sweep` | Schema: **v13** (unchanged)
 - Delivered: `models/retrieval.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step6.cjs`
 - Phase 12.6 suite: **56/56 PASS** | TypeScript: **PASS** | Phase 12.5 regression: **15 PASS**
-- Next: Phase 12.7 — RAG Answer Generation (retrieval → AI provider grounding → final answer).
+- Next: Phase 12.7 — RAG Answer Generation
+
+## Historical — Phase 12.5: Chunking and Source Indexing
+
+- Phase 12.5 — Chunking and Source Indexing: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v13** (table `source_chunks` introduced)
+- Delivered: `models/chunk.ts`, `db/repositories/sourceChunkRepo.ts`, `db/migrations.ts`, `services/chunking/semanticChunker.ts`, `services/chunking/indexingService.ts`, `services/chunking/fingerprint.ts`, `services/chunking/termTokenizer.ts`, `services/chunking/tokenEstimator.ts`, `scripts/validate-phase12-step5.cjs`
+- Phase 12.5 suite: **15/15 PASS** | TypeScript: **PASS**
+- Next: Phase 12.6 — Retrieval Layer
 
 ## Historical — Phase 10: AI Study Engine (Step 12: Master QA / AI Integrity Gate)
 
@@ -1322,21 +1359,31 @@ Phase 3.3 phone QA remains passed. Phase 3.3 tablet QA, Phase 3.4–3.6 phone/ta
 - Committee exam-plan screen, Today/day sections and existing Topic-detail/Focus path. Schema v8 unchanged; physical QA PENDING.
 - Master Phase 4 remains ACTIVE: deferred weight/priority and broader progress/weak-topic requirements are not implemented or silently removed from roadmap.
 
-These groupings preserve the original advanced Phase 4 goals, not implementation commitments or new data-model decisions. Master Phase 4 remains ACTIVE.
+These groupings preserve the original advanced Phase 4 goals, not implementation commitments or new data-model decisions. Master Phase 4 legacy context preserved.
 
-## Phase 5 — Memory & Learning Engine — ACTIVE
+---
 
-### Phase 5.1 — Spaced repetition foundation — IMPLEMENTATION COMPLETE
+# HISTORICAL / LEGACY ROADMAP CONTEXT (Early Phases Archive)
+
+> [!NOTE]
+> The sections below represent early historical roadmap context (Phases 4 through 5, schema v6–v9).
+> They are retained for archival reference only.
+> Canonical active roadmap development is **Phase 12 (AI Study / RAG Pipeline)** at the top of this document.
+> Current Next Phase is strictly: **Phase 12.9 — Vector Store Integration**.
+> The historical entries below (such as Phase 5.1/5.2 or earlier Next Required Actions) are archived records from previous milestones and do NOT represent the current next step.
+
+## Historical / Legacy — Phase 5: Memory & Learning Engine Context (Archive)
+
+### Phase 5.1 — Spaced repetition foundation — IMPLEMENTATION COMPLETE (Historical)
 
 - Deterministic Again/Hard/Good/Easy scheduling and atomic history updates; schema v9, separate due queue, preserved legacy history.
 - Static PASS; physical phone/tablet QA PENDING. Full-deck and max-five reviews retained.
 
-### Phase 5.2 — NOT STARTED
+### Phase 5.2 — Historical Backlog / Deferred (Superseded by Phase 12 AI Study Engine)
 
-- Topic/Memory linkage and further learning intelligence require separate approval; no mastery/retention percentages.
+- Topic/Memory linkage and further learning intelligence were deferred in the early roadmap; superseded by Phase 10/12 AI Study and RAG integration.
 
-## Next Required Action
+### Historical Archived Next Action (Completed / Superseded)
 
-User physical QA of Phase 5.1 scheduling. Phase 4.5/4.6/4.7 physical QA DEFERRED. No Phase 5.2 or PDF/Gemini implementation without approval.
-
-Static: TypeScript and dependency tree EXIT 0; Phase 2 21 PASS, Phase 3 85 PASS, Phase 4 43 PASS, Phase 5 8 PASS. Schema v9; dependencies unchanged.
+- (Archived reference from Phase 5.1 completion: User physical QA of Phase 5.1 scheduling was pending at schema v9. Active development has since progressed through Phase 10 and Phase 12 with schema v13).
+- (Archived static status at Phase 5.1: TypeScript and dependency tree EXIT 0; Phase 2 21 PASS, Phase 3 85 PASS, Phase 4 43 PASS, Phase 5 8 PASS. Schema was v9; current schema is v13).
