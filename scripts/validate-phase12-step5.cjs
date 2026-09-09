@@ -199,12 +199,12 @@ async function runValidation() {
       './client': { getDB: () => v12Db },
       '@/utils/calendarDate': calendarDate,
     });
-    assert.strictEqual(v12Migrations.CURRENT_VERSION, 13, 'CURRENT_VERSION constant must be 13');
+    assert.ok(v12Migrations.CURRENT_VERSION >= 13, 'CURRENT_VERSION constant must be at least 13');
     await v12Migrations.runMigrations();
 
-    // Verify schema version is now 13
+    // Verify schema version is at least 13
     const versionRow = v12Db.getFirstSync('SELECT version FROM _schema_version LIMIT 1');
-    assert.strictEqual(versionRow.version, 13, 'Schema must advance from v12 to v13');
+    assert.ok(versionRow.version >= 13, 'Schema must advance to at least v13');
 
     // Verify all existing user data was preserved
     assert.ok(v12Db.getFirstSync("SELECT id FROM committees WHERE id = 'c_v12'"));

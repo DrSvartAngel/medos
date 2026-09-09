@@ -37,7 +37,6 @@ type ResultState =
   | { status: 'idle' }
   | { status: 'loading'; kind: ActionMode }
   | {
-  | {
       status: 'success';
       kind: 'explain' | 'summarize';
       text: string;
@@ -721,7 +720,6 @@ export default function StudyAssistantScreen() {
                     onPress={() => handleModeChange('questions')}
                     style={{ flex: 1, minWidth: '47%' }}
                   />
-                  />
                 </View>
 
                 {activeMode === 'rag' && (
@@ -898,7 +896,7 @@ export default function StudyAssistantScreen() {
                           }}
                         >
                           <AppText variant="label" color={colors.primary}>
-                            {t.studyAi.basedOnSource(selectedSource.title)}
+                            {selectedSource ? t.studyAi.basedOnSource(selectedSource.title) : ''}
                           </AppText>
                           <AppText variant="caption" color={colors.textSecondary}>
                             {t.studyAi.sourceOnlyNote}
@@ -1284,7 +1282,7 @@ export default function StudyAssistantScreen() {
                           }}
                         >
                           <AppText variant="label" color={colors.primary}>
-                            {t.studyAi.basedOnSource(selectedSource.title)}
+                            {selectedSource ? t.studyAi.basedOnSource(selectedSource.title) : ''}
                           </AppText>
                           <AppText variant="caption" color={colors.textSecondary}>
                             {t.studyAi.sourceOnlyNote}

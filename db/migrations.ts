@@ -1,7 +1,7 @@
 import { getDB } from './client';
 import { formatLocalDateKey } from '@/utils/calendarDate';
 
-const CURRENT_VERSION = 13;
+const CURRENT_VERSION = 14;
 
 interface TableInfoRow {
   name: string;
@@ -392,6 +392,42 @@ export async function runMigrations(): Promise<void> {
       db.runSync('UPDATE _schema_version SET version = ?', [13]);
     });
   }
+
+  if (currentVersion < 14) {
+    // --- Version 14: persistent chunk embeddings for semantic retrieval ---
+    db.withTransactionSync(() => {
+      ensureChunkEmbeddingsSchema(db);
+      db.runSync('UPDATE _schema_version SET version = ?', [14]);
+    });
+  }
+}
+
+export function ensureChunkEmbeddingsSchema(db: ReturnType<typeof getDB>): void {
+  db.execSync(`
+    CREATE TABLE IF NOT EXISTS chunk_embeddings (
+      chunk_id TEXT PRIMARY KEY NOT NULL
+        REFERENCES source_chunks(id) ON DELETE CASCADE,
+      source_id TEXT NOT NULL
+        REFERENCES study_sources(id) ON DELETE CASCADE,
+      topic_id TEXT NOT NULL
+        REFERENCES topics(id) ON DELETE CASCADE,
+      embedding TEXT NOT NULL,
+      dimensions INTEGER NOT NULL,
+      model TEXT NOT NULL,
+      content_hash TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_chunk_embeddings_source_id
+      ON chunk_embeddings(source_id);
+    CREATE INDEX IF NOT EXISTS idx_chunk_embeddings_topic_id
+      ON chunk_embeddings(topic_id);
+    CREATE INDEX IF NOT EXISTS idx_chunk_embeddings_model
+      ON chunk_embeddings(model);
+    CREATE INDEX IF NOT EXISTS idx_chunk_embeddings_chunk_hash
+      ON chunk_embeddings(chunk_id, content_hash, model);
+  `);
 }
 
 export function ensureSourceChunksSchema(db: ReturnType<typeof getDB>): void {

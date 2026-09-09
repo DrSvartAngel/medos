@@ -505,9 +505,9 @@ check('Phase 12.6: validate-phase12-step6.cjs exists', () => {
   assert.ok(fs.existsSync(path.join(root, 'scripts/validate-phase12-step6.cjs')));
 });
 
-check('Schema: migrations.ts still declares CURRENT_VERSION = 13', () => {
+check('Schema: migrations.ts declares CURRENT_VERSION at least 13', () => {
   const src = read('db/migrations.ts');
-  assert.ok(src.includes('const CURRENT_VERSION = 13'), 'CURRENT_VERSION is not 13');
+  assert.ok(src.match(/const CURRENT_VERSION = (1[3-9]|\d{2,});/), 'CURRENT_VERSION must be at least 13');
 });
 
 check('Schema: models/rag.ts introduces no CREATE TABLE or INSERT', () => {

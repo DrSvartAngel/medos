@@ -1,6 +1,47 @@
 # MedOS — Last Agent Report
 
-## Current — Phase 12.8: RAG UI
+## Current — Phase 12.9: Vector Store Integration
+
+- **Phase Completed:** Phase 12.9 — Vector Store Integration: **COMPLETE**
+- **Branch:** `localization-en-tr-sweep`
+- **Schema:** **v14** (deterministic migration v13 → v14, `chunk_embeddings` table with 4 indexes and foreign key cascade)
+
+### Architecture
+- **Embedding Provider Abstraction:** Provider-agnostic `EmbeddingProvider` interface in `models/embedding.ts` with methods for single/batch text embedding and deterministic error boundaries. Implementations: `UnconfiguredEmbeddingProvider` (safe production default), `MockEmbeddingProvider` (deterministic 64-dim unit-normalized vectors restricted to test/dev), and `GeminiEmbeddingAdapter` (REST adapter for `text-embedding-004` using secure encrypted keys from `credentialStore`).
+- **Vector Store Abstraction:** Defined via `VectorStore` interface and implemented in `chunkEmbeddingRepo.ts` with local SQLite storage (`chunk_embeddings` table), foreign key cascading with `source_chunks`, fingerprint-based content cache invalidation, and bounded candidate similarity queries.
+- **Source Indexing Lifecycle:** Seamlessly integrated into `services/chunking/indexingService.ts` (`indexSource` and `indexSourceSync`), triggering embedding indexing when chunks are created, skipping unchanged chunks, invalidating stale vectors upon content or model changes, and cleaning up vectors on source deletion.
+- **Similarity Metric & Search:** Bounded candidate retrieval (`LIMIT 1000`) with deterministic cosine similarity ($[-1, 1]$ clamped to $[0, 1]$).
+- **Deterministic Hybrid Ranking:** Implemented in `hybridRanker.ts`. Combines min-max normalized lexical scores with normalized semantic scores using configurable weights ($w_{lex} \cdot s_{lex} + w_{sem} \cdot s_{sem}$, default 0.5/0.5). Automatically deduplicates by `chunkId` and enforces deterministic tie-breaking.
+- **Offline-First Lexical Fallback:** If vector generation or vector store search fails, times out, is unconfigured, or throws, `RetrievalService` catches the failure and returns pure lexical results without throwing or failing RAG answer generation.
+
+### Delivered Scope
+- **Models:** `models/embedding.ts`, `models/retrieval.ts`
+- **Migrations & Repository:** `db/migrations.ts` (schema v14), `db/repositories/chunkEmbeddingRepo.ts`
+- **Embedding Services:** `services/embedding/mockEmbeddingProvider.ts`, `services/embedding/geminiEmbeddingAdapter.ts`, `services/embedding/embeddingClient.ts`, `services/embedding/embeddingIndexingService.ts`
+- **Lifecycle & Indexing:** `services/chunking/indexingService.ts` (integrated chunk vector lifecycle)
+- **Retrieval & Ranking:** `services/retrieval/hybridRanker.ts`, `services/retrieval/retrievalService.ts` (`retrieve` and `retrieveAsync` hybrid execution)
+- **RAG Integration:** `services/rag/ragAnswerService.ts` (asynchronous retrieval integration with legacy synchronous fallback)
+- **Validation Suite:** `scripts/validate-phase12-step9.cjs` (40 comprehensive validation suites)
+
+### Validation Summary
+- TypeScript compilation (`tsc --noEmit`): **PASS (0 errors)**
+- Phase 12.5 regression suite: **PASS (15/15)**
+- Phase 12.6 regression suite: **PASS (56/56)**
+- Phase 12.7 regression suite: **PASS (35/35)**
+- Phase 12.8 regression suite: **PASS**
+- Phase 12.9 validation suite: **PASS (40/40)**
+- Real embedding smoke test: **NOT RUN** (no remote credentials configured in environment)
+
+### Physical QA Status
+- Phone QA: **PENDING** (user-owned)
+- Tablet QA: **PENDING** (user-owned)
+
+### Next Action
+- **Next:** Phase 12 Closure & Physical QA Gate
+
+---
+
+## Historical — Phase 12.8: RAG UI
 
 - **Phase Completed:** Phase 12.8 — RAG UI: **COMPLETE**
 - **Commit:** `ea30253`

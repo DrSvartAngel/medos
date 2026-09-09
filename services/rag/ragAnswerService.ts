@@ -18,7 +18,7 @@
 //  - Schema v13 unchanged
 
 import type { AIProvider } from '@/models/ai';
-import type { RetrievalResult } from '@/models/retrieval';
+import type { RetrievalResult, RetrievalScope } from '@/models/retrieval';
 import type { RagAnswer, RagAnswerRequest } from '@/models/rag';
 import {
   RAG_DEFAULT_TOP_K,
@@ -63,11 +63,11 @@ function filterUsableChunks(results: RetrievalResult[]): RetrievalResult[] {
  * Heuristic: if the query contains Turkish-specific characters (ş, ğ, ı, ç, ö, ü),
  * default to Turkish; otherwise default to English.
  */
-function resolveAnswerLanguage(request: RagAnswerRequest): 'tr' | 'en' {
+function resolveAnswerLanguage(request: { answerLanguage?: 'tr' | 'en'; query?: string; question?: string }): 'tr' | 'en' {
   if (request.answerLanguage === 'tr' || request.answerLanguage === 'en') {
     return request.answerLanguage;
   }
-  const query = (request.query ?? '').toLowerCase();
+  const query = (request.query ?? request.question ?? '').toLowerCase();
   if (/[şğıçöü]/.test(query)) return 'tr';
   return 'en';
 }
@@ -85,6 +85,17 @@ export interface RagAnswerServiceDeps {
    */
   modelId?: string;
 }
+
+export type FlexibleRagRequest =
+  | RagAnswerRequest
+  | {
+      query?: string;
+      question?: string;
+      scope?: RetrievalScope;
+      topK?: number;
+      answerLanguage?: 'tr' | 'en';
+      deps?: RagAnswerServiceDeps;
+    };
 
 export const ragAnswerService = {
   /**
@@ -106,36 +117,49 @@ export const ragAnswerService = {
    * @param allowedTopicIds - Optional set for committee/subject scope filtering.
    */
   async generate(
-    request: RagAnswerRequest,
-    deps: RagAnswerServiceDeps,
+    request: FlexibleRagRequest,
+    deps?: RagAnswerServiceDeps,
     allowedTopicIds?: ReadonlySet<string>
   ): Promise<RagAnswer> {
     // 1. Validate
     if (!request || typeof request !== 'object') {
       throw new RagError('invalid_request', 'RagAnswerRequest is required');
     }
-    const queryText = (request.query ?? '').trim();
+    const rawReq = request as { question?: string; query?: string; deps?: RagAnswerServiceDeps };
+    const queryText = (rawReq.query ?? rawReq.question ?? '').trim();
     if (!queryText) {
       throw new RagError('invalid_request', 'query is required and must not be empty');
     }
-    if (!deps || !deps.provider) {
+    const resolvedDeps = deps ?? rawReq.deps;
+    if (!resolvedDeps || !resolvedDeps.provider) {
       throw new RagError('invalid_request', 'AIProvider is required');
     }
 
     const effectiveTopK = clampTopK(request.topK);
     const answerLanguage = resolveAnswerLanguage(request);
 
-    // 2. Retrieve chunks
+    // 2. Retrieve chunks (hybrid retrieval when async retrieval is available)
     let retrievalResults: RetrievalResult[];
     try {
-      const retrievalResp = retrievalService.retrieve(
-        {
-          query: queryText,
-          scope: request.scope,
-          topK: effectiveTopK,
-        },
-        allowedTopicIds
-      );
+      const retrievalResp = await (retrievalService.retrieveAsync
+        ? retrievalService.retrieveAsync(
+            {
+              query: queryText,
+              scope: request.scope,
+              topK: effectiveTopK,
+            },
+            allowedTopicIds
+          )
+        : Promise.resolve(
+            retrievalService.retrieve(
+              {
+                query: queryText,
+                scope: request.scope,
+                topK: effectiveTopK,
+              },
+              allowedTopicIds
+            )
+          ));
       retrievalResults = retrievalResp.results;
     } catch (err) {
       throw new RagError(
@@ -155,8 +179,8 @@ export const ragAnswerService = {
         citations: [],
         retrievedChunks: retrievalResults,
         contextChunkCount: 0,
-        providerId: deps.provider.id,
-        modelId: deps.modelId,
+        providerId: resolvedDeps.provider.id,
+        modelId: resolvedDeps.modelId,
         providerCallPerformed: false,
         generatedAt: Date.now(),
       };
@@ -181,8 +205,8 @@ export const ragAnswerService = {
         citations: [],
         retrievedChunks: retrievalResults,
         contextChunkCount: 0,
-        providerId: deps.provider.id,
-        modelId: deps.modelId,
+        providerId: resolvedDeps.provider.id,
+        modelId: resolvedDeps.modelId,
         providerCallPerformed: false,
         generatedAt: Date.now(),
       };
@@ -199,7 +223,7 @@ export const ragAnswerService = {
     // 7. Call AI provider
     let answerText: string;
     try {
-      const result = await deps.provider.generateText({
+      const result = await resolvedDeps.provider.generateText({
         systemPrompt,
         userPrompt,
         options: {
@@ -247,10 +271,21 @@ export const ragAnswerService = {
       citations,
       retrievedChunks: retrievalResults,
       contextChunkCount: builtContext.includedCount,
-      providerId: deps.provider.id,
-      modelId: deps.modelId,
+      providerId: resolvedDeps.provider.id,
+      modelId: resolvedDeps.modelId,
       providerCallPerformed: true,
       generatedAt: Date.now(),
     };
+  },
+
+  /**
+   * Alias for generate(), preserving API backwards compatibility.
+   */
+  async generateAnswer(
+    request: RagAnswerRequest,
+    deps: RagAnswerServiceDeps,
+    allowedTopicIds?: ReadonlySet<string>
+  ): Promise<RagAnswer> {
+    return this.generate(request, deps, allowedTopicIds);
   },
 };

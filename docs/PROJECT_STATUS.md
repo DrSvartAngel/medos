@@ -1,21 +1,36 @@
 # MedOS — Project Status
 
-## Current — Phase 12.8: RAG UI
+## Current — Phase 12.9: Vector Store Integration
 
-- **Current Status:** Phase 12.8 — RAG UI: **COMPLETE**
-- **Next Phase:** Phase 12.9 — Vector Store Integration: **NEXT**
+- **Current Status:** Phase 12.9 — Vector Store Integration: **COMPLETE**
+- **Next Phase:** Phase 12 Closure & Physical QA Gate: **NEXT**
 - **Branch:** `localization-en-tr-sweep`
-- **Latest Checkpoint:** `ea30253`
-- **Schema:** **v13** (unchanged)
+- **Schema:** **v14** (deterministic migration v13 → v14, `chunk_embeddings` table with 4 indexes and foreign key cascade)
 - **Delivered Scope:**
-  - `components/study-ai/RagAnswerCard.tsx` (grounded answer rendering, clickable citations, evidence state banners, copy to clipboard, medical disclaimer)
-  - `app/topics/[id]/assistant.tsx` (dedicated `rag` mode, topic-wide source retrieval query, `ragAnswerService.generateAnswer` wiring)
-  - `i18n/en.ts`, `i18n/tr.ts` (RAG UI localization)
-  - `scripts/validate-phase12-step8.cjs` (validation suite)
+  - `models/embedding.ts` (EmbeddingRequest, EmbeddingVector, ChunkEmbeddingRecord, VectorSearchOptions, VectorSearchResult, VectorIndexStatus, EmbeddingProvider, VectorStore)
+  - `models/retrieval.ts` (retrieval mode, vector score fields, hybrid parameters)
+  - `db/migrations.ts` (schema v14 migration creating `chunk_embeddings` and bounded indexes)
+  - `db/repositories/chunkEmbeddingRepo.ts` (SQLite vector persistence, bounded candidate cosine similarity search, cascade deletion, content fingerprint caching)
+  - `services/embedding/mockEmbeddingProvider.ts` (deterministic unit-normalized vector generation with comprehensive failure testing modes)
+  - `services/embedding/geminiEmbeddingAdapter.ts` (REST adapter for text-embedding-004 using secure credentialStore)
+  - `services/embedding/embeddingClient.ts` (pluggable provider registry, defaults safely to unconfigured in production, mock for test/dev)
+  - `services/embedding/embeddingIndexingService.ts` (chunk embedding generation, change detection, batch upsert)
+  - `services/chunking/indexingService.ts` (integrated source ingestion embedding lifecycle, re-indexing, and cleanup)
+  - `services/retrieval/hybridRanker.ts` (deterministic min-max normalization, weighted hybrid combination, deduplication, tie-breaking)
+  - `services/retrieval/retrievalService.ts` (synchronous and asynchronous hybrid retrieval with guaranteed lexical fallback)
+  - `scripts/validate-phase12-step9.cjs` (40/40 validation checks passing)
+- **Offline & Runtime Boundaries:**
+  - Lexical retrieval: guaranteed 100% offline
+  - Local stored-vector search: offline once embeddings exist
+  - Remote query embedding: requires network/provider when Gemini is configured
+  - Answer generation: depends on configured AI provider
+  - Mock provider: restricted to testing and development validation; unconfigured runtime falls back to lexical retrieval without mock leaks
 - **Validation:**
   - TypeScript (`tsc --noEmit`): **PASS (0 errors)**
-  - Phase 12.8 validator: **PASS**
-  - Phase 12.5–12.7 regression suites: **ALL PASS**
+  - Phase 12.9 validator: **PASS (40/40)**
+  - Phase 12.5–12.8 regression suites: **ALL PASS**
+  - Migration validation: **PASS** (fresh install to v14, v13 → v14 upgrade, data preservation, idempotency)
+  - Real embedding smoke test: **NOT RUN** (no API credentials configured)
 - **Physical QA Status:**
   - Physical phone QA: **PENDING** (user-owned)
   - Physical tablet QA: **PENDING** (user-owned)
@@ -27,7 +42,18 @@
 - Phase 12.6 — Retrieval Layer: **COMPLETE**
 - Phase 12.7 — RAG Answer Generation: **COMPLETE**
 - Phase 12.8 — RAG UI: **COMPLETE**
-- Phase 12.9 — Vector Store Integration: **NEXT**
+- Phase 12.9 — Vector Store Integration: **COMPLETE**
+- Phase 12 Closure & Physical QA Gate: **NEXT**
+
+---
+
+## Historical — Phase 12.9: Vector Store Integration
+
+- Phase 12.9 — Vector Store Integration: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v14**
+- Delivered: `models/embedding.ts`, `models/retrieval.ts`, `db/migrations.ts`, `db/repositories/chunkEmbeddingRepo.ts`, `services/embedding/*`, `services/chunking/indexingService.ts`, `services/retrieval/hybridRanker.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step9.cjs`
+- Validation: `scripts/validate-phase12-step9.cjs` PASS (40/40) | TypeScript PASS (0 errors) | Phase 12.5–12.8 regression PASS
+- Next: Phase 12 Closure & Physical QA Gate
 
 ---
 

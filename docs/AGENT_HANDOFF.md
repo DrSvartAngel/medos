@@ -2,28 +2,40 @@
 
 ## CURRENT CHECKPOINT
 
-- **Phase 12.8 — RAG UI: COMPLETE**
-- **Commit:** `ea30253`
+- **Phase 12.9 — Vector Store Integration: COMPLETE**
 - **Branch:** `localization-en-tr-sweep`
-- **Schema:** `v13` (unchanged)
+- **Schema:** `v14` (deterministic migration v13 → v14, `chunk_embeddings` with 4 indexes)
 - **Phase 12.5 regression:** PASS (`validate-phase12-step5.cjs`)
 - **Phase 12.6 regression:** PASS (`validate-phase12-step6.cjs`)
 - **Phase 12.7 regression:** PASS (`validate-phase12-step7.cjs`)
-- **Phase 12.8 validator:** PASS (`validate-phase12-step8.cjs`)
-- **TypeScript:** PASS (`tsc --noEmit`)
+- **Phase 12.8 regression:** PASS (`validate-phase12-step8.cjs`)
+- **Phase 12.9 validator:** PASS (`validate-phase12-step9.cjs`, 40/40)
+- **TypeScript:** PASS (`tsc --noEmit`, 0 errors)
 - **Physical QA:** Phone PENDING | Tablet PENDING
-- **Next:** Phase 12.9 — Vector Store Integration
+- **Next:** Phase 12 Closure & Physical QA Gate
 
 ### Architecture Pipeline Summary
 
 ```
 Sources
 → Chunking / Indexing (Phase 12.5)
-→ Retrieval Layer (Phase 12.6)
+→ Embedding Layer + Vector Store (Phase 12.9)
+→ Lexical + Semantic Retrieval (Phase 12.6 + Phase 12.9)
+→ Deterministic Hybrid Ranking (Phase 12.9)
 → Grounded RAG Answer Generation (Phase 12.7)
 → RAG UI / Ask MedOS Mode (Phase 12.8)
-→ NEXT: Vector Store Integration (Phase 12.9)
+→ NEXT: Phase 12 Closure & Physical QA Gate
 ```
+
+---
+
+## Historical — Phase 12.9: Vector Store Integration
+
+- Phase 12.9 — Vector Store Integration: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v14**
+- Delivered: `models/embedding.ts`, `models/retrieval.ts`, `db/migrations.ts`, `db/repositories/chunkEmbeddingRepo.ts`, `services/embedding/*`, `services/chunking/indexingService.ts`, `services/retrieval/hybridRanker.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step9.cjs`
+- Full hybrid retrieval pipeline, bounded similarity search, safe Gemini embedding adapter, guaranteed lexical fallback, source ingestion lifecycle integration.
+- Next: Phase 12 Closure & Physical QA Gate.
 
 ---
 

@@ -735,9 +735,9 @@ console.log('\nSuite 11: Zero write verification');
   });
 
   // Verify schema version hasn't changed by checking migrations.ts
-  check('migrations.ts CURRENT_VERSION still equals 13', () => {
+  check('migrations.ts CURRENT_VERSION is at least 13', () => {
     const src = read('db/migrations.ts');
-    assert.ok(src.includes('const CURRENT_VERSION = 13'), 'CURRENT_VERSION is not 13');
+    assert.ok(src.match(/const CURRENT_VERSION = (1[3-9]|\d{2,});/), 'CURRENT_VERSION must be at least 13');
   });
 }
 

@@ -1,18 +1,19 @@
-// MedOS — Phase 12.6: Retrieval Service
-// Structured, provider-neutral retrieval over the Phase 12.5 chunk index.
+// MedOS — Phase 12.9: Retrieval Service (Lexical + Semantic Hybrid)
+// Structured, provider-neutral retrieval over the Phase 12.5 chunk index and Phase 12.9 vector store.
 //
 // Responsibilities:
 //  - Accept a RetrievalQuery with optional hierarchical scope
-//  - Delegate to sourceChunkRepo.search() (FTS5 → term index → list fallback)
-//  - Map raw ChunkSearchResult[] into ranked RetrievalResult[]
-//  - Apply topK clamping, minScore filtering, and deterministic tie-breaking
-//  - Return a complete RetrievalResponse with diagnostics
+//  - Delegate lexical search to sourceChunkRepo.search() (FTS5 → term index → list fallback)
+//  - Delegate semantic search to chunkEmbeddingRepo.searchNearest()
+//  - Deterministically merge candidates via hybridRanker
+//  - Safe fallback: if vector retrieval fails or is unavailable, continue with lexical results
+//  - Return a complete RetrievalResponse with diagnostics (usedFts, usedTermIndex, usedVector)
 //
 // Boundaries:
-//  - ZERO external network calls
-//  - ZERO Gemini/OpenAI SDK usage
+//  - ZERO external network calls inside synchronous retrieve()
+//  - ZERO direct Gemini/OpenAI SDK imports
 //  - ZERO final answer generation
-//  - ZERO writes to any SQLite table
+//  - ZERO writes to any SQLite table (no write ops in this file)
 //  - Schema v13 unchanged
 
 import type {
@@ -29,8 +30,12 @@ import {
   RetrievalError,
 } from '@/models/retrieval';
 import type { ChunkSearchOptions, ChunkSearchResult } from '@/models/chunk';
+import type { VectorSearchResult } from '@/models/embedding';
 import { sourceChunkRepo } from '@/db/repositories/sourceChunkRepo';
+import { chunkEmbeddingRepo } from '@/db/repositories/chunkEmbeddingRepo';
+import { getActiveEmbeddingProvider } from '@/services/embedding/embeddingClient';
 import { tokenizeQuery } from '@/services/chunking/termTokenizer';
+import { rankHybrid } from './hybridRanker';
 
 // ---------------------------------------------------------------------------
 // Internal helpers
@@ -64,17 +69,13 @@ function mapToRetrievalResult(r: ChunkSearchResult): RetrievalResult {
     matchTerms: r.matchTerms ?? [],
     provenance: r.provenance,
     ordinal: r.chunk.ordinal,
+    lexicalScore: r.score ?? 0,
+    retrievalMode: 'lexical',
   };
 }
 
 /**
  * Applies subject/committee scope filtering to results in-process.
- * sourceChunkRepo.search() natively filters by topicId and sourceId;
- * subjectId and committeeId are higher-order scopes resolved here by
- * matching chunk provenance against the caller-supplied topic set.
- *
- * If committeeId or subjectId is provided without a matching topicIds set,
- * they are treated as advisory (the caller should pre-resolve topic IDs).
  */
 function applyHigherOrderScope(
   results: RetrievalResult[],
@@ -87,30 +88,17 @@ function applyHigherOrderScope(
   return results.filter((r) => allowedTopicIds.has(r.provenance.topicId));
 }
 
-// ---------------------------------------------------------------------------
-// Diagnostic helpers — determine which backend was used
-// ---------------------------------------------------------------------------
-
 /**
- * Heuristically identifies which search path was taken by sourceChunkRepo.search().
- * FTS results use negative rank (closer to 0 = better); term-index results use
- * matched_terms_count * 10 + freq (always positive > 0 when terms match).
- * List-only results have score === 1 and empty matchTerms.
+ * Heuristically identifies which lexical search path was taken by sourceChunkRepo.search().
  */
 function detectSearchBackend(results: ChunkSearchResult[]): { usedFts: boolean; usedTermIndex: boolean } {
   if (results.length === 0) return { usedFts: false, usedTermIndex: false };
   const firstMatchTerms = results[0].matchTerms ?? [];
   const firstScore = results[0].score ?? 0;
 
-  // FTS path: score comes from SQLite rank (small negative or converted to abs)
-  // Term-index path: score is matched_terms_count * 10 + freq (typically >= 10)
-  // List path: score === 1 and matchTerms empty
   if (firstMatchTerms.length === 0 && firstScore === 1) {
     return { usedFts: false, usedTermIndex: false };
   }
-  // FTS raw rank values after abs() tend to be fractional or small integers
-  // Term index scores tend to be >= 10 (at least 1 term * 10)
-  // We use a conservative threshold: if score >= 10 it's likely term-index
   const usedFts = firstScore > 0 && firstScore < 10;
   const usedTermIndex = firstScore >= 10;
   return { usedFts, usedTermIndex: usedTermIndex && !usedFts };
@@ -122,23 +110,14 @@ function detectSearchBackend(results: ChunkSearchResult[]): { usedFts: boolean; 
 
 export const retrievalService = {
   /**
-   * Executes a structured retrieval query over the Phase 12.5 chunk index.
-   *
-   * Scope hierarchy (cumulative narrowing):
-   *   committeeId → (caller resolves topicIds) → topicId → sourceId
-   *
-   * For topicId and sourceId scope, filtering is delegated to SQLite.
-   * For committeeId/subjectId scope, pass the resolved `allowedTopicIds` set.
-   *
-   * @param query          - Structured retrieval query.
-   * @param allowedTopicIds - Optional pre-resolved set of topic IDs for committee/subject scope.
-   *                          When provided, results are filtered to these topics in-process.
+   * Synchronously executes retrieval over the chunk index and vector store.
+   * If synchronous vector embedding is available or query.vector is provided, performs hybrid retrieval.
+   * Otherwise returns deterministic lexical results without failing.
    */
   retrieve(
     query: RetrievalQuery,
     allowedTopicIds?: ReadonlySet<string>
   ): RetrievalResponse {
-    // Validate
     if (!query || typeof query !== 'object') {
       throw new RetrievalError('invalid_query', 'Query object is required');
     }
@@ -146,96 +125,259 @@ export const retrievalService = {
     const effectiveTopK = clampTopK(query.topK);
     const scope: RetrievalScope = query.scope ?? {};
     const minScore = query.minScore ?? 0;
+    const mode = query.mode ?? 'hybrid';
+    const trimmedQuery = (query.query ?? '').trim();
 
-    // Build and execute the low-level search
-    const searchOptions = buildSearchOptions(query, effectiveTopK);
-
-    let rawResults: ChunkSearchResult[];
-    try {
-      rawResults = sourceChunkRepo.search(searchOptions);
-    } catch {
-      rawResults = [];
+    // 1. Lexical retrieval
+    let rawResults: ChunkSearchResult[] = [];
+    if (mode !== 'semantic') {
+      const searchOptions = buildSearchOptions(query, effectiveTopK);
+      try {
+        rawResults = sourceChunkRepo.search(searchOptions);
+      } catch {
+        rawResults = [];
+      }
     }
 
-    // Map to domain results
-    let results: RetrievalResult[] = rawResults.map(mapToRetrievalResult);
+    let lexicalResults: RetrievalResult[] = rawResults.map(mapToRetrievalResult);
 
-    // Apply higher-order scope (committee / subject) if allowedTopicIds provided
     if (allowedTopicIds && allowedTopicIds.size > 0) {
-      results = applyHigherOrderScope(results, scope, allowedTopicIds);
+      lexicalResults = applyHigherOrderScope(lexicalResults, scope, allowedTopicIds);
     }
 
-    // Apply minScore filter (only meaningful when query terms were provided)
-    const queryTerms = tokenizeQuery((query.query ?? '').trim());
+    const queryTerms = tokenizeQuery(trimmedQuery);
     if (queryTerms.length > 0 && minScore > 0) {
-      results = results.filter((r) => r.score >= minScore);
+      lexicalResults = lexicalResults.filter((r) => r.score >= minScore);
     }
 
-    // Deterministic secondary sort: ordinal ASC within equal-score groups
-    // Primary sort (score DESC) is already guaranteed by sourceChunkRepo.search()
-    results.sort((a, b) => {
+    lexicalResults.sort((a, b) => {
       const scoreDiff = b.score - a.score;
       if (scoreDiff !== 0) return scoreDiff;
-      // Tie-break: source order, then ordinal
       const sourceComp = a.provenance.sourceId.localeCompare(b.provenance.sourceId);
       if (sourceComp !== 0) return sourceComp;
       return a.ordinal - b.ordinal;
     });
 
-    // Clamp to topK after scope filtering
-    results = results.slice(0, effectiveTopK);
-
-    // Diagnostics
     const { usedFts, usedTermIndex } = detectSearchBackend(rawResults);
 
+    // 2. Vector retrieval (synchronous attempt if query.vector or sync provider available)
+    let usedVector = false;
+    let vectorResults: VectorSearchResult[] = [];
+
+    if (mode !== 'lexical' && trimmedQuery.length > 0) {
+      try {
+        let queryVec = query.vector;
+        const provider = getActiveEmbeddingProvider();
+        if (!queryVec && provider.embedTextSync) {
+          const res = provider.embedTextSync(trimmedQuery);
+          queryVec = res.vector;
+        }
+
+        if (queryVec && Array.isArray(queryVec) && queryVec.length > 0) {
+          vectorResults = chunkEmbeddingRepo.searchNearest(queryVec, {
+            scope,
+            limit: effectiveTopK * 2,
+            model: provider.defaultModel,
+          });
+
+          if (allowedTopicIds && allowedTopicIds.size > 0) {
+            vectorResults = vectorResults.filter((v) => allowedTopicIds.has(v.provenance.topicId));
+          }
+
+          if (vectorResults.length > 0) {
+            usedVector = true;
+          }
+        }
+      } catch {
+        // Safe fallback: never fail overall retrieval due to vector lookup error
+        usedVector = false;
+      }
+    }
+
+    // 3. Combine results
+    let finalResults: RetrievalResult[];
+    if (usedVector && mode !== 'lexical') {
+      finalResults = rankHybrid(lexicalResults, vectorResults, {
+        lexicalWeight: query.lexicalWeight,
+        semanticWeight: query.semanticWeight,
+        topK: effectiveTopK,
+        mode,
+      });
+    } else {
+      finalResults = lexicalResults.slice(0, effectiveTopK);
+    }
+
+    if (scope.topicId) {
+      finalResults = finalResults.filter((r) => r.provenance.topicId === scope.topicId);
+    }
+    if (scope.sourceId) {
+      finalResults = finalResults.filter((r) => r.provenance.sourceId === scope.sourceId);
+    }
+
+    const vectorStatus = chunkEmbeddingRepo.getIndexStatus(scope).status;
+
     return {
-      results,
-      total: results.length,
+      results: finalResults,
+      total: finalResults.length,
       queryTerms,
       scope,
       usedFts,
       usedTermIndex,
+      usedVector,
+      vectorStatus,
+    };
+  },
+
+  /**
+   * Asynchronously executes retrieval, awaiting query embedding generation if required.
+   * Full hybrid ranking pipeline with graceful lexical fallback.
+   */
+  async retrieveAsync(
+    query: RetrievalQuery,
+    allowedTopicIds?: ReadonlySet<string>
+  ): Promise<RetrievalResponse> {
+    if (!query || typeof query !== 'object') {
+      throw new RetrievalError('invalid_query', 'Query object is required');
+    }
+
+    const effectiveTopK = clampTopK(query.topK);
+    const scope: RetrievalScope = query.scope ?? {};
+    const minScore = query.minScore ?? 0;
+    const mode = query.mode ?? 'hybrid';
+    const trimmedQuery = (query.query ?? '').trim();
+
+    // 1. Lexical retrieval
+    let rawResults: ChunkSearchResult[] = [];
+    if (mode !== 'semantic') {
+      const searchOptions = buildSearchOptions(query, effectiveTopK);
+      try {
+        rawResults = sourceChunkRepo.search(searchOptions);
+      } catch {
+        rawResults = [];
+      }
+    }
+
+    let lexicalResults: RetrievalResult[] = rawResults.map(mapToRetrievalResult);
+
+    if (allowedTopicIds && allowedTopicIds.size > 0) {
+      lexicalResults = applyHigherOrderScope(lexicalResults, scope, allowedTopicIds);
+    }
+
+    const queryTerms = tokenizeQuery(trimmedQuery);
+    if (queryTerms.length > 0 && minScore > 0) {
+      lexicalResults = lexicalResults.filter((r) => r.score >= minScore);
+    }
+
+    lexicalResults.sort((a, b) => {
+      const scoreDiff = b.score - a.score;
+      if (scoreDiff !== 0) return scoreDiff;
+      const sourceComp = a.provenance.sourceId.localeCompare(b.provenance.sourceId);
+      if (sourceComp !== 0) return sourceComp;
+      return a.ordinal - b.ordinal;
+    });
+
+    const { usedFts, usedTermIndex } = detectSearchBackend(rawResults);
+
+    // 2. Vector retrieval (asynchronous)
+    let usedVector = false;
+    let vectorResults: VectorSearchResult[] = [];
+
+    if (mode !== 'lexical' && trimmedQuery.length > 0) {
+      try {
+        let queryVec = query.vector;
+        const provider = getActiveEmbeddingProvider();
+        if (!queryVec) {
+          const res = await provider.embedText(trimmedQuery);
+          queryVec = res.vector;
+        }
+
+        if (queryVec && Array.isArray(queryVec) && queryVec.length > 0) {
+          vectorResults = chunkEmbeddingRepo.searchNearest(queryVec, {
+            scope,
+            limit: effectiveTopK * 2,
+            model: provider.defaultModel,
+          });
+
+          if (allowedTopicIds && allowedTopicIds.size > 0) {
+            vectorResults = vectorResults.filter((v) => allowedTopicIds.has(v.provenance.topicId));
+          }
+
+          if (vectorResults.length > 0) {
+            usedVector = true;
+          }
+        }
+      } catch {
+        // Safe fallback: never fail overall retrieval due to vector lookup error
+        usedVector = false;
+      }
+    }
+
+    // 3. Combine results
+    let finalResults: RetrievalResult[];
+    if (usedVector && mode !== 'lexical') {
+      finalResults = rankHybrid(lexicalResults, vectorResults, {
+        lexicalWeight: query.lexicalWeight,
+        semanticWeight: query.semanticWeight,
+        topK: effectiveTopK,
+        mode,
+      });
+    } else {
+      finalResults = lexicalResults.slice(0, effectiveTopK);
+    }
+
+    if (scope.topicId) {
+      finalResults = finalResults.filter((r) => r.provenance.topicId === scope.topicId);
+    }
+    if (scope.sourceId) {
+      finalResults = finalResults.filter((r) => r.provenance.sourceId === scope.sourceId);
+    }
+
+    const vectorStatus = chunkEmbeddingRepo.getIndexStatus(scope).status;
+
+    return {
+      results: finalResults,
+      total: finalResults.length,
+      queryTerms,
+      scope,
+      usedFts,
+      usedTermIndex,
+      usedVector,
+      vectorStatus,
     };
   },
 
   /**
    * Retrieves chunks for a specific topic without a text query (listing mode).
-   * Results are ordered by source, then ordinal. Useful for browsing all
-   * indexed content for a topic.
    */
   listByTopic(topicId: string, limit?: number): RetrievalResponse {
     if (!topicId || !topicId.trim()) {
       throw new RetrievalError('invalid_query', 'topicId is required for listByTopic');
     }
-    return this.retrieve(
-      {
-        query: '',
-        scope: { topicId: topicId.trim() },
-        topK: limit,
-      }
-    );
+    return this.retrieve({
+      query: '',
+      scope: { topicId: topicId.trim() },
+      topK: limit,
+      mode: 'lexical',
+    });
   },
 
   /**
    * Retrieves chunks for a specific source without a text query (listing mode).
-   * Results are ordered by ordinal.
    */
   listBySource(sourceId: string, limit?: number): RetrievalResponse {
     if (!sourceId || !sourceId.trim()) {
       throw new RetrievalError('invalid_query', 'sourceId is required for listBySource');
     }
-    return this.retrieve(
-      {
-        query: '',
-        scope: { sourceId: sourceId.trim() },
-        topK: limit,
-      }
-    );
+    return this.retrieve({
+      query: '',
+      scope: { sourceId: sourceId.trim() },
+      topK: limit,
+      mode: 'lexical',
+    });
   },
 
   /**
-   * Full-text search within a single topic scope.
-   * Convenience wrapper for the most common retrieval pattern.
+   * Full-text / hybrid search within a single topic scope.
    */
   searchInTopic(topicId: string, queryText: string, topK?: number): RetrievalResponse {
     if (!topicId || !topicId.trim()) {
@@ -249,7 +391,7 @@ export const retrievalService = {
   },
 
   /**
-   * Full-text search within a single source scope.
+   * Full-text / hybrid search within a single source scope.
    */
   searchInSource(sourceId: string, queryText: string, topK?: number): RetrievalResponse {
     if (!sourceId || !sourceId.trim()) {

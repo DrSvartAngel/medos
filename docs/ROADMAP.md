@@ -7,17 +7,27 @@
 - Phase 12.6 — Retrieval Layer: **COMPLETE**
 - Phase 12.7 — RAG Answer Generation: **COMPLETE**
 - Phase 12.8 — RAG UI: **COMPLETE**
-- Phase 12.9 — Vector Store Integration: **NEXT**
+- Phase 12.9 — Vector Store Integration: **COMPLETE**
 
 ### Current Checkpoint:
-- **Phase 12.8 — RAG UI: COMPLETE**
-- Branch: `localization-en-tr-sweep` | Commit: `ea30253` | Schema: **v13** (unchanged)
-- Delivered: `app/topics/[id]/assistant.tsx`, `components/study-ai/RagAnswerCard.tsx`, `i18n/en.ts`, `i18n/tr.ts`, `scripts/validate-phase12-step8.cjs`
-- Validation: `scripts/validate-phase12-step8.cjs` PASS | TypeScript PASS | Phase 12.5–12.7 regression PASS
+- **Phase 12.9 — Vector Store Integration: COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v14**
+- Delivered: `models/embedding.ts`, `models/retrieval.ts`, `db/migrations.ts`, `db/repositories/chunkEmbeddingRepo.ts`, `services/embedding/*`, `services/chunking/indexingService.ts`, `services/retrieval/hybridRanker.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step9.cjs`
+- Validation: `scripts/validate-phase12-step9.cjs` PASS (40/40) | TypeScript PASS (0 errors) | Phase 12.5–12.8 regression PASS
 - Physical QA: Phone PENDING | Tablet PENDING
 
 ### Next Phase:
-- **Phase 12.9 — Vector Store Integration**
+- **Phase 12 Closure & Physical QA Gate**
+
+---
+
+## Historical — Phase 12.9: Vector Store Integration
+
+- Phase 12.9 — Vector Store Integration: **COMPLETE**
+- Branch: `localization-en-tr-sweep` | Schema: **v14**
+- Delivered: `models/embedding.ts`, `models/retrieval.ts`, `db/migrations.ts`, `db/repositories/chunkEmbeddingRepo.ts`, `services/embedding/*`, `services/chunking/indexingService.ts`, `services/retrieval/hybridRanker.ts`, `services/retrieval/retrievalService.ts`, `scripts/validate-phase12-step9.cjs`
+- Phase 12.9 suite: **40/40 PASS** | TypeScript: **PASS (0 errors)** | Phase 12.5–12.8 regression: **PASS**
+- Next: Phase 12 Closure & Physical QA Gate
 
 ---
 

@@ -37,7 +37,7 @@ export function RagAnswerCard({ answer, onCitationPress }: RagAnswerCardProps) {
             return (
               <AppText
                 key={index}
-                weight="semiBold"
+                variant="bodyStrong"
                 style={{
                   color: colors.primary,
                   backgroundColor: colors.primary + '1A', // 10% opacity

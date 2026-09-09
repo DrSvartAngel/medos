@@ -29,6 +29,8 @@ export interface RetrievalScope {
 // Query
 // ---------------------------------------------------------------------------
 
+export type RetrievalMode = 'lexical' | 'semantic' | 'hybrid';
+
 /**
  * Structured retrieval request.
  * Only `query` is mandatory; all other fields narrow the search space.
@@ -46,6 +48,14 @@ export interface RetrievalQuery {
   extractionMethod?: ExtractionMethod;
   /** Minimum score threshold to include a result (default 0, i.e. include everything). */
   minScore?: number;
+  /** Retrieval strategy mode (default: 'hybrid'). */
+  mode?: RetrievalMode;
+  /** Weight for lexical scores in hybrid ranking (0..1, default 0.5). */
+  lexicalWeight?: number;
+  /** Weight for semantic/vector scores in hybrid ranking (0..1, default 0.5). */
+  semanticWeight?: number;
+  /** Optional pre-computed query vector for synchronous or caller-provided embedding. */
+  vector?: number[];
 }
 
 // ---------------------------------------------------------------------------
@@ -70,6 +80,12 @@ export interface RetrievalResult {
   provenance: SourceProvenance;
   /** Zero-based ordinal position of the chunk within its source. */
   ordinal: number;
+  /** Individual lexical score component if hybrid retrieval was used. */
+  lexicalScore?: number;
+  /** Individual semantic cosine similarity score component if hybrid retrieval was used. */
+  semanticScore?: number;
+  /** Which retrieval method contributed this result. */
+  retrievalMode?: RetrievalMode;
 }
 
 // ---------------------------------------------------------------------------
@@ -92,6 +108,10 @@ export interface RetrievalResponse {
   usedFts: boolean;
   /** True when the response was produced by the persistent inverted term index. */
   usedTermIndex: boolean;
+  /** True when vector similarity retrieval was executed and merged. */
+  usedVector: boolean;
+  /** Optional vector index diagnostic status. */
+  vectorStatus?: string;
 }
 
 // ---------------------------------------------------------------------------
