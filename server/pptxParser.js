@@ -106,25 +106,35 @@ function extractZipEntriesNative(buffer) {
 }
 
 /**
- * Extracts map of filename -> string contents from PPTX ZIP buffer.
+ * Extracts map of filename -> { text: string, buffer: Buffer } from PPTX ZIP buffer.
  */
 function getZipEntries(buffer) {
+  const textEntries = new Map();
+  const binaryEntries = new Map();
+
   if (AdmZip) {
     try {
       const zip = new AdmZip(buffer);
-      const entries = new Map();
       const zipEntries = zip.getEntries();
       for (const entry of zipEntries) {
         if (!entry.isDirectory) {
-          entries.set(entry.entryName, entry.getData().toString('utf8'));
+          const raw = entry.getData();
+          binaryEntries.set(entry.entryName, raw);
+          try {
+            textEntries.set(entry.entryName, raw.toString('utf8'));
+          } catch {
+            // Non-UTF8 binary entry
+          }
         }
       }
-      return entries;
+      return { textEntries, binaryEntries };
     } catch {
       // Fallback to native
     }
   }
-  return extractZipEntriesNative(buffer);
+
+  const nativeText = extractZipEntriesNative(buffer);
+  return { textEntries: nativeText, binaryEntries: new Map() };
 }
 
 /**
@@ -407,10 +417,12 @@ function parseSlideXml(slideXml, slideNumber, relationships, entries) {
   };
 }
 
+const { recognizeImage } = require('./ocrEngine');
+
 /**
  * Parses a PPTX buffer into structured slides.
  */
-async function parsePptxBuffer(buffer) {
+async function parsePptxBuffer(buffer, options = {}) {
   if (!Buffer.isBuffer(buffer)) {
     throw new Error('Input must be a valid Buffer');
   }
@@ -428,7 +440,8 @@ async function parsePptxBuffer(buffer) {
     throw err;
   }
 
-  const entries = getZipEntries(buffer);
+  const { textEntries, binaryEntries } = getZipEntries(buffer);
+  const entries = textEntries;
   if (entries.size === 0) {
     const err = new Error('Invalid presentation: Empty or corrupted ZIP container');
     err.code = 'corrupted_archive';
@@ -446,6 +459,8 @@ async function parsePptxBuffer(buffer) {
   }
 
   const slides = [];
+  const enableOcr = options.enableOcr !== false;
+
   for (let i = 0; i < slideFiles.length; i++) {
     const file = slideFiles[i];
     const xml = entries.get(file);
@@ -453,6 +468,61 @@ async function parsePptxBuffer(buffer) {
 
     const rels = extractSlideRelationships(file, entries);
     const slide = parseSlideXml(xml, i + 1, rels, entries);
+
+    // Run OCR on embedded images if enabled
+    if (enableOcr && slide.images && slide.images.length > 0 && binaryEntries.size > 0) {
+      for (let imgIdx = 0; imgIdx < slide.images.length; imgIdx++) {
+        const img = slide.images[imgIdx];
+        let targetKey = img.target;
+        if (targetKey) {
+          if (targetKey.startsWith('../')) {
+            targetKey = 'ppt/' + targetKey.replace(/^\.\.\//, '');
+          } else if (!targetKey.startsWith('ppt/')) {
+            targetKey = 'ppt/' + targetKey;
+          }
+        }
+
+        const imgBuffer = targetKey ? binaryEntries.get(targetKey) : null;
+        if (imgBuffer) {
+          try {
+            const ocrResult = await recognizeImage(imgBuffer, {
+              language: options.language || 'tur+eng',
+              provenance: {
+                slideNumber: slide.slideNumber,
+                mediaId: img.relId,
+                imageIndex: imgIdx + 1,
+              },
+            });
+
+            if (ocrResult && ocrResult.text && ocrResult.text.trim().length > 0) {
+              img.ocrText = ocrResult.text.trim();
+              img.ocrConfidence = ocrResult.confidence;
+              img.extractionMethod = 'ocr';
+              slide.text += `\n\n[OCR - Image ${imgIdx + 1}]\n${img.ocrText}`;
+            }
+          } catch {
+            // Ignore single image OCR failure
+          }
+        }
+      }
+
+      slide.visualAssets = slide.images.map((img, idx) => ({
+        slideNumber: slide.slideNumber,
+        mediaId: img.relId,
+        imageIndex: idx + 1,
+        target: img.target,
+        altText: img.altText,
+        ocrText: img.ocrText,
+        ocrConfidence: img.ocrConfidence,
+        provenance: {
+          slideNumber: slide.slideNumber,
+          mediaId: img.relId,
+          imageIndex: idx + 1,
+          extractionMethod: img.ocrText ? 'ocr' : 'native',
+        },
+      }));
+    }
+
     slides.push(slide);
   }
 
@@ -477,4 +547,5 @@ async function parsePptxBuffer(buffer) {
 module.exports = {
   parsePptxBuffer,
   MAX_PPTX_SIZE_BYTES,
+  isMaturePptxParserAvailable: () => AdmZip !== null,
 };

@@ -12,15 +12,18 @@ import {
 import { pdfExtractor } from './pdfExtractor';
 import { pptxExtractor } from './pptxExtractor';
 import { textExtractor } from './textExtractor';
+import { imageExtractor } from './imageExtractor';
 
 export * from './pptxExtractor';
+export * from './imageExtractor';
 
 export class CompositeDocumentExtractor implements DocumentExtractor {
   isSupported(mimeType?: string, fileName?: string): boolean {
     return (
       textExtractor.isSupported(mimeType, fileName) ||
       (mimeType === 'application/pdf' || (fileName ? fileName.toLowerCase().endsWith('.pdf') : false)) ||
-      pptxExtractor.isSupported(mimeType, fileName)
+      pptxExtractor.isSupported(mimeType, fileName) ||
+      imageExtractor.isSupported(mimeType, fileName)
     );
   }
 
@@ -64,10 +67,15 @@ export class CompositeDocumentExtractor implements DocumentExtractor {
       return await pptxExtractor.extract(input);
     }
 
+    // Check if Image
+    if (imageExtractor.isSupported(mime, name)) {
+      return await imageExtractor.extract(input);
+    }
+
     return {
       status: 'unsupported',
       text: '',
-      errorMessage: 'Unsupported document format. Please select a PDF, presentation, or plain text file.',
+      errorMessage: 'Unsupported document format. Please select a PDF, presentation, image, or plain text file.',
     };
   }
 }

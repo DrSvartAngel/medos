@@ -103,6 +103,9 @@ export default function ImportDocumentScreen() {
           'text/markdown',
           'application/vnd.openxmlformats-officedocument.presentationml.presentation',
           'application/vnd.ms-powerpoint',
+          'image/png',
+          'image/jpeg',
+          'image/webp',
         ],
         copyToCacheDirectory: true,
       });
@@ -152,12 +155,21 @@ export default function ImportDocumentScreen() {
           const slideCount = structuredExtraction.slideCount ?? extraction.metadata?.slideCount;
           if (slideCount && slideCount > 0) {
             setExtractionNotice(t.documentImport.slidesExtracted(slideCount));
+          } else if (extraction.canonicalType === 'image') {
+            setExtractionNotice('Metin OCR ile başarıyla çıkarıldı / Text successfully extracted via OCR.');
           } else {
             setExtractionNotice(t.documentImport.extractionSuccess);
           }
         } else if (extraction.status === 'partial') {
           setContent(extraction.text);
           setExtractionNotice(t.documentImport.extractionUnavailableDesc);
+        } else if (extraction.status === 'empty') {
+          setContent('');
+          if (extraction.canonicalType === 'image') {
+            setValidationError('Görselde okunabilir metin algılanmadı / No readable text detected in image.');
+          } else {
+            setValidationError(t.documentImport.noTextExtracted);
+          }
         } else if (extraction.status === 'unavailable') {
           setContent('');
           setExtractionNotice(t.documentImport.extractionUnavailableDesc);
@@ -167,9 +179,6 @@ export default function ImportDocumentScreen() {
         } else if (extraction.status === 'text_too_long') {
           setContent(extraction.text);
           setValidationError(t.documentImport.textTooLong);
-        } else if (extraction.status === 'empty') {
-          setContent('');
-          setValidationError(t.documentImport.noTextExtracted);
         } else if (extraction.status === 'unsupported') {
           setContent('');
           setValidationError(t.documentImport.unsupportedDocument);
@@ -232,6 +241,8 @@ export default function ImportDocumentScreen() {
               ? 'pptx'
               : selectedFile.name.toLowerCase().endsWith('.pdf')
               ? 'pdf'
+              : selectedFile.name.toLowerCase().match(/\.(png|jpe?g|webp)$/)
+              ? 'image'
               : 'text',
           processingStatus: 'ready',
           lastProcessedAt: Date.now(),

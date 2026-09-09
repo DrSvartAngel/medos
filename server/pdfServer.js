@@ -4,6 +4,7 @@
 const http = require('http');
 const { parsePdfBuffer, MAX_PDF_SIZE_BYTES } = require('./pdfParser');
 const { parsePptxBuffer } = require('./pptxParser');
+const { recognizeImage } = require('./ocrEngine');
 
 function parseMultipartBody(buffer, boundary) {
   const boundaryBuffer = Buffer.from(`--${boundary}`);
@@ -60,13 +61,18 @@ function createPdfServer() {
       return;
     }
 
-    // Extraction endpoint (supports both PDF and PPTX)
+    // Extraction endpoint (supports PDF, PPTX, and standalone images)
     if (
       req.method === 'POST' &&
       (req.url === '/extract' ||
+        req.url === '/api/v1/extract' ||
         req.url === '/api/v1/extract-pdf' ||
         req.url === '/extract-pptx' ||
-        req.url === '/api/v1/extract-pptx')
+        req.url === '/api/v1/extract-pptx' ||
+        req.url === '/extract-image' ||
+        req.url === '/api/v1/extract-image' ||
+        req.url === '/extract-ocr' ||
+        req.url === '/api/v1/extract-ocr')
     ) {
       const chunks = [];
       let totalLength = 0;
@@ -138,8 +144,60 @@ function createPdfServer() {
               return;
             }
           } else {
-            // Direct binary (application/pdf, application/vnd.openxmlformats-officedocument.presentationml.presentation, etc.)
+            // Direct binary
             pdfBuffer = bodyBuffer;
+          }
+
+          const isPng =
+            pdfBuffer.length >= 8 &&
+            pdfBuffer[0] === 0x89 &&
+            pdfBuffer[1] === 0x50 &&
+            pdfBuffer[2] === 0x4e &&
+            pdfBuffer[3] === 0x47;
+          const isJpeg =
+            pdfBuffer.length >= 3 &&
+            pdfBuffer[0] === 0xff &&
+            pdfBuffer[1] === 0xd8 &&
+            pdfBuffer[2] === 0xff;
+          const isWebp =
+            pdfBuffer.length >= 12 &&
+            pdfBuffer.toString('ascii', 0, 4) === 'RIFF' &&
+            pdfBuffer.toString('ascii', 8, 12) === 'WEBP';
+          const isImage =
+            isPng ||
+            isJpeg ||
+            isWebp ||
+            req.url.includes('image') ||
+            req.url.includes('ocr') ||
+            contentType.includes('image/');
+
+          if (isImage) {
+            const ocrResult = await recognizeImage(pdfBuffer, {
+              language: 'tur+eng',
+              provenance: {
+                imageIndex: 1,
+              },
+            });
+
+            const hasText = ocrResult.text && ocrResult.text.trim().length > 0;
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(
+              JSON.stringify({
+                status: hasText ? 'success' : 'empty',
+                canonicalType: 'image',
+                text: ocrResult.text || '',
+                confidence: ocrResult.confidence,
+                language: ocrResult.language,
+                warnings: ocrResult.warnings,
+                extractionMethod: 'ocr',
+                blocks: ocrResult.blocks,
+                provenance: {
+                  imageIndex: 1,
+                  extractionMethod: 'ocr',
+                },
+              })
+            );
+            return;
           }
 
           const isZip =

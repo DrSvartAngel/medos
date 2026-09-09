@@ -197,10 +197,79 @@ function parseWithFallback(buffer) {
   };
 }
 
+const { recognizeImage, rasterizePdfPageNative, extractImagesFromPdfBuffer } = require('./ocrEngine');
+
+/**
+ * Applies hybrid OCR to pages with nearly zero or missing native text.
+ */
+async function applyHybridOcrIfNeeded(pdfBuffer, pages, options = {}) {
+  const enableOcr = options.enableOcr !== false;
+  if (!enableOcr) {
+    for (const p of pages) {
+      if (!p.extractionMethod) p.extractionMethod = 'native';
+    }
+    return pages;
+  }
+
+  // Pre-extract raw image XObjects from PDF buffer if available
+  let extractedImages = null;
+
+  for (let i = 0; i < pages.length; i++) {
+    const page = pages[i];
+    const textLen = (page.text || '').trim().length;
+
+    // Decision rule: Usable native text (> 40 chars) uses normal PDF text
+    if (textLen > 40) {
+      page.extractionMethod = 'native';
+      continue;
+    }
+
+    // Page has nearly zero meaningful text (<= 40 chars). Check for raster scan / image
+    let pageImageBuffer = rasterizePdfPageNative(pdfBuffer, page.pageNumber);
+
+    if (!pageImageBuffer) {
+      if (extractedImages === null) {
+        extractedImages = extractImagesFromPdfBuffer(pdfBuffer);
+      }
+      if (extractedImages && extractedImages.length > i) {
+        pageImageBuffer = extractedImages[i].data;
+      } else if (extractedImages && extractedImages.length > 0 && pages.length === 1) {
+        pageImageBuffer = extractedImages[0].data;
+      }
+    }
+
+    if (pageImageBuffer) {
+      const ocrResult = await recognizeImage(pageImageBuffer, {
+        language: options.language || 'tur+eng',
+        provenance: {
+          pageNumber: page.pageNumber,
+          imageIndex: i + 1,
+        },
+      });
+
+      if (ocrResult && ocrResult.text && ocrResult.text.trim().length > 0) {
+        // Prefer OCR text when native text is trivial/empty
+        page.text = ocrResult.text.trim();
+        page.extractionMethod = 'ocr';
+        page.confidence = ocrResult.confidence;
+        if (ocrResult.warnings && ocrResult.warnings.length > 0) {
+          page.warnings = ocrResult.warnings;
+        }
+        continue;
+      }
+    }
+
+    // Fallback: preserve original native text
+    page.extractionMethod = 'native';
+  }
+
+  return pages;
+}
+
 /**
  * Parses a PDF buffer into structured pages and provenance metadata.
  */
-async function parsePdfBuffer(buffer) {
+async function parsePdfBuffer(buffer, options = {}) {
   if (!Buffer.isBuffer(buffer)) {
     throw new Error('Input must be a valid Buffer');
   }
@@ -218,15 +287,34 @@ async function parsePdfBuffer(buffer) {
     throw err;
   }
 
+  let result;
   if (pdfParseModule) {
     try {
-      return await parseWithPdfJs(buffer);
+      result = await parseWithPdfJs(buffer);
     } catch {
-      return parseWithFallback(buffer);
+      result = parseWithFallback(buffer);
     }
+  } else {
+    result = parseWithFallback(buffer);
   }
 
-  return parseWithFallback(buffer);
+  // Apply Hybrid OCR for scanned / image-only pages
+  result.pages = await applyHybridOcrIfNeeded(buffer, result.pages, options);
+
+  const totalTextLength = result.pages.reduce((sum, p) => sum + (p.text || '').length, 0);
+  const ocrPagesCount = result.pages.filter((p) => p.extractionMethod === 'ocr').length;
+  const warnings = [];
+
+  if (result.pages.length === 0) {
+    warnings.push('no_pages_found');
+  } else if (totalTextLength === 0) {
+    warnings.push('scanned_or_image_only_pdf_requires_ocr');
+  } else if (ocrPagesCount > 0) {
+    warnings.push('hybrid_ocr_applied');
+  }
+
+  result.warnings = warnings.length > 0 ? warnings : undefined;
+  return result;
 }
 
 module.exports = {

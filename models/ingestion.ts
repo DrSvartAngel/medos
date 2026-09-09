@@ -42,6 +42,8 @@ export type SourceOrigin =
   | 'file_import'
   | 'external_sync';
 
+export type ExtractionMethod = 'native' | 'ocr' | 'visual';
+
 /**
  * Detailed provenance information linking generated learning items (cards, questions, summaries)
  * or chunks back to their exact location in the original study material.
@@ -52,10 +54,36 @@ export interface SourceProvenance {
   topicId: string;
   pageNumber?: number;
   slideNumber?: number;
+  mediaId?: string;
+  imageIndex?: number;
   sectionTitle?: string;
   excerpt?: string;
   charStart?: number;
   charEnd?: number;
+  extractionMethod?: ExtractionMethod;
+  confidence?: number;
+}
+
+/**
+ * Canonical visual asset reference captured from documents (PDF figures, PPTX media, or standalone images).
+ */
+export interface VisualAsset {
+  id: string;
+  sourceId: string;
+  sourceTitle: string;
+  topicId: string;
+  pageNumber?: number;
+  slideNumber?: number;
+  mediaId?: string;
+  imageIndex?: number;
+  mimeType: string;
+  width?: number;
+  height?: number;
+  altText?: string;
+  ocrText?: string;
+  ocrConfidence?: number;
+  visualDescription?: string;
+  provenance: SourceProvenance;
 }
 
 /**
@@ -71,6 +99,8 @@ export interface SourceIngestionMetadata {
   processingStatus: IngestionProcessingStatus;
   pageCount?: number;
   slideCount?: number;
+  imageCount?: number;
+  visualAssets?: VisualAsset[];
   errorMessage?: string;
   warnings?: string[];
   lastProcessedAt?: number;

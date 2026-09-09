@@ -206,7 +206,12 @@ export default function StudySourceDetailScreen() {
               <AppText variant="h2" style={{ flex: 1, marginRight: spacing.sm }}>
                 {source.title}
               </AppText>
-              <Badge label={t.studySources[source.sourceType]} variant="default" />
+              <View style={{ flexDirection: 'row', gap: 6 }}>
+                <Badge label={t.studySources[source.sourceType]} variant="default" />
+                {source.metadata?.canonicalType === 'image' || source.content.includes('[OCR') ? (
+                  <Badge label="OCR" variant="primary" />
+                ) : null}
+              </View>
             </View>
 
             <AppText variant="caption" color={colors.textSecondary} style={{ marginBottom: spacing.md }}>
@@ -219,11 +224,95 @@ export default function StudySourceDetailScreen() {
               )}
             </AppText>
 
-            <Card style={[styles.contentCard, { backgroundColor: colors.surface, padding: spacing.md }]}>
-              <AppText variant="body" style={styles.contentText}>
-                {source.content}
-              </AppText>
-            </Card>
+            {/* Content Display with Layer Distinction */}
+            {source.content.includes('[OCR') ? (
+              <View style={{ gap: spacing.md }}>
+                {source.content.split(/(?=\[OCR)/g).map((section, idx) => {
+                  const isOcr = section.trim().startsWith('[OCR');
+                  const lines = section.trim().split('\n');
+                  const header = isOcr ? lines[0].replace(/[\[\]]/g, '') : 'Extracted Text';
+                  const body = isOcr ? lines.slice(1).join('\n').trim() : section.trim();
+
+                  if (!body) return null;
+
+                  return (
+                    <Card
+                      key={idx}
+                      style={[
+                        styles.contentCard,
+                        {
+                          backgroundColor: isOcr ? colors.surfaceElevated : colors.surface,
+                          borderColor: isOcr ? colors.cardBorder : 'transparent',
+                          borderWidth: isOcr ? 1 : 0,
+                          padding: spacing.md,
+                        },
+                      ]}
+                    >
+                      <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs }}>
+                        <Badge label={isOcr ? 'OCR' : 'Native Text'} variant={isOcr ? 'primary' : 'default'} />
+                        {isOcr && header ? (
+                          <AppText variant="caption" color={colors.textSecondary} style={{ marginLeft: spacing.sm }}>
+                            {header}
+                          </AppText>
+                        ) : null}
+                      </View>
+                      <AppText variant="body" style={styles.contentText}>
+                        {body}
+                      </AppText>
+                    </Card>
+                  );
+                })}
+              </View>
+            ) : (
+              <Card style={[styles.contentCard, { backgroundColor: colors.surface, padding: spacing.md }]}>
+                {source.metadata?.canonicalType === 'image' ? (
+                  <View style={{ marginBottom: spacing.xs }}>
+                    <Badge label="OCR Extracted Text" variant="primary" />
+                  </View>
+                ) : null}
+                <AppText variant="body" style={styles.contentText}>
+                  {source.content}
+                </AppText>
+              </Card>
+            )}
+
+            {/* Visual Assets Section if present in metadata */}
+            {source.metadata?.visualAssets && source.metadata.visualAssets.length > 0 ? (
+              <View style={{ marginTop: spacing.lg }}>
+                <AppText variant="h3" style={{ marginBottom: spacing.sm }}>
+                  Visuals & Figures ({source.metadata.visualAssets.length})
+                </AppText>
+                <View style={{ gap: spacing.sm }}>
+                  {source.metadata.visualAssets.map((asset, idx) => (
+                    <Card
+                      key={asset.id || idx}
+                      style={[
+                        styles.contentCard,
+                        { backgroundColor: colors.surfaceElevated, borderColor: colors.cardBorder, borderWidth: 1, padding: spacing.sm },
+                      ]}
+                    >
+                      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <AppText variant="label">
+                          {asset.slideNumber ? `Slide ${asset.slideNumber}` : asset.pageNumber ? `Page ${asset.pageNumber}` : `Figure ${idx + 1}`}
+                          {asset.imageIndex ? ` • Image ${asset.imageIndex}` : ''}
+                        </AppText>
+                        <Badge label={asset.ocrText ? 'OCR available' : 'Visual figure'} variant="default" />
+                      </View>
+                      {asset.altText ? (
+                        <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: 2 }}>
+                          {asset.altText}
+                        </AppText>
+                      ) : null}
+                      {asset.ocrText ? (
+                        <AppText variant="caption" style={{ marginTop: 4, fontStyle: 'italic' }}>
+                          "{asset.ocrText.slice(0, 100)}{asset.ocrText.length > 100 ? '...' : ''}"
+                        </AppText>
+                      ) : null}
+                    </Card>
+                  ))}
+                </View>
+              </View>
+            ) : null}
 
             {deleteError ? (
               <View style={{ marginTop: spacing.md }}>
