@@ -2,36 +2,32 @@
 
 ## CURRENT CHECKPOINT
 
-- **Master Phase 12 — Learning Material Intelligence & RAG Pipeline: COMPLETE / CLOSED**
+- **Active Canonical Stage:** Phase 13 — UX Architecture & Ergonomic Reorganization: **CURRENT / READY TO START**
 - **Branch:** `localization-en-tr-sweep`
-- **Current HEAD:** `e5b3896`
+- **Current HEAD:** `5eff41c`
 - **Schema:** `v14` (deterministic migration v13 → v14, `chunk_embeddings` with 4 indexes)
-- **Delivered Sequence:**
-  - Phase 12.1 — Source Ingestion Foundation: **COMPLETE**
-  - Phase 12.2 — PDF Extraction Pipeline: **COMPLETE**
-  - Phase 12.3 — PPTX / Slide Ingestion: **COMPLETE**
-  - Phase 12.4 — OCR & Visual Understanding: **COMPLETE**
-  - Phase 12.5 — Chunking & Source Indexing: **COMPLETE**
-  - Phase 12.6 — Retrieval Layer: **COMPLETE**
-  - Phase 12.7 — RAG Answer Generation: **COMPLETE**
-  - Phase 12.8 — RAG UI: **COMPLETE**
-  - Phase 12.9 — Vector Store Integration: **COMPLETE**
-- **Verification Gates:**
-  - Phase 12 Static Closure Gate: **PASS** (TypeScript, Phase 12.2–12.9 suites 100% pass)
-  - Phone Physical QA: **PASS** (Confirmed by user on real Android phone)
-  - Tablet Physical QA: **PASS** (Confirmed by user on real Android tablet)
-  - Bugs found during Phase 12 closure: **NONE**
+- **Last Completed Milestone:** Retroactive Gap Closure (Historical debt for Phases 3, 6, 8, 9, 10, 11 resolved; Phone & Tablet physical regression QA: PASS; Master Phase 12: CLOSED)
 
 ### Canonical Project Position
 
-- **LAST COMPLETED:** Master Phase 12 — Learning Material Intelligence & RAG Pipeline
-- **CURRENT:** Retroactive Gap Closure Audit (Historical review of Phase 3, 6, 8, 9, 10, 11 QA debt)
-- **NEXT AFTER RETROACTIVE CLOSURE:** Phase 13 — UX Architecture & Ergonomic Reorganization (PLANNED / NOT STARTED)
+- **LAST COMPLETED:** Retroactive Gap Closure
+- **CURRENT:** Phase 13 — UX Architecture & Ergonomic Reorganization (CURRENT / READY TO START)
+- **NEXT:** Phase 14 — Design System & Application Shell Rebuild (PLANNED / NOT STARTED)
+- **AFTER:** Phase 15 — Full Screen UI Rebuild & Visual QA (PLANNED / NOT STARTED)
 
-### Future Planned Roadmap Sequence:
-- **Phase 13 — UX Architecture & Ergonomic Reorganization:** ⬜ PLANNED / NOT STARTED
-- **Phase 14 — Design System & Application Shell Rebuild:** ⬜ PLANNED / NOT STARTED
-- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
+### Historical Gap Closure Summary
+- **Phase 3:** CLOSED (Implementation complete, consolidated Phone & Tablet QA PASS, safe-area/accessibility superseded by Phase 8/11)
+- **Phase 6:** CLOSED (Implementation complete, consolidated Phone & Tablet QA PASS, anti-shame/no-streak invariants verified)
+- **Phase 8:** CLOSED (Implementation complete, technical safe-area/error states PASS, visual QA superseded by Phase 11)
+- **Phase 9:** CLOSED (Implementation complete, master analytics validator 10/10 PASS, consolidated Phone & Tablet QA PASS)
+- **Phase 10:** CLOSED (Implementation complete, master integrity gate 17/17 PASS, consolidated Phone & Tablet QA PASS, PDF limitation superseded by Phase 12)
+- **Phase 11:** CLOSED (Implementation complete, consolidated baseline sanity QA PASS; navigation ergonomics deferred to Phase 13, design system to Phase 14, visual rebuild to Phase 15)
+- **Real Remaining Implementation Gaps:** NONE
+
+### Superseded Validator Assertions (Not Production Defects)
+1. `scripts/validate-phase3.cjs`: Rigid `accessibilityState` regex — SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT
+2. `scripts/validate-phase6.cjs`: Rigid Phase 5 git hash freeze for Memory files — SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT
+3. `scripts/validate-phase9-step4.cjs`: Obsolete `topics.slice(0, 5)` expectation — SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT
 
 ### Architecture Pipeline Summary
 
@@ -44,11 +40,19 @@ Sources
 → Grounded RAG Answer Generation (Phase 12.7)
 → RAG UI / Ask MedOS Mode (Phase 12.8)
 → Master Phase 12: CLOSED
-→ CURRENT: Retroactive Gap Closure Audit
-→ NEXT AFTER GAP CLOSURE: Phase 13 — UX Architecture & Ergonomic Reorganization
+→ Retroactive Gap Closure: CLOSED
+→ CURRENT: Phase 13 — UX Architecture & Ergonomic Reorganization
+→ NEXT: Phase 14 — Design System & Application Shell Rebuild
+→ AFTER: Phase 15 — Full Screen UI Rebuild & Visual QA
 ```
 
 ---
+
+## Historical — Retroactive Gap Closure Milestone (2026-09-09)
+
+- Retroactive Gap Closure completed with zero real implementation gaps remaining and user-confirmed consolidated physical QA on Phone and Tablet.
+- Master Phase 12 and historical debts across Phases 3, 6, 8, 9, 10, 11 are CLOSED.
+- Next activity: Phase 13 — UX Architecture & Ergonomic Reorganization.
 
 ## Historical — Master Phase 12 Closure Gate (2026-09-09)
 
@@ -1169,14 +1173,23 @@ Verified against canonical/user-confirmed physical statuses; never promote emula
 | Android bottom tab-bar safe-area phone retest | PASSED |
 | Android bottom tab-bar safe-area tablet retest | PASSED |
 | Phase 3.3 Android phone QA | PASSED |
-| Phase 3.3 Android tablet QA | PENDING |
-| Phase 3.4 Android phone QA | PENDING |
-| Phase 3.4 Android tablet QA | PENDING |
-| Phase 3.5 Android phone QA | PENDING |
-| Phase 3.5 Android tablet QA | PENDING |
-| Phase 3.6 Android phone QA | PENDING |
-| Phase 3.6 Android tablet QA | PENDING |
-| Consolidated post-Phase-3.6 safe-area regression | PENDING |
+| Phase 3.3 Android tablet QA | PASSED (Consolidated QA) |
+| Phase 3.4 Android phone QA | PASSED (Consolidated QA) |
+| Phase 3.4 Android tablet QA | PASSED (Consolidated QA) |
+| Phase 3.5 Android phone QA | PASSED (Consolidated QA) |
+| Phase 3.5 Android tablet QA | PASSED (Consolidated QA) |
+| Phase 3.6 Android phone QA | PASSED (Consolidated QA) |
+| Phase 3.6 Android tablet QA | PASSED (Consolidated QA) |
+| Consolidated safe-area & error-state regression | PASSED (Consolidated QA) |
+| Phase 6 Motivation Phone QA | PASSED (Consolidated QA) |
+| Phase 6 Motivation Tablet QA | PASSED (Consolidated QA) |
+| Phase 8 Safe-Area / Error State QA | PASSED (Consolidated QA) |
+| Phase 9 Analytics Phone QA | PASSED (Consolidated QA) |
+| Phase 9 Analytics Tablet QA | PASSED (Consolidated QA) |
+| Phase 10 AI Engine Phone QA | PASSED (Consolidated QA) |
+| Phase 10 AI Engine Tablet QA | PASSED (Consolidated QA) |
+| Phase 11 Baseline Sanity Phone QA | PASSED (Consolidated QA) |
+| Phase 11 Baseline Sanity Tablet QA | PASSED (Consolidated QA) |
 | Phase 12 Phone Physical QA | PASSED |
 | Phase 12 Tablet Physical QA | PASSED |
 
@@ -1190,7 +1203,8 @@ Localization phone/tablet QA: DEFERRED with the rest of whole-app localization. 
 > Historical status from early development:
 > Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Phase 4 complete; Phase 5 legacy foundation complete.
 > Master Phase 12 (Learning Material Intelligence & RAG Pipeline) is **COMPLETE / CLOSED**.
-> Current Active Stage is: **Retroactive Gap Closure Audit** (reviewing historical QA debt in Phases 3, 6, 8, 9, 10, 11).
-> Next after gap closure: **Phase 13 — UX Architecture & Ergonomic Reorganization** (PLANNED / NOT STARTED).
+> Retroactive Gap Closure (Phases 3, 6, 8, 9, 10, 11) is **COMPLETE / CLOSED**.
+> Current Active Stage is strictly: **Phase 13 — UX Architecture & Ergonomic Reorganization (CURRENT / READY TO START)**.
+> Followed by: **Phase 14 — Design System & Application Shell Rebuild (PLANNED / NOT STARTED)**.
 
 (Legacy archive summary from early development: Phase 1/2 complete; Phase 3.1–3.6 implementation complete; Master Phase 3 ACTIVE for remaining explicit QA gaps; Phase 4.1/4.2 COMPLETE; Phase 4.2 phone/tablet QA PASS; Phase 5 NOT STARTED at schema v6).

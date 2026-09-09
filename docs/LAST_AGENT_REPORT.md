@@ -1,48 +1,68 @@
 # MedOS — Last Agent Report
 
-## Master Phase 12 — Learning Material Intelligence & RAG Pipeline: COMPLETE / CLOSED
+## Retroactive Gap Closure: COMPLETE / CLOSED
 
-- **Phase Status:** Master Phase 12: **COMPLETE / CLOSED**
+- **Milestone Status:** Retroactive Gap Closure: **COMPLETE / CLOSED**
 - **Branch:** `localization-en-tr-sweep`
-- **Current HEAD:** `e5b3896`
+- **Current HEAD:** `5eff41c`
 - **Schema:** `v14` (deterministic migration v13 → v14, `chunk_embeddings` table with 4 indexes and foreign key cascade)
+- **Consolidated Physical Regression QA:**
+  - Phone Regression QA: **PASS** (Confirmed by user on real Android phone)
+  - Tablet Regression QA: **PASS** (Confirmed by user on real Android tablet)
+- **Real Remaining Historical Implementation Gaps:** **NONE**
 
-### Delivered Sequence
-- Phase 12.1 — Source Ingestion Foundation: **COMPLETE**
-- Phase 12.2 — PDF Extraction Pipeline: **COMPLETE**
-- Phase 12.3 — PPTX / Slide Ingestion: **COMPLETE**
-- Phase 12.4 — OCR & Visual Understanding: **COMPLETE**
-- Phase 12.5 — Chunking & Source Indexing: **COMPLETE**
-- Phase 12.6 — Retrieval Layer: **COMPLETE**
-- Phase 12.7 — RAG Answer Generation: **COMPLETE**
-- Phase 12.8 — RAG UI: **COMPLETE**
-- Phase 12.9 — Vector Store Integration: **COMPLETE**
+### Historical Phases Final Resolution
+- **Phase 3 (Study Support / ADHD):** **CLOSED**
+  - Implementation: COMPLETE
+  - Consolidated Phone & Tablet QA: PASS
+  - Historical safe-area/accessibility concerns superseded by Phase 8 and Phase 11
+  - Legacy `validate-phase3.cjs` regex mismatch (`checked` vs `checked` + `selected`): SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT
+- **Phase 6 (Motivation & Momentum Engine):** **CLOSED**
+  - Implementation: COMPLETE
+  - Consolidated Phone & Tablet QA: PASS
+  - Anti-shame, no-streak, no-XP, and no-double-credit invariants: verified intact
+  - Legacy `validate-phase6.cjs` Phase 5 commit hash freeze (`99fa648`): SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT
+- **Phase 8 (Accessibility & Safe-Area Hardening):** **CLOSED**
+  - Implementation: COMPLETE
+  - Relevant technical safe-area and error-state behavior verified in consolidated physical QA: PASS
+  - Visual/responsive QA: superseded by Phase 11 V8/V9/V10
+- **Phase 9 (Learning Analytics & Priority Engine):** **CLOSED**
+  - Implementation: COMPLETE
+  - Master analytics validator `validate-phase9.cjs`: PASS (10/10)
+  - Consolidated Phone & Tablet QA: PASS
+  - Legacy `validate-phase9-step4.cjs` `slice(0, 5)` expectation superseded by intentional Phase 11 `slice(0, 3)` responsive adjustment: SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT
+- **Phase 10 (AI Study Engine Foundation):** **CLOSED**
+  - Implementation: COMPLETE
+  - Master integrity gate `validate-phase10.cjs`: PASS (17/17)
+  - Consolidated Phone & Tablet QA: PASS
+  - Legacy on-device PDF extraction limitation: superseded by Phase 12.1–12.4
+- **Phase 11 (UI/UX Redesign & Design System):** **CLOSED**
+  - Implementation & static validation: COMPLETE (`validate-phase11.cjs` PASS, `validate-phase11-step5-ia.cjs` PASS)
+  - Consolidated real-device baseline sanity QA: PASS
+  - Remaining navigation ergonomics belong to Phase 13
+  - Remaining design-system reconstruction belongs to Phase 14
+  - Remaining full visual rebuild belongs to Phase 15
 
-### Verification Gates
-- Phase 12 Static Closure Gate: **PASS** (TypeScript 0 errors, Phase 12.2–12.9 suites 100% pass)
-- Phone Physical QA: **PASS** (Confirmed by user on real Android phone)
-- Tablet Physical QA: **PASS** (Confirmed by user on real Android tablet)
-- Bugs found during Phase 12 closure: **NONE**
+### Superseded Validator Assertions
+1. `scripts/validate-phase3.cjs`: Rigid `accessibilityState` regex
+2. `scripts/validate-phase6.cjs`: Rigid Phase 5 byte/hash freeze for Memory files
+3. `scripts/validate-phase9-step4.cjs`: Obsolete `topics.slice(0, 5)` expectation
+*Note: These are documented as SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT. Production code is not modified merely to satisfy obsolete expectations. Authoritative validation relies on TypeScript integrity (`tsc --noEmit` 0 errors) and modern master suites (Phase 9, Phase 10, Phase 11, Phase 12).*
 
 ### Canonical Project Position
-- **LAST COMPLETED:** Master Phase 12 — Learning Material Intelligence & RAG Pipeline
-- **CURRENT:** Retroactive Gap Closure Audit
-- **NEXT AFTER RETROACTIVE CLOSURE:** Phase 13 — UX Architecture & Ergonomic Reorganization (PLANNED / NOT STARTED)
+- **LAST COMPLETED:** Retroactive Gap Closure
+- **CURRENT:** Phase 13 — UX Architecture & Ergonomic Reorganization (CURRENT / READY TO START)
+- **NEXT:** Phase 14 — Design System & Application Shell Rebuild (PLANNED / NOT STARTED)
+- **AFTER:** Phase 15 — Full Screen UI Rebuild & Visual QA (PLANNED / NOT STARTED)
 
-### Historical Phases Requiring Review in Next Audit
-- Phase 3
-- Phase 6
-- Phase 8
-- Phase 9
-- Phase 10
-- Phase 11
-
-### Future Planned Roadmap Sequence
-- **Phase 13 — UX Architecture & Ergonomic Reorganization:** ⬜ PLANNED / NOT STARTED
-- **Phase 14 — Design System & Application Shell Rebuild:** ⬜ PLANNED / NOT STARTED
-- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
+### Phase 13 Mandate (DO NOT START IN THIS CHECKPOINT)
+- **Title:** Phase 13 — UX Architecture & Ergonomic Reorganization
+- **Scope:** Whole-app navigation flow, screen hierarchy, information architecture, mobile/tablet ergonomics, repeated UI patterns, and keep/modify/merge/remove/rebuild architectural decisions.
+- **Strict Boundary:** Phase 13 MUST NOT visually redesign the app.
 
 ---
+
+## Historical — Master Phase 12 — Learning Material Intelligence & RAG Pipeline: COMPLETE / CLOSED
 
 ## Historical — Phase 12.9: Vector Store Integration
 

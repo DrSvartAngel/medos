@@ -1,6 +1,51 @@
 # MedOS — Project Status
 
-## Master Phase 12 — Learning Material Intelligence & RAG Pipeline ✅ COMPLETE / CLOSED
+## Active Canonical Stage — Phase 13: UX Architecture & Ergonomic Reorganization 🚀 CURRENT / READY TO START
+
+- **Status:** CURRENT / READY TO START
+- **Branch:** `localization-en-tr-sweep` | **Schema:** **v14** (deterministic migration v13 → v14, `chunk_embeddings` table with 4 indexes and foreign key cascade)
+- **Established Scope & Purpose:**
+  - Analyze whole-app navigation, screen hierarchy, and information architecture
+  - Map end-to-end user flows and mobile/tablet ergonomics
+  - Identify repeated UI patterns and consolidate route relationships
+  - Deliver structured keep / modify / merge / remove / rebuild architectural decisions
+  - **Constraint:** Phase 13 MUST NOT visually redesign the application (visual rebuild is reserved for Phases 14–15)
+
+---
+
+## Canonical Project Position
+
+- **LAST COMPLETED:** Retroactive Gap Closure (Historical debt for Phases 3, 6, 8, 9, 10, 11 resolved; Phone & Tablet physical regression QA: PASS; Master Phase 12: CLOSED)
+- **CURRENT:** Phase 13 — UX Architecture & Ergonomic Reorganization (CURRENT / READY TO START)
+- **NEXT:** Phase 14 — Design System & Application Shell Rebuild (PLANNED / NOT STARTED)
+- **AFTER:** Phase 15 — Full Screen UI Rebuild & Visual QA (PLANNED / NOT STARTED)
+
+---
+
+## Historical — Retroactive Gap Closure Milestone (2026-09-09) ✅ CLOSED
+
+- **Status:** COMPLETE / CLOSED
+- **Scope Reviewed:** Phase 3, Phase 6, Phase 8, Phase 9, Phase 10, Phase 11
+- **Consolidated Physical Regression QA:**
+  - Phone Physical Regression QA: **PASS** (Confirmed by user on real Android phone)
+  - Tablet Physical Regression QA: **PASS** (Confirmed by user on real Android tablet)
+- **Real Remaining Implementation Gaps:** **NONE** (Zero production functional defects or data integrity gaps)
+- **Historical Phase Resolutions:**
+  - **Phase 3 (Study Support / ADHD):** **CLOSED**. Implementation complete. Consolidated phone & tablet QA passed. Historical safe-area/accessibility concerns superseded by Phase 8 and Phase 11.
+  - **Phase 6 (Motivation & Momentum):** **CLOSED**. Implementation complete. Consolidated phone & tablet QA passed. Anti-shame, no-streak, no-XP, and no-double-credit invariants verified intact.
+  - **Phase 8 (Accessibility & Safe Area Hardening):** **CLOSED**. Implementation complete. Technical safe-area and error states verified in consolidated physical QA. Visual/responsive QA superseded by Phase 11.
+  - **Phase 9 (Learning Analytics):** **CLOSED**. Implementation complete. Master analytics validator 10/10 PASS. Consolidated phone & tablet QA passed.
+  - **Phase 10 (AI Study Engine Foundation):** **CLOSED**. Implementation complete. Master integrity gate 17/17 PASS. Consolidated phone & tablet QA passed. Legacy on-device PDF extraction limitation superseded by Phase 12.1–12.4.
+  - **Phase 11 (UI/UX Redesign & Design System):** **CLOSED**. Implementation and static validation complete. Consolidated real-device baseline sanity QA passed. Remaining navigation ergonomics belong to Phase 13, design system reconstruction belongs to Phase 14, and full visual rebuild belongs to Phase 15.
+- **Superseded Historical Validator Assertions (Not Production Defects):**
+  1. `scripts/validate-phase3.cjs`: Rigid regex `/accessibilityState=\{\{ checked: isSelected \}\}/` — SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT. Code provides `{ checked: isSelected, selected: isSelected }`.
+  2. `scripts/validate-phase6.cjs`: Rigid git hash freeze against Phase 5 commit `99fa648` — SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT. Superseded by legitimate memory store additions in Phases 10–12.
+  3. `scripts/validate-phase9-step4.cjs`: Obsolete `topics.slice(0, 5)` expectation — SUPERSEDED HISTORICAL ASSERTION — NOT AN ACTIVE DEFECT. Superseded by intentional Phase 11 `slice(0, 3)` responsive adjustment.
+- **Authoritative Validation Baseline:** TypeScript `tsc --noEmit` (0 errors), Phase 9 master suite (10/10 PASS), Phase 10 master integrity suite (17/17 PASS), Phase 11 master suite (PASS), Phase 12 master suite (PASS).
+
+---
+
+## Historical — Master Phase 12 — Learning Material Intelligence & RAG Pipeline ✅ COMPLETE / CLOSED
 
 - **Phase Status:** Master Phase 12: **COMPLETE / CLOSED**
 - **Branch:** `localization-en-tr-sweep` | **Schema:** **v14** (deterministic migration v13 → v14, `chunk_embeddings` table with 4 indexes and foreign key cascade)
@@ -19,26 +64,6 @@
   - Phone Physical QA: **PASS** (User confirmed on real Android phone)
   - Tablet Physical QA: **PASS** (User confirmed on real Android tablet)
   - Bugs found during Phase 12 closure: **NONE**
-
----
-
-## Canonical Project Position
-
-- **LAST COMPLETED:** Master Phase 12 — Learning Material Intelligence & RAG Pipeline
-- **CURRENT:** Retroactive Gap Closure Audit (Historical review of Phase 3, 6, 8, 9, 10, 11 QA debt)
-- **NEXT AFTER RETROACTIVE CLOSURE:** Phase 13 — UX Architecture & Ergonomic Reorganization (PLANNED / NOT STARTED)
-
-### Future Planned Roadmap Sequence:
-- **Phase 13 — UX Architecture & Ergonomic Reorganization:** ⬜ PLANNED / NOT STARTED
-- **Phase 14 — Design System & Application Shell Rebuild:** ⬜ PLANNED / NOT STARTED
-- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
-
----
-
-## Historical — Master Phase 12 Closure Gate (2026-09-09)
-
-- Master Phase 12 formally closed after full automated validation and explicit user physical phone and tablet QA confirmation.
-- Next activity: Retroactive Gap Closure Audit across historical phases before beginning Phase 13.
 
 ## Historical — Phase 12.9: Vector Store Integration
 
@@ -1463,11 +1488,12 @@ None at the time of this fix. Later Phase 4.1 advanced schema to v6. No package 
 
 ## Canonical Next Recommended Action
 
-**Retroactive Gap Closure Audit**
+**Phase 13 — UX Architecture & Ergonomic Reorganization**
 
-- Review outstanding or deferred QA and historical debt across Phase 3, Phase 6, Phase 8, Phase 9, Phase 10, and Phase 11.
+- Status: CURRENT / READY TO START
 - Active branch: `localization-en-tr-sweep`
-- Next after gap closure: Phase 13 — UX Architecture & Ergonomic Reorganization (PLANNED / NOT STARTED).
+- Established mandate: Analyze whole-app navigation, screen hierarchy, information architecture, and mobile/tablet ergonomics. Delivers structured keep/modify/merge/remove/rebuild architectural decisions without visual redesign.
+- Followed by: Phase 14 — Design System & Application Shell Rebuild (PLANNED / NOT STARTED).
 
 ---
 
