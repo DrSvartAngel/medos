@@ -1,0 +1,30 @@
+{
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": false,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "never"
+  },
+  "eslint.validate": [
+    "javascript",
+    "javascriptreact",
+    "typescript",
+    "typescriptreact"
+  ],
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.suggest.autoImports": true,
+  "typescript.updateImportsOnFileMove.enabled": "prompt",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.expo": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/server/node_modules": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/server/node_modules": true,
+    "**/dist": true,
+    "**/.expo": true,
+    "**/*.log": true
+  }
+}

@@ -2,6 +2,7 @@
 
 # dependencies
 node_modules/
+server/node_modules/
 
 # Expo
 .expo/
@@ -21,14 +22,23 @@ expo-env.d.ts
 # Metro
 .metro-health-check*
 
-# debug
+# debug & logs
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log
+.eslintcache
 
-# macOS
+# system / OS
 .DS_Store
+Thumbs.db
 *.pem
+
+# temporary files
+*.tmp
+*.temp
+*~
+*.swp
 
 # env files
 .env
@@ -38,7 +48,11 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# editor & debugger temporary directories
+.vscode/.react
+
 # generated native folders
 /ios
 /android
 .claude/settings.json
+

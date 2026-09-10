@@ -9,13 +9,13 @@
     "@gluestack-ui/utils": "^5.0.6",
     "@react-native-async-storage/async-storage": "2.2.0",
     "babel-preset-expo": "~57.0.0",
-    "expo": "~57.0.20",
+    "expo": "~57.0.21",
     "expo-constants": "~57.0.17",
     "expo-document-picker": "~57.0.1",
     "expo-file-system": "~57.0.6",
     "expo-font": "~57.0.2",
     "expo-linking": "~57.0.9",
-    "expo-router": "~57.0.19",
+    "expo-router": "~57.0.20",
     "expo-secure-store": "~57.0.3",
     "expo-sqlite": "~57.0.2",
     "expo-status-bar": "~57.0.1",
@@ -35,6 +35,9 @@
   "devDependencies": {
     "@types/react": "~19.2.2",
     "babel-plugin-module-resolver": "^5.0.3",
+    "eslint": "^9.0.0",
+    "eslint-config-expo": "~57.0.2",
+    "prettier": "^3.9.6",
     "tailwindcss": "^4.1.18",
     "typescript": "~6.0.3"
   },
@@ -47,7 +50,10 @@
     "validate:phase3": "node scripts/validate-phase3.cjs",
     "validate:phase4": "node scripts/validate-phase4.cjs",
     "validate:phase5": "node scripts/validate-phase5.cjs",
-    "validate:phase6": "node scripts/validate-phase6.cjs"
+    "validate:phase6": "node scripts/validate-phase6.cjs",
+    "lint": "expo lint",
+    "lint:fix": "expo lint --fix",
+    "typecheck": "tsc --noEmit"
   },
   "private": true
 }
