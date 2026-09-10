@@ -1,6 +1,53 @@
 # MedOS — Project Status
 
-## Master Phase 12 — Learning Material Intelligence & RAG Pipeline ✅ COMPLETE / CLOSED
+## Master Phase 13 — UX Architecture & Ergonomic Reorganization ✅ COMPLETE / ACCEPTED / CLOSED
+
+- **Phase Status:** Master Phase 13: **COMPLETE / ACCEPTED / CLOSED**
+- **Canonical Architecture Document:** `docs/MEDOS_FINAL_ARCHITECTURE.md` (SHA256: `1813243a537df6678a65638e1a86438c36851cf680cda7f0ef3a6f5b1c930d0b`)
+- **Production Implementation Status:** Architecture and UX redesign is accepted but **NOT yet implemented in production**. Production code remains strictly at the validated Phase 12 baseline.
+- **Branch:** `phase13-track-b-codex` | **Schema:** **v14** (strictly preserved, zero unapproved schema modifications)
+- **Final Architecture Source of Truth:** `docs/MEDOS_FINAL_ARCHITECTURE.md` (Track A, Track B, and Track C exploratory tracks are historical reference only and do not override it).
+- **Core Architecture Decisions:**
+  - **Primary Navigation:** `Today` · `Study` · `Review` · `Plan` (Bugün · Çalış · Tekrar · Plan).
+  - **Academic Spine:** `Committee` → `Subject` → `Topic` → `Material` (Topic is the academic workspace, not an obligatory funnel for all actions).
+  - **Shared Context Contract:** Strictly decouples academic identity, browsing context, activity scope, evidence attribution, entry point, and return destination.
+  - **AI Role:** Contextual and global `Ask MedOS` assistant capability (`Inform` / `Generate` / `Propose`), not a standalone primary tab or competing chat product.
+  - **Focus Role:** Activity control with frozen scope and checkpointed state; not a primary navigation destination.
+  - **Review Role:** Primary destination for global due queue plus Topic/Deck filtering while preserving historical rating-time attribution snapshots.
+  - **QBank Status:** Retains aggregate external-practice logging (`qbank_sessions`) in current baseline.
+  - **Deferred Durable Models:** Persistent Question Player (`D7`), structured question/attempt models, and structured card-to-source provenance (`D6`) remain deferred.
+  - **Planning Model:** `StudyIntention` (`D5`) is defined as a future additive planning entity with single completion ownership; strictly not falsely marked as implemented.
+  - **Invariants Preserved:** Evidence truth, historical review snapshots, weighted accuracy metrics, offline-first behavior, schema v14 integrity, and zero fake completion automation.
+- **Final Design Reference:**
+  - Figma System: `https://www.figma.com/design/STGX479HWOwrlzsLKs3Okw`
+  - Final Figma Exploration Scope: 36 phone main compositions, 24 tablet main compositions, 60 total main compositions (design layout compositions / coverage, **not** 60 application routes).
+- **Next Phase:** **Phase 14 — Design System & Application Shell Rebuild**
+
+---
+
+## Canonical Project Position
+
+- **LAST COMPLETED:** Master Phase 13 — UX Architecture & Ergonomic Reorganization (ACCEPTED / CLOSED)
+- **CURRENT:** Ready for Phase 14 — Design System & Application Shell Rebuild
+- **NEXT:** Phase 14 — Design System & Application Shell Rebuild
+
+### Roadmap Sequence:
+- **Phase 13 — UX Architecture & Ergonomic Reorganization:** ✅ COMPLETE / ACCEPTED / CLOSED
+- **Phase 14 — Design System & Application Shell Rebuild:** 🟡 READY TO START
+- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
+
+---
+
+## Historical — Master Phase 13 Closure Gate (2026-09-10)
+
+- Master Phase 13 formally closed after full synthesis and canonical restoration of `docs/MEDOS_FINAL_ARCHITECTURE.md`.
+- Track A, B, and C exploratory paths reconciled into one canonical architecture specification.
+- Production code remains at Phase 12 baseline with zero unapproved schema or runtime changes.
+- Next activity: Phase 14 — Design System & Application Shell Rebuild.
+
+---
+
+## Historical — Master Phase 12 — Learning Material Intelligence & RAG Pipeline ✅ COMPLETE / CLOSED
 
 - **Phase Status:** Master Phase 12: **COMPLETE / CLOSED**
 - **Branch:** `localization-en-tr-sweep` | **Schema:** **v14** (deterministic migration v13 → v14, `chunk_embeddings` table with 4 indexes and foreign key cascade)
@@ -19,19 +66,6 @@
   - Phone Physical QA: **PASS** (User confirmed on real Android phone)
   - Tablet Physical QA: **PASS** (User confirmed on real Android tablet)
   - Bugs found during Phase 12 closure: **NONE**
-
----
-
-## Canonical Project Position
-
-- **LAST COMPLETED:** Master Phase 12 — Learning Material Intelligence & RAG Pipeline
-- **CURRENT:** Retroactive Gap Closure Audit (Historical review of Phase 3, 6, 8, 9, 10, 11 QA debt)
-- **NEXT AFTER RETROACTIVE CLOSURE:** Phase 13 — UX Architecture & Ergonomic Reorganization (PLANNED / NOT STARTED)
-
-### Future Planned Roadmap Sequence:
-- **Phase 13 — UX Architecture & Ergonomic Reorganization:** ⬜ PLANNED / NOT STARTED
-- **Phase 14 — Design System & Application Shell Rebuild:** ⬜ PLANNED / NOT STARTED
-- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
 
 ---
 
