@@ -1,50 +1,62 @@
 # MedOS — Last Agent Report
 
-## Master Phase 13 — UX Architecture & Ergonomic Reorganization: COMPLETE / ACCEPTED / CLOSED
+## Phase 13.5 — Final Visual Design Lock: COMPLETE / ACCEPTED / CLOSED
 
-- **Phase Status:** Master Phase 13: **COMPLETE / ACCEPTED / CLOSED**
-- **Canonical Architecture Document:** `docs/MEDOS_FINAL_ARCHITECTURE.md` (SHA256: `1813243a537df6678a65638e1a86438c36851cf680cda7f0ef3a6f5b1c930d0b`)
-- **Production Implementation Status:** Architecture and UX redesign is accepted but **NOT yet implemented in production**. Production code strictly remains at validated Phase 12 baseline.
+- **Phase Status:** Phase 13.5: **COMPLETE / ACCEPTED / CLOSED**
+- **Dual Source of Truth Model:**
+  - **Architectural Authority:** `docs/MEDOS_FINAL_ARCHITECTURE.md` (SHA256: `1813243a537df6678a65638e1a86438c36851cf680cda7f0ef3a6f5b1c930d0b`). Canonical source of truth overriding visual exploration.
+  - **Visual Authority:** MedOS Figma Phase 13.5 (`https://www.figma.com/design/STGX479HWOwrlzsLKs3Okw`) & `docs/PHASE13_5_FINAL_VISUAL_DESIGN.md`. Governs visual implementation for Phase 14 and Phase 15.
+- **Production Implementation Status:** Architecture and visual design specifications are locked and accepted, but **NOT yet implemented in production**. Production code strictly remains at validated Phase 12 baseline.
 - **Branch:** `phase13-track-b-codex`
-- **Current HEAD:** `e5b3896`
 - **Schema:** `v14` (strictly preserved, zero unapproved schema modifications)
-- **Final Architecture Source of Truth:** `docs/MEDOS_FINAL_ARCHITECTURE.md` (Track A, Track B, and Track C exploratory documents are historical reference only).
+- **Visual Direction:** **Neutral Zen** (Premium Academic + Refined Academic). Off-white/stone/charcoal foundations (`#F1F1EE`, `#F8F8F5`, `#171917`, `#5C625E`) with desaturated sage (`#87968C`) and moss (`#4F5E55`) as semantic accents. Manrope typography. Low card density.
 
 ### Final Architecture Decisions & Invariants Recorded:
 - **Primary Navigation:** `Today` · `Study` · `Review` · `Plan` (Bugün · Çalış · Tekrar · Plan).
 - **Academic Spine:** `Committee` → `Subject` → `Topic` → `Material` (Topic is the academic workspace, not an obligatory funnel for all actions).
-- **Shared Context Contract:** Strictly decouples academic identity, browsing context, activity scope, evidence attribution, entry point, and return destination.
-- **AI Role:** Contextual and global `Ask MedOS` assistant capability (`Inform` / `Generate` / `Propose`), not a standalone primary tab or competing chat product.
+- **Shared Context Contract:** Strictly decouples academic identity, browsing context, activity scope, evidence attribution, entry point, and return destination. Navigation never silently determines evidence attribution.
+- **AI Role:** Contextual and global `Ask MedOS` assistant capability (`Inform` / `Generate` / `Propose`), not a standalone primary tab.
 - **Focus Role:** Activity control with frozen scope and checkpointed state; not a primary navigation destination.
 - **Review Role:** Primary destination for global due queue plus Topic/Deck filtering while preserving historical rating-time attribution snapshots.
-- **QBank Status:** Retains aggregate external-practice logging (`qbank_sessions`) in current baseline.
-- **Deferred Durable Models:** Persistent Question Player (`D7`), structured question/attempt models, and structured card-to-source provenance (`D6`) remain deferred.
+- **QBank Status:** Retains aggregate external-practice logging (`qbank_sessions`) in current baseline. Persistent Question Player (`D7`) deferred.
 - **Planning Model:** `StudyIntention` (`D5`) is defined as a future additive planning entity with single completion ownership; strictly not falsely marked as implemented.
 - **Invariants Preserved:** Evidence truth, historical review snapshots, weighted accuracy metrics, offline-first behavior, schema v14 integrity, and zero fake completion automation.
 
 ### Design System & Figma Reference:
 - **Figma Design System:** `https://www.figma.com/design/STGX479HWOwrlzsLKs3Okw`
-- **Design Exploration Scope:** 36 phone main compositions, 24 tablet main compositions, 60 total main compositions (design layout coverage / compositions, **not** 60 application routes).
+- **Phase 13.5 Visual Spec:** `docs/PHASE13_5_FINAL_VISUAL_DESIGN.md`
+- **Figma Pages:**
+  - `13.5 Foundations — Neutral Zen` (Node `20:2`)
+  - `13.5 Phone — Core Screens` (Node `20:3`)
+  - `13.5 Tablet — Core Screens` (Node `20:4`)
+  - `13.5 Phone — Academic & Activities` (Node `28:2`)
+  - `13.5 Tablet — Deep Study` (Node `28:3`)
+  - `13.5 Dark & States` (Node `28:4`)
 
 ### Canonical Project Position:
-- **LAST COMPLETED:** Master Phase 13 — UX Architecture & Ergonomic Reorganization (ACCEPTED / CLOSED)
+- **LAST COMPLETED:** Phase 13.5 — Final Visual Design Lock (ACCEPTED / CLOSED)
 - **CURRENT:** Ready for Phase 14 — Design System & Application Shell Rebuild
-- **NEXT:** Phase 14 — Design System & Application Shell Rebuild
+- **NEXT:** Phase 14.1 — Visual Foundations & Semantic Tokens
 
 ### Roadmap Sequence:
 - **Phase 13 — UX Architecture & Ergonomic Reorganization:** ✅ COMPLETE / ACCEPTED / CLOSED
+- **Phase 13.5 — Final Visual Design Lock:** ✅ COMPLETE / ACCEPTED / CLOSED
 - **Phase 14 — Design System & Application Shell Rebuild:** 🟡 READY TO START
-  - *Phase 14 Implementation Scope:*
-    1. visual foundations and semantic tokens
-    2. typography
-    3. spacing/grid/radii/borders/icons
-    4. shared UI primitives
-    5. responsive application shell
-    6. Today / Study / Review / Plan navigation shell
-    7. phone/tablet responsive composition
-    8. light/dark theme behavior
-    9. accessibility foundations
+  - *Phase 14.1:* Visual foundations and semantic tokens
+  - *Phase 14.2:* Spacing, grid, radii, borders, icons
+  - *Phase 14.3:* Shared UI primitives
+  - *Phase 14.4:* Responsive application shell & navigation
+  - *Phase 14.5:* Light/dark theme behavior & accessibility foundations
 - **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
+
+---
+
+## Historical — Phase 13.5 Final Visual Design Lock Gate (2026-09-10)
+
+- Phase 13.5 formally closed. Visual source of truth locked in Figma (`STGX479HWOwrlzsLKs3Okw`) and recorded in `docs/PHASE13_5_FINAL_VISUAL_DESIGN.md`.
+- Neutral Zen visual language, Manrope typography, semantic tokens (light/dark), surface hierarchy, phone/tablet responsive compositions, and core state matrices established.
+- Production code remains untouched at validated Phase 12 baseline (schema v14).
+- Ready for Phase 14 implementation.
 
 ---
 
@@ -53,7 +65,7 @@
 - Master Phase 13 formally closed after full synthesis and canonical restoration of `docs/MEDOS_FINAL_ARCHITECTURE.md`.
 - Track A, B, and C exploratory paths reconciled into one canonical architecture specification.
 - Production code remains at Phase 12 baseline with zero unapproved schema or runtime changes.
-- Next activity: Phase 14 — Design System & Application Shell Rebuild.
+- Next activity: Phase 13.5 — Final Visual Design Lock.
 
 ---
 
