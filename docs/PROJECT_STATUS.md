@@ -41,8 +41,8 @@
 ## Canonical Project Position
 
 - **LAST ACCEPTED CHECKPOINT:** Phase 14.2 — Typography System (CLOSED / prior physical QA PASS)
-- **CURRENT SLICE:** Phase 14.3 — Spacing, Grid, Radius, Borders & Icons (IMPLEMENTED / STATIC PASS / PHYSICAL QA DEFERRED)
-- **NEXT SLICE:** Phase 14.4 — Shared UI Primitives
+- **CURRENT SLICE:** Phase 14.4 — Shared UI Primitives (IMPLEMENTED / STATIC PASS / PHYSICAL QA DEFERRED)
+- **NEXT SLICE:** Phase 14.5 — Responsive Application Shell
 
 ### Roadmap Sequence:
 - **Phase 13 — UX Architecture & Ergonomic Reorganization:** ✅ COMPLETE / ACCEPTED / CLOSED
@@ -51,8 +51,8 @@
   - *Phase 14.1 — Visual Foundations & Semantic Tokens:* ✅ COMPLETE / ACCEPTED / CLOSED (Physical QA: PASS, Branding: IMPLEMENTED / ACCEPTED)
   - *Phase 14.2 — Typography System:* ✅ COMPLETE / ACCEPTED / CLOSED (Physical QA: PASS)
   - *Phase 14.3 — Spacing, Grid, Radius, Borders & Icons:* 🟡 IMPLEMENTED (Static: PASS, Physical QA: DEFERRED)
-  - *Phase 14.4 — Shared UI Primitives:* ⬜ NEXT UP
-  - *Phase 14.5 — Responsive Application Shell:* ⬜ PENDING
+  - *Phase 14.4 — Shared UI Primitives:* 🟡 IMPLEMENTED (Static: PASS, Physical QA: DEFERRED)
+  - *Phase 14.5 — Responsive Application Shell:* ⬜ NEXT UP
   - *Phase 14.6 — Primary Navigation Shell:* ⬜ PENDING
   - *Phase 14.7 — Phone / Tablet Composition Rules:* ⬜ PENDING
   - *Phase 14.8 — Theme Completion:* ⬜ PENDING
@@ -71,9 +71,10 @@
 - **Phase 14.1 Physical QA:** ✅ PASSED (verified on device)
 - **Phase 14.2 Physical QA:** ✅ PASSED (verified on device)
 - **Phase 14.3 Physical QA:** ⏳ DEFERRED / PENDING (14 checks accumulated)
-- **Accumulated Pending Checks:** 14
+- **Phase 14.4 Physical QA:** ⏳ DEFERRED / PENDING (19 checks accumulated)
+- **Accumulated Pending Checks:** 33
 
-### Phase 14.3 Deferred Checks Checklist:
+### Phase 14.3 Deferred Checks Checklist (14 checks):
 - [ ] App launches normally
 - [ ] Persisted data remains intact
 - [ ] No unexpected layout shift from spacing token integration
@@ -88,6 +89,27 @@
 - [ ] Dark theme unaffected
 - [ ] System theme unaffected
 - [ ] Turkish UI unaffected
+
+### Phase 14.4 Deferred Checks Checklist (19 checks):
+- [ ] Shared Button states render correctly
+- [ ] Button text/icons do not clip
+- [ ] IconButton hit areas remain usable
+- [ ] Card/Surface hierarchy looks restrained
+- [ ] ListRow alignment is correct
+- [ ] SectionHeader hierarchy is clear
+- [ ] Tag/Chip labels do not clip
+- [ ] Badge remains legible
+- [ ] Input text/placeholder/helper/error render correctly
+- [ ] Search control behaves visually correctly
+- [ ] Segmented control selected state is clear
+- [ ] Progress renders supplied values correctly
+- [ ] EmptyState composition is visually balanced
+- [ ] Modal/Sheet content fits phone
+- [ ] Modal/Sheet content fits tablet
+- [ ] Light theme primitive states remain usable
+- [ ] Dark theme primitive states remain usable
+- [ ] Turkish labels render correctly
+- [ ] No regression in existing screens consuming modified primitives
 
 ---
 

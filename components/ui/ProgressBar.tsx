@@ -3,6 +3,7 @@ import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import { Progress as GSProgress, ProgressFilledTrack } from './progress/index';
 import { GSText, HStack } from './gluestack';
 import { useTheme } from '@/hooks/useTheme';
+import { FontFamily } from '@/theme/typography';
 
 export interface ProgressBarProps {
   value: number;
@@ -17,6 +18,10 @@ export interface ProgressBarProps {
   className?: string;
 }
 
+/**
+ * Progress / ProgressBar primitive: Deterministic linear metric visualization.
+ * Renders factual numerical progress only; never implies ungrounded mastery or readiness.
+ */
 export function ProgressBar({
   value,
   max = 100,
@@ -36,7 +41,7 @@ export function ProgressBar({
   const percentage = Math.round((clampedValue / safeMax) * 100);
 
   const resolvedColor = color ?? colors.primary;
-  const resolvedTrackColor = trackColor ?? colors.surfaceHighlight;
+  const resolvedTrackColor = trackColor ?? colors.surfaceSubtle;
 
   return (
     <View
@@ -49,7 +54,14 @@ export function ProgressBar({
       {label || showPercentage ? (
         <HStack style={[styles.labelRow, { marginBottom: spacing.xs }]}>
           {label ? (
-            <GSText size="xs" style={{ color: colors.textSecondary }}>
+            <GSText
+              size="xs"
+              style={{
+                color: colors.textSecondary,
+                fontFamily: FontFamily.regular,
+                fontSize: 12,
+              }}
+            >
               {label}
             </GSText>
           ) : (
@@ -58,7 +70,12 @@ export function ProgressBar({
           {showPercentage ? (
             <GSText
               size="xs"
-              style={{ color: colors.textPrimary, fontWeight: '600' }}
+              style={{
+                color: colors.textPrimary,
+                fontFamily: FontFamily.semibold,
+                fontWeight: '600',
+                fontSize: 12,
+              }}
             >
               {percentage}%
             </GSText>
@@ -73,7 +90,7 @@ export function ProgressBar({
           {
             height,
             backgroundColor: resolvedTrackColor,
-            borderRadius: radius.full,
+            borderRadius: radius.pill,
           },
         ]}
       >
@@ -81,13 +98,17 @@ export function ProgressBar({
           style={{
             height,
             backgroundColor: resolvedColor,
-            borderRadius: radius.full,
+            borderRadius: radius.pill,
           }}
         />
       </GSProgress>
     </View>
   );
 }
+
+/** Canonical alias for ProgressBar */
+export const Progress = ProgressBar;
+export type ProgressProps = ProgressBarProps;
 
 const styles = StyleSheet.create({
   container: {

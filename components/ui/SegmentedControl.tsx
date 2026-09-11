@@ -4,6 +4,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { AppText } from './Typography';
 import { Feather } from '@expo/vector-icons';
 import { Interaction } from '@/theme/interaction';
+import { FontFamily } from '@/theme/typography';
+import { IconSizes } from '@/theme/icons';
 
 export interface SegmentOption<T extends string = string> {
   id: T;
@@ -19,6 +21,10 @@ export interface SegmentedControlProps<T extends string = string> {
   style?: ViewStyle;
 }
 
+/**
+ * SegmentedControl primitive: Local filter and view-mode selector.
+ * Restrained academic aesthetic with clear active state and touch targets.
+ */
 export function SegmentedControl<T extends string = string>({
   options,
   selectedId,
@@ -26,7 +32,7 @@ export function SegmentedControl<T extends string = string>({
   accessibilityLabel,
   style,
 }: SegmentedControlProps<T>) {
-  const { colors, spacing, radius } = useTheme();
+  const { colors, spacing, radius, borders } = useTheme();
 
   return (
     <View
@@ -35,9 +41,10 @@ export function SegmentedControl<T extends string = string>({
       style={[
         styles.container,
         {
-          backgroundColor: colors.surfaceElevated,
-          borderColor: colors.border,
-          borderRadius: radius.md,
+          backgroundColor: colors.surfaceSubtle,
+          borderColor: colors.borderSubtle,
+          borderWidth: borders.standard,
+          borderRadius: radius.control,
           padding: spacing.xxs,
         },
         style,
@@ -56,10 +63,10 @@ export function SegmentedControl<T extends string = string>({
             style={[
               styles.segment,
               {
-                borderRadius: radius.sm,
+                borderRadius: radius.controlSmall,
                 backgroundColor: isSelected ? colors.surface : 'transparent',
-                borderColor: isSelected ? colors.border : 'transparent',
-                borderWidth: isSelected ? 1 : 0,
+                borderColor: isSelected ? colors.borderSubtle : 'transparent',
+                borderWidth: isSelected ? borders.standard : borders.none,
                 paddingVertical: spacing.xs + 2,
                 paddingHorizontal: spacing.sm,
               },
@@ -68,15 +75,18 @@ export function SegmentedControl<T extends string = string>({
             {option.icon ? (
               <Feather
                 name={option.icon}
-                size={15}
-                color={isSelected ? colors.primary : colors.textMuted}
+                size={IconSizes.sm}
+                color={isSelected ? colors.accentMoss : colors.textMuted}
                 style={{ marginRight: spacing.xs }}
               />
             ) : null}
             <AppText
-              variant="label"
+              variant="labelM"
               color={isSelected ? colors.textPrimary : colors.textSecondary}
-              style={{ fontWeight: isSelected ? '600' : '400' }}
+              style={{
+                fontFamily: isSelected ? FontFamily.semibold : FontFamily.medium,
+                fontWeight: isSelected ? '600' : '500',
+              }}
             >
               {option.label}
             </AppText>
@@ -90,7 +100,6 @@ export function SegmentedControl<T extends string = string>({
 const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
-    borderWidth: 1,
   },
   segment: {
     flex: 1,

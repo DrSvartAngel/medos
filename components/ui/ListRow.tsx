@@ -10,6 +10,8 @@ import { Feather } from '@expo/vector-icons';
 import { HStack, VStack, GSText, Pressable as GSPressable } from './gluestack';
 import { useTheme } from '@/hooks/useTheme';
 import { Interaction } from '@/theme/interaction';
+import { FontFamily } from '@/theme/typography';
+import { IconSizes } from '@/theme/icons';
 
 export interface ListRowProps {
   title: string;
@@ -19,6 +21,7 @@ export interface ListRowProps {
   value?: string | number | React.ReactNode;
   onPress?: () => void;
   chevron?: boolean;
+  selected?: boolean;
   destructive?: boolean;
   disabled?: boolean;
   borderBottom?: boolean;
@@ -29,6 +32,10 @@ export interface ListRowProps {
   className?: string;
 }
 
+/**
+ * ListRow primitive: Reusable row for academic lists, settings, review decks, and materials.
+ * Supports leading/trailing elements, chevrons, selection states, and accessible touch targets.
+ */
 export function ListRow({
   title,
   subtitle,
@@ -37,6 +44,7 @@ export function ListRow({
   value,
   onPress,
   chevron = false,
+  selected = false,
   destructive = false,
   disabled = false,
   borderBottom = true,
@@ -46,7 +54,7 @@ export function ListRow({
   style,
   className,
 }: ListRowProps) {
-  const { colors, spacing } = useTheme();
+  const { colors, spacing, borders } = useTheme();
   const isInteractive = Boolean(onPress && !disabled);
 
   const rowContent = (
@@ -57,8 +65,9 @@ export function ListRow({
           minHeight: Interaction.minTarget,
           paddingVertical: spacing.md,
           paddingHorizontal: spacing.md,
-          borderBottomColor: borderBottom ? colors.cardBorder : 'transparent',
-          borderBottomWidth: borderBottom ? 1 : 0,
+          backgroundColor: selected ? colors.accentSoft : 'transparent',
+          borderBottomColor: borderBottom ? colors.borderSubtle : 'transparent',
+          borderBottomWidth: borderBottom ? borders.standard : borders.none,
           opacity: disabled ? Interaction.disabledOpacity : 1,
         },
         style,
@@ -72,8 +81,15 @@ export function ListRow({
           <GSText
             size="sm"
             style={{
-              color: destructive ? colors.error : colors.textPrimary,
+              color: destructive
+                ? colors.error
+                : selected
+                ? colors.accentMoss
+                : colors.textPrimary,
+              fontFamily: FontFamily.semibold,
               fontWeight: '600',
+              fontSize: 14,
+              lineHeight: 20,
             }}
             numberOfLines={2}
           >
@@ -82,7 +98,12 @@ export function ListRow({
           {subtitle ? (
             <GSText
               size="xs"
-              style={{ color: colors.textSecondary }}
+              style={{
+                color: colors.textSecondary,
+                fontFamily: FontFamily.regular,
+                fontSize: 12,
+                lineHeight: 16,
+              }}
               numberOfLines={2}
             >
               {subtitle}
@@ -92,7 +113,14 @@ export function ListRow({
 
         {value !== undefined ? (
           typeof value === 'string' || typeof value === 'number' ? (
-            <GSText size="xs" style={{ color: colors.textMuted }}>
+            <GSText
+              size="xs"
+              style={{
+                color: colors.textMuted,
+                fontFamily: FontFamily.medium,
+                fontSize: 12,
+              }}
+            >
               {value}
             </GSText>
           ) : (
@@ -105,8 +133,8 @@ export function ListRow({
         {chevron ? (
           <Feather
             name="chevron-right"
-            size={18}
-            color={colors.textMuted}
+            size={IconSizes.sm}
+            color={selected ? colors.accentMoss : colors.textMuted}
             style={{ marginLeft: spacing.xxs }}
           />
         ) : null}
@@ -124,7 +152,7 @@ export function ListRow({
           accessibilityLabel ?? (subtitle ? `${title}, ${subtitle}` : title)
         }
         accessibilityHint={accessibilityHint}
-        accessibilityState={{ disabled }}
+        accessibilityState={{ disabled, selected }}
         style={({ pressed }: { pressed: boolean }) => [
           { opacity: pressed ? Interaction.pressedOpacity : 1 },
         ]}

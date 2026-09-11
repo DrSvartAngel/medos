@@ -7,8 +7,18 @@ import {
 } from './button/index';
 import { useTheme } from '@/hooks/useTheme';
 import { Interaction } from '@/theme/interaction';
+import { FontFamily } from '@/theme/typography';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'destructive' | 'outline';
+export type ButtonVariant =
+  | 'primary'
+  | 'secondary'
+  | 'ghost'
+  | 'danger'
+  | 'destructive'
+  | 'outline'
+  | 'text'
+  | 'quiet';
+
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps {
@@ -27,6 +37,10 @@ export interface ButtonProps {
   className?: string;
 }
 
+/**
+ * Button primitive: Primary, secondary, ghost, and destructive actions.
+ * Restrained Neutral Zen character: Deep moss primary CTA, subtle secondary borders, stable layout.
+ */
 export function Button({
   label,
   title,
@@ -42,7 +56,7 @@ export function Button({
   textStyle,
   className,
 }: ButtonProps) {
-  const { colors, spacing, radius } = useTheme();
+  const { colors, spacing, radius, borders } = useTheme();
   const text = label ?? title ?? '';
 
   // Map MedOS variant to Gluestack Button variant
@@ -63,9 +77,11 @@ export function Button({
   // Explicit semantic color overrides for exact Light/Dark parity
   const bgColors: Record<ButtonVariant, string> = {
     primary: colors.primary,
-    secondary: colors.surfaceElevated,
+    secondary: colors.surfaceSubtle,
     outline: 'transparent',
     ghost: 'transparent',
+    text: 'transparent',
+    quiet: 'transparent',
     danger: colors.error,
     destructive: colors.error,
   };
@@ -75,15 +91,19 @@ export function Button({
     secondary: colors.textPrimary,
     outline: colors.textPrimary,
     ghost: colors.textSecondary,
+    text: colors.textSecondary,
+    quiet: colors.textSecondary,
     danger: colors.textInverse,
     destructive: colors.textInverse,
   };
 
   const borderColors: Record<ButtonVariant, string> = {
     primary: 'transparent',
-    secondary: colors.cardBorder,
-    outline: colors.cardBorder,
+    secondary: colors.borderSubtle,
+    outline: colors.borderSubtle,
     ghost: 'transparent',
+    text: 'transparent',
+    quiet: 'transparent',
     danger: 'transparent',
     destructive: 'transparent',
   };
@@ -105,9 +125,10 @@ export function Button({
           minHeight: Interaction.minTarget,
           backgroundColor: bgColors[variant],
           borderColor: borderColors[variant],
-          borderWidth: isBordered ? 1 : 0,
-          borderRadius: radius.md,
-          paddingHorizontal: size === 'sm' ? spacing.md : size === 'lg' ? spacing.xl : spacing.lg,
+          borderWidth: isBordered ? borders.standard : borders.none,
+          borderRadius: radius.control,
+          paddingHorizontal:
+            size === 'sm' ? spacing.md : size === 'lg' ? spacing.xl : spacing.lg,
           opacity: disabled ? Interaction.disabledOpacity : 1,
         },
         style,
@@ -123,9 +144,10 @@ export function Button({
             style={[
               {
                 color: textColors[variant],
+                fontFamily: FontFamily.semibold,
                 fontWeight: '600',
-                fontSize: size === 'sm' ? 13 : 15,
-                lineHeight: size === 'sm' ? 18 : 22,
+                fontSize: size === 'sm' ? 13 : 14,
+                lineHeight: size === 'sm' ? 18 : 20,
               },
               textStyle,
             ]}

@@ -5,12 +5,15 @@ import { HStack, VStack, Heading, GSText, Pressable as GSPressable } from './glu
 import { Badge, type BadgeVariant } from './Badge';
 import { useTheme } from '@/hooks/useTheme';
 import { Interaction } from '@/theme/interaction';
+import { FontFamily } from '@/theme/typography';
+import { IconSizes } from '@/theme/icons';
 
 export interface SectionHeaderProps {
   title: string;
   subtitle?: string;
   badge?: string;
   badgeVariant?: BadgeVariant;
+  count?: number | string;
   action?: {
     label: string;
     onPress: () => void;
@@ -20,11 +23,16 @@ export interface SectionHeaderProps {
   className?: string;
 }
 
+/**
+ * SectionHeader primitive: Structural header establishing hierarchy primarily through type and spacing.
+ * Never styled as a card container.
+ */
 export function SectionHeader({
   title,
   subtitle,
   badge,
   badgeVariant = 'default',
+  count,
   action,
   style,
   className,
@@ -39,18 +47,32 @@ export function SectionHeader({
             size="md"
             style={{
               color: colors.textPrimary,
+              fontFamily: FontFamily.semibold,
               fontWeight: '600',
-              letterSpacing: -0.2,
+              fontSize: 20,
+              lineHeight: 26,
+              letterSpacing: -0.3,
             }}
           >
             {title}
           </Heading>
+          {count !== undefined ? (
+            <Badge label={count} variant="neutral" size="sm" />
+          ) : null}
           {badge ? (
             <Badge label={badge} variant={badgeVariant} size="sm" />
           ) : null}
         </HStack>
         {subtitle ? (
-          <GSText size="xs" style={{ color: colors.textSecondary }}>
+          <GSText
+            size="xs"
+            style={{
+              color: colors.textSecondary,
+              fontFamily: FontFamily.regular,
+              fontSize: 12,
+              lineHeight: 16,
+            }}
+          >
             {subtitle}
           </GSText>
         ) : null}
@@ -75,7 +97,9 @@ export function SectionHeader({
             size="xs"
             style={{
               color: colors.primary,
+              fontFamily: FontFamily.semibold,
               fontWeight: '600',
+              fontSize: 13,
             }}
           >
             {action.label}
@@ -83,7 +107,7 @@ export function SectionHeader({
           {action.icon ? (
             <Feather
               name={action.icon}
-              size={14}
+              size={IconSizes.sm}
               color={colors.primary}
               style={{ marginLeft: spacing.xxs }}
             />

@@ -3,6 +3,8 @@ import { View, StyleSheet, type ViewStyle, type TextStyle, type StyleProp } from
 import { Badge as GSBadge, BadgeText } from './badge/index';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
+import { FontFamily } from '@/theme/typography';
+import { IconSizes } from '@/theme/icons';
 
 export type BadgeVariant =
   | 'default'
@@ -15,7 +17,7 @@ export type BadgeVariant =
   | 'info';
 
 export interface BadgeProps {
-  label: string;
+  label: string | number;
   variant?: BadgeVariant;
   dot?: boolean;
   size?: 'sm' | 'md';
@@ -25,6 +27,10 @@ export interface BadgeProps {
   className?: string;
 }
 
+/**
+ * Badge primitive for compact status, count, and notification semantics.
+ * Visually subordinate to primary content.
+ */
 export function Badge({
   label,
   variant = 'default',
@@ -35,15 +41,14 @@ export function Badge({
   textStyle,
   className,
 }: BadgeProps) {
-  const { colors, spacing, radius } = useTheme();
+  const { colors, spacing, radius, borders } = useTheme();
 
   const isNeutral = variant === 'default' || variant === 'neutral';
-  const isDanger = variant === 'error' || variant === 'danger';
 
   const bgMap: Record<BadgeVariant, string> = {
-    default: colors.surfaceHighlight,
-    neutral: colors.surfaceHighlight,
-    primary: colors.primaryMuted,
+    default: colors.surfaceSubtle,
+    neutral: colors.surfaceSubtle,
+    primary: colors.accentSoft,
     success: colors.successMuted,
     warning: colors.warningMuted,
     error: colors.errorMuted,
@@ -71,11 +76,11 @@ export function Badge({
         styles.badge,
         {
           backgroundColor: bgMap[variant],
-          borderColor: isNeutral ? colors.cardBorder : bgMap[variant],
-          borderWidth: 1,
-          borderRadius: radius.full,
+          borderColor: isNeutral ? colors.borderSubtle : bgMap[variant],
+          borderWidth: borders.standard,
+          borderRadius: radius.pill,
           paddingHorizontal: isSmall ? spacing.sm : spacing.md,
-          paddingVertical: isSmall ? 2 : 4,
+          paddingVertical: isSmall ? 2 : spacing.xs,
         },
         style,
       ]}
@@ -92,7 +97,7 @@ export function Badge({
       {icon && (
         <Feather
           name={icon}
-          size={isSmall ? 10 : 12}
+          size={isSmall ? 10 : IconSizes.xs}
           color={resolvedColor}
           style={{ marginRight: spacing.xxs }}
         />
@@ -103,14 +108,15 @@ export function Badge({
           {
             color: resolvedColor,
             fontSize: isSmall ? 11 : 12,
-            lineHeight: isSmall ? 14 : 16,
-            fontWeight: '600',
+            lineHeight: isSmall ? 15 : 16,
+            fontFamily: FontFamily.medium,
+            fontWeight: '500',
             textTransform: 'none', // Turkish character safety
           },
           textStyle,
         ]}
       >
-        {label}
+        {String(label)}
       </BadgeText>
     </GSBadge>
   );

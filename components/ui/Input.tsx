@@ -12,6 +12,7 @@ import { AppText } from './Typography';
 import { useTheme } from '@/hooks/useTheme';
 import { Layout } from '@/theme/layout';
 import { Interaction } from '@/theme/interaction';
+import { FontFamily } from '@/theme/typography';
 
 declare module 'react-native' {
   interface AccessibilityState {
@@ -29,7 +30,10 @@ export interface InputProps extends TextInputProps {
   className?: string;
 }
 
-/** Controlled input backed by Gluestack UI; validation and draft ownership stay with the caller. */
+/**
+ * Input primitive: Controlled text field with label, placeholder, helper text, and error states.
+ * Consumes canonical Neutral Zen colors, 1px subtle borders, and Manrope typography.
+ */
 export const Input = forwardRef<TextInput, InputProps>(function Input(
   {
     invalid = false,
@@ -50,11 +54,13 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   },
   ref
 ) {
-  const { colors, spacing, radius, typography } = useTheme();
+  const { colors, spacing, radius, borders } = useTheme();
   const [focused, setFocused] = useState(false);
 
   const hasError = Boolean(invalid || errorText || accessibilityState?.invalid);
-  const minHeight = multiline ? Layout.textAreaMinHeight : Math.max(44, Layout.inputMinHeight);
+  const minHeight = multiline
+    ? Layout.textAreaMinHeight
+    : Math.max(Interaction.minTarget, Layout.inputMinHeight);
 
   const inputNode = (
     <GSInput
@@ -63,9 +69,13 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         {
           minHeight,
           backgroundColor: colors.surface,
-          borderColor: invalid ? colors.error : hasError ? colors.error : focused ? colors.primary : colors.cardBorder,
-          borderRadius: radius.md,
-          borderWidth: Interaction.borderWidth,
+          borderColor: hasError
+            ? colors.error
+            : focused
+            ? colors.accentMoss
+            : colors.borderSubtle,
+          borderRadius: radius.control,
+          borderWidth: borders.standard,
           paddingHorizontal: spacing.md,
           opacity: editable ? 1 : Interaction.disabledOpacity,
         },
@@ -73,7 +83,9 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
       ]}
       className={className}
     >
-      {leftIcon ? <InputSlot style={{ marginRight: spacing.xs }}>{leftIcon}</InputSlot> : null}
+      {leftIcon ? (
+        <InputSlot style={{ marginRight: spacing.xs }}>{leftIcon}</InputSlot>
+      ) : null}
       <InputField
         {...props}
         ref={ref as any}
@@ -99,14 +111,17 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           styles.field,
           {
             color: colors.textPrimary,
-            fontFamily: typography.fontFamily,
-            fontSize: typography.size.base,
+            fontFamily: FontFamily.regular,
+            fontSize: 14,
+            lineHeight: multiline ? 20 : undefined,
             textAlignVertical: multiline ? 'top' : 'center',
             paddingVertical: multiline ? spacing.sm : 0,
           },
         ]}
       />
-      {rightIcon ? <InputSlot style={{ marginLeft: spacing.xs }}>{rightIcon}</InputSlot> : null}
+      {rightIcon ? (
+        <InputSlot style={{ marginLeft: spacing.xs }}>{rightIcon}</InputSlot>
+      ) : null}
     </GSInput>
   );
 
@@ -117,7 +132,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
   return (
     <View style={styles.wrapper}>
       {label ? (
-        <AppText variant="label" color={colors.textPrimary} style={{ marginBottom: spacing.xs }}>
+        <AppText
+          variant="labelM"
+          color={colors.textPrimary}
+          style={{ marginBottom: spacing.xs, fontFamily: FontFamily.medium }}
+        >
           {label}
         </AppText>
       ) : null}
@@ -129,7 +148,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           </AppText>
         </View>
       ) : helperText ? (
-        <AppText variant="caption" color={colors.textSecondary} style={{ marginTop: spacing.xxs }}>
+        <AppText
+          variant="caption"
+          color={colors.textSecondary}
+          style={{ marginTop: spacing.xxs }}
+        >
           {helperText}
         </AppText>
       ) : null}

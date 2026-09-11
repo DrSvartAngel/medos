@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import { Divider as GSDivider } from './divider/index';
 import { useTheme } from '@/hooks/useTheme';
+import { BorderWidths } from '@/theme/borders';
 
 export interface DividerProps {
   orientation?: 'horizontal' | 'vertical';
@@ -19,7 +20,7 @@ export function Divider({
   className,
 }: DividerProps) {
   const { colors, spacing } = useTheme();
-  const resolvedColor = color ?? colors.cardBorder;
+  const resolvedColor = color ?? colors.borderSubtle ?? colors.cardBorder;
   const margin = customSpacing ?? spacing.sm;
 
   if (orientation === 'vertical') {
@@ -57,11 +58,11 @@ export function Divider({
 
 const styles = StyleSheet.create({
   horizontal: {
-    height: 1,
+    height: BorderWidths.hairline,
     width: '100%',
   },
   vertical: {
-    width: 1,
+    width: BorderWidths.hairline,
     height: '100%',
   },
 });
