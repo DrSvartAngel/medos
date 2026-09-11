@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "index.ts",
   "dependencies": {
+    "@expo-google-fonts/manrope": "^0.4.2",
     "@expo/html-elements": "^57.0.0",
     "@expo/vector-icons": "^15.0.2",
     "@gluestack-ui/core": "^5.0.15",
