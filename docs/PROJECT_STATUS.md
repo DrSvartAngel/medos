@@ -27,21 +27,25 @@
   - `13.5 Tablet — Deep Study` (Node `28:3`)
   - `13.5 Dark & States` (Node `28:4`)
 - **Current Phase:** **Phase 14 — Design System & Application Shell Rebuild**
-- **Next Implementation Slice:** **Phase 14.1 — Visual Foundations & Semantic Tokens**
+- **Active Implementation Slice:** **Phase 14.1 — Visual Foundations & Semantic Tokens: COMPLETE / ACCEPTED / CLOSED** (Physical QA: PASS, Branding: IMPLEMENTED / ACCEPTED)
 
 ---
 
 ## Canonical Project Position
 
-- **LAST COMPLETED:** Phase 13.5 — Final Visual Design Lock (ACCEPTED / CLOSED)
-- **CURRENT:** Ready for Phase 14 — Design System & Application Shell Rebuild (Next slice: Phase 14.1)
-- **NEXT:** Phase 14.1 — Visual Foundations & Semantic Tokens
+- **LAST COMPLETED:** Phase 14.1 — Visual Foundations & Semantic Tokens (ACCEPTED / CLOSED)
+- **CURRENT:** Phase 14 — Design System & Application Shell Rebuild
+- **NEXT:** Phase 14.2 — Typography System
 
 ### Roadmap Sequence:
 - **Phase 13 — UX Architecture & Ergonomic Reorganization:** ✅ COMPLETE / ACCEPTED / CLOSED
 - **Phase 13.5 — Final Visual Design Lock:** ✅ COMPLETE / ACCEPTED / CLOSED
-- **Phase 14 — Design System & Application Shell Rebuild:** 🟡 READY TO START
-  - *Phase 14.1 — Visual Foundations & Semantic Tokens:* Next active slice
+- **Phase 14 — Design System & Application Shell Rebuild:** 🟡 IN PROGRESS
+  - *Phase 14.1 — Visual Foundations & Semantic Tokens:* ✅ COMPLETE / ACCEPTED / CLOSED (Physical QA: PASS, Branding: IMPLEMENTED / ACCEPTED)
+  - *Phase 14.2 — Typography System:* 🟡 READY TO START
+  - *Phase 14.3 — Shared UI Primitives:* ⬜ PENDING
+  - *Phase 14.4 — Responsive Application Shell & Navigation:* ⬜ PENDING
+  - *Phase 14.5 — Light/Dark Theme Behavior & Accessibility:* ⬜ PENDING
 - **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
 
 ---

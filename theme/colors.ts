@@ -1,93 +1,128 @@
-// MedOS – Centralized Theme Colors (90% Monochrome Neutrals + 10% Functional Teal Accent)
+// MedOS – Centralized Theme Colors (Neutral Zen Foundation)
+// Architectural Source: docs/MEDOS_FINAL_ARCHITECTURE.md
+// Visual Implementation Spec: docs/PHASE13_5_FINAL_VISUAL_DESIGN.md
+// Figma Reference: 13.5 Foundations — Neutral Zen (Node 20:2)
 
+/**
+ * Locked Phase 13.5 Neutral Zen Light Palette
+ */
 export const LightColors = {
-  // Backgrounds & Surfaces (90% monochrome neutrals)
-  background: '#F7F7F7',
-  surface: '#FFFFFF',
-  surfaceElevated: '#F0F0F0',
-  surfaceHighlight: '#E5E5E5',
-  border: '#E5E5E5',
-  borderFaint: '#F0F0F0',
-  borderMuted: '#E5E5E5',
-  cardBorder: '#E5E5E5',
-  cardBorderHover: '#D4D4D4',
+  // --- Canonical Semantic Tokens (Phase 13.5 Locked) ---
+  // Canvas & Surfaces
+  canvas: '#F1F1EE',          // bg/canvas (Screen canvas)
+  surface: '#F8F8F5',         // bg/surface (Default container / panel surface)
+  surfaceSubtle: '#E8E9E4',   // bg/subtle (Secondary / recessed surface)
+  surfaceRaised: '#FFFFFF',   // bg/raised (Elevated card, modal, popover)
 
-  // Functional Teal Accent (10% sparingly used)
-  primary: '#0D9488',          // Clinical teal
-  primaryPressed: '#0F766E',   // Deep pressed teal
-  primaryMuted: '#CCFBF1',     // Soft teal surface
-  accent: '#0D9488',           // Primary accent
-  accentMuted: '#E6FFFA',
+  // Typography
+  textPrimary: '#171917',     // text/primary (High-contrast ink)
+  textSecondary: '#5C625E',   // text/secondary (Subheadings, body metadata)
+  textMuted: '#838A85',       // text/muted (Captions, placeholders, disabled)
+  textInverse: '#FFFFFF',     // text on dark accents/surfaces
 
-  // Semantic States (Controlled & functional)
-  success: '#059669',          // Calm emerald
-  successMuted: '#DEF7EC',
-  warning: '#D97706',          // Muted amber
-  warningMuted: '#FEF3C7',
-  error: '#DC2626',            // Controlled crimson
-  errorMuted: '#FEE2E2',
-  info: '#0284C7',             // Calm sky blue
-  infoMuted: '#E0F2FE',
+  // Borders & Dividers
+  borderSubtle: '#D7DAD5',    // border/subtle (1px hairline divider)
 
-  // Interactive & Focus
-  focus: '#0D9488',
-  focusRing: 'rgba(13, 148, 136, 0.25)',
+  // Semantic Accents (Desaturated Sage & Deep Moss)
+  accent: '#87968C',          // accent/sage (Selection indicator, badges)
+  accentStrong: '#4F5E55',    // accent/moss (Primary CTA, focus ring, prominent action)
+  accentSoft: '#DCE3DE',      // accent/soft (Soft pill background, subtle highlight)
+  accentSage: '#87968C',      // Explicit accent/sage token
+  accentMoss: '#4F5E55',      // Explicit accent/moss token
 
-  // Typography (90% monochrome neutrals)
-  textPrimary: '#111111',      // Deep monochrome black
-  textSecondary: '#525252',    // Neutral secondary
-  textMuted: '#737373',        // Neutral muted
-  textInverse: '#FFFFFF',
+  // Status Roles (Controlled, Non-Decorative)
+  success: '#2E6B4A',         // status/success
+  successMuted: '#DCE8E0',
+  warning: '#9B6B28',         // status/warning
+  warningMuted: '#F5EBDD',
+  error: '#A13B35',           // status/error
+  errorMuted: '#F6E0DF',
+  info: '#3B627A',            // status/info
+  infoMuted: '#DEE8EE',
 
-  // Navigation Shell
-  tabActive: '#0D9488',
-  tabInactive: '#737373',
-  tabBar: '#FFFFFF',
+  // --- Backward-Compatible Aliases (Legacy Token Preservation) ---
+  background: '#F1F1EE',      // Alias to canvas
+  surfaceElevated: '#FFFFFF', // Alias to surfaceRaised
+  surfaceHighlight: '#E8E9E4',// Alias to surfaceSubtle
+  border: '#D7DAD5',          // Alias to borderSubtle
+  borderFaint: '#E8E9E4',     // Subtler border
+  borderMuted: '#D7DAD5',     // Alias to borderSubtle
+  cardBorder: '#D7DAD5',      // Alias to borderSubtle
+  cardBorderHover: '#C2C6BE', // Subtle hover elevation
+
+  // Interactive & Primary Aliases
+  primary: '#4F5E55',         // Primary CTA is moss in Neutral Zen
+  primaryPressed: '#3D4A43',  // Pressed moss
+  primaryMuted: '#DCE3DE',    // Soft sage pill/surface
+  accentMuted: '#DCE3DE',     // Alias to accentSoft
+  focus: '#4F5E55',           // Focus accent
+  focusRing: 'rgba(79, 94, 85, 0.25)',
+
+  // Navigation Shell Aliases
+  tabActive: '#4F5E55',       // Primary active tab
+  tabInactive: '#838A85',     // Inactive tab text/icon
+  tabBar: '#F8F8F5',          // Bottom navigation bar surface
 } as const;
 
+/**
+ * Locked Phase 13.5 Neutral Zen Dark Palette
+ */
 export const DarkColors: Record<keyof typeof LightColors, string> = {
-  // Backgrounds & Surfaces (Deep monochrome charcoal / black)
-  background: '#0A0A0A',
-  surface: '#171717',
-  surfaceElevated: '#212121',
-  surfaceHighlight: '#2A2A2A',
-  border: '#262626',
-  borderFaint: '#1C1C1C',
-  borderMuted: '#262626',
-  cardBorder: '#262626',
-  cardBorderHover: '#383838',
+  // --- Canonical Semantic Tokens (Phase 13.5 Locked) ---
+  // Canvas & Surfaces
+  canvas: '#111412',          // bg/canvas
+  surface: '#171B18',         // bg/surface
+  surfaceSubtle: '#1E2420',   // bg/subtle
+  surfaceRaised: '#202621',   // bg/raised
 
-  // Functional Teal Accent (10% sparingly used)
-  primary: '#14B8A6',
-  primaryPressed: '#0D9488',
-  primaryMuted: '#134E48',
-  accent: '#14B8A6',
-  accentMuted: '#164E63',
+  // Typography
+  textPrimary: '#F3F3EE',     // text/primary
+  textSecondary: '#B7BDB8',   // text/secondary
+  textMuted: '#858D87',       // text/muted
+  textInverse: '#111412',     // text on light accents/surfaces
 
-  // Semantic States
-  success: '#34D399',
-  successMuted: '#064E3B',
-  warning: '#FBBF24',
-  warningMuted: '#78350F',
-  error: '#F87171',
-  errorMuted: '#7F1D1D',
-  info: '#38BDF8',
-  infoMuted: '#0C4A6E',
+  // Borders & Dividers
+  borderSubtle: '#303832',    // border/subtle
 
-  // Interactive & Focus
-  focus: '#14B8A6',
-  focusRing: 'rgba(20, 184, 166, 0.35)',
+  // Semantic Accents (Desaturated Sage & Deep Moss)
+  accent: '#95A59B',          // accent/sage
+  accentStrong: '#A8B7AE',    // accent/moss
+  accentSoft: '#253029',      // accent/soft
+  accentSage: '#95A59B',      // Explicit accent/sage token
+  accentMoss: '#A8B7AE',      // Explicit accent/moss token
 
-  // Typography (High-contrast monochrome neutral)
-  textPrimary: '#FAFAFA',      // Neutral primary
-  textSecondary: '#A3A3A3',    // Neutral secondary
-  textMuted: '#737373',        // Neutral muted
-  textInverse: '#0A0A0A',
+  // Status Roles (Controlled, Non-Decorative)
+  success: '#5FA87D',         // status/success
+  successMuted: '#1B2E23',
+  warning: '#D4A359',         // status/warning
+  warningMuted: '#332717',
+  error: '#D96B64',           // status/error
+  errorMuted: '#381E1C',
+  info: '#689EC0',            // status/info
+  infoMuted: '#1C2A33',
 
-  // Navigation Shell
-  tabActive: '#14B8A6',
-  tabInactive: '#737373',
-  tabBar: '#171717',
+  // --- Backward-Compatible Aliases (Legacy Token Preservation) ---
+  background: '#111412',      // Alias to canvas
+  surfaceElevated: '#202621', // Alias to surfaceRaised
+  surfaceHighlight: '#1E2420',// Alias to surfaceSubtle
+  border: '#303832',          // Alias to borderSubtle
+  borderFaint: '#1E2420',
+  borderMuted: '#303832',     // Alias to borderSubtle
+  cardBorder: '#303832',      // Alias to borderSubtle
+  cardBorderHover: '#454E47',
+
+  // Interactive & Primary Aliases
+  primary: '#A8B7AE',         // Primary CTA moss in Dark mode
+  primaryPressed: '#95A59B',
+  primaryMuted: '#253029',    // Soft sage pill/surface
+  accentMuted: '#253029',     // Alias to accentSoft
+  focus: '#A8B7AE',
+  focusRing: 'rgba(168, 183, 174, 0.35)',
+
+  // Navigation Shell Aliases
+  tabActive: '#A8B7AE',
+  tabInactive: '#858D87',
+  tabBar: '#171B18',
 };
 
 export type ThemeColors = Record<keyof typeof LightColors, string>;
