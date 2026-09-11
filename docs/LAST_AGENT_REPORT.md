@@ -36,6 +36,7 @@
 ### Canonical Project Position:
 - **LAST ACCEPTED CHECKPOINT:** Phase 14.2 — Typography System (CLOSED / prior physical QA PASS)
 - **CURRENT SLICE:** Phase 14.3 — Spacing, Grid, Radius, Borders & Icons (IMPLEMENTED / STATIC PASS / PHYSICAL QA DEFERRED)
+  - **Spacing Model:** Canonical Phase 13.5 (`4..40`, `space/4..space/40`, `space40`) + Legacy compatibility retained separately (`xxs: 2, xs: 4, sm: 8, smd: 12, md: 16, mlg: 20, lg: 24, xl: 32, xxl: 48, xxxl: 64`)
 - **NEXT SLICE:** Phase 14.4 — Shared UI Primitives
 
 ### Roadmap Sequence:

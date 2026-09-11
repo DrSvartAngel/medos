@@ -45,7 +45,10 @@ export const Spacing = {
   'space/32': 32,
   'space/40': 40,
 
-  // Semantic Named Tokens (Preserves existing codebase conventions & passes validate-phase11)
+  // Canonical Phase 13.5 Semantic Accessor for 40
+  space40: 40, // space/40 - canonical Phase 13.5 dimension
+
+  // Legacy Compatibility Aliases (Preserves pre-existing codebase scale exactly)
   xxs: 2,   // Fine micro-alignment / hairline padding (legacy)
   xs: 4,    // space/4  - micro gaps, tag insets, icon offsets
   sm: 8,    // space/8  - compact gaps, button vertical padding, chips
@@ -54,8 +57,8 @@ export const Spacing = {
   mlg: 20,  // space/20 - tablet inset, medium section gap
   lg: 24,   // space/24 - standard section gap, prominent group separation
   xl: 32,   // space/32 - major layout section gap, hero header spacing
-  xxl: 40,  // space/40 - generous visual breathing room, hero bottom offset (Phase 13.5 canonical)
-  xxxl: 48, // large container bottom scroll padding (legacy)
+  xxl: 48,  // legacy xxl: 48 preserved for existing components
+  xxxl: 64, // legacy xxxl: 64 preserved for existing components
 } as const;
 
 export type SpacingKey = keyof typeof Spacing;

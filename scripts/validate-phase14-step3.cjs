@@ -82,8 +82,15 @@ test('2. All 8 canonical Spacing values exist with exact locked numbers', () => 
   }
 });
 
-// 3. Spacing semantic keys and legacy preservation
-test('3. Spacing semantic keys and backward-compatible aliases resolve properly', () => {
+// 3. Spacing canonical 40 accessor and legacy backward-compatible aliases
+test('3. Spacing canonical 40 and legacy backward-compatible aliases resolve properly', () => {
+  // Canonical 40 accessors
+  assert.strictEqual(Spacing[40], 40, 'Spacing[40] must equal 40');
+  assert.strictEqual(Spacing['space/40'], 40, 'Spacing["space/40"] must equal 40');
+  assert.strictEqual(Spacing.space40, 40, 'Spacing.space40 must equal 40');
+
+  // Legacy compatibility aliases (strictly preserved values)
+  assert.strictEqual(Spacing.xxs, 2, 'Spacing.xxs must be 2');
   assert.strictEqual(Spacing.xs, 4, 'Spacing.xs must be 4');
   assert.strictEqual(Spacing.sm, 8, 'Spacing.sm must be 8');
   assert.strictEqual(Spacing.smd, 12, 'Spacing.smd must be 12');
@@ -91,9 +98,12 @@ test('3. Spacing semantic keys and backward-compatible aliases resolve properly'
   assert.strictEqual(Spacing.mlg, 20, 'Spacing.mlg must be 20');
   assert.strictEqual(Spacing.lg, 24, 'Spacing.lg must be 24');
   assert.strictEqual(Spacing.xl, 32, 'Spacing.xl must be 32');
-  assert.strictEqual(Spacing.xxl, 40, 'Spacing.xxl must be 40');
-  assert.strictEqual(Spacing.xxs, 2, 'Spacing.xxs must be preserved as 2');
-  assert.strictEqual(Spacing.xxxl, 48, 'Spacing.xxxl must be preserved as 48');
+  assert.strictEqual(Spacing.xxl, 48, 'Spacing.xxl must remain 48 for legacy compatibility');
+  assert.strictEqual(Spacing.xxxl, 64, 'Spacing.xxxl must remain 64 for legacy compatibility');
+
+  // Regression guards: ensure legacy aliases were not hijacked
+  assert.notStrictEqual(Spacing.xxl, 40, 'Spacing.xxl must NOT be hijacked to 40');
+  assert.notStrictEqual(Spacing.xxxl, 48, 'Spacing.xxxl must NOT be 48');
 });
 
 // 4. Radius canonical 5 values

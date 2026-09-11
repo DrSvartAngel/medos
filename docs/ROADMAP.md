@@ -29,6 +29,9 @@
 - **Current Phase:** **Phase 14 — Design System & Application Shell Rebuild**
 - **Active Implementation Slice:** **Phase 14.3 — Spacing, Grid, Radius, Borders & Icons: IMPLEMENTED**
   - **Static Validation:** PASS (TypeScript, Phase12.9, Phase14.1, Phase14.2, Phase14.3, Expo config)
+  - **Spacing Model:**
+    - Canonical Phase 13.5 scale: `4 / 8 / 12 / 16 / 20 / 24 / 32 / 40` (accessed via numeric keys `4..40`, `space/4..space/40`, `space40: 40`, `SpacingTokens`)
+    - Legacy compatibility retained separately: `xxs: 2`, `xs: 4`, `sm: 8`, `smd: 12`, `md: 16`, `mlg: 20`, `lg: 24`, `xl: 32`, `xxl: 48`, `xxxl: 64` (strictly preserving existing component geometry without alias collision)
   - **Physical QA:** DEFERRED / PENDING USER PHYSICAL QA (binding policy: accumulated testing after 14.9 before Phase 15)
   - **Phase 14 Final Acceptance:** BLOCKED awaiting cumulative user physical QA after Phase 14.9
   - **Phase 15:** BLOCKED until Phase 14 final physical QA passes
