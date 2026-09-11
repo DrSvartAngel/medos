@@ -1,12 +1,11 @@
 import { useWindowDimensions } from 'react-native';
-import { Layout } from '@/theme/layout';
-
-/** Breakpoints (dp) */
-const BREAKPOINTS = {
-  phone: 0,
-  tablet: Layout.breakpoints.tablet,
-  largeTablet: Layout.breakpoints.largeTablet,
-} as const;
+import {
+  Breakpoints,
+  PageLayout,
+  ContentWidths,
+  Layout,
+  type BreakpointKey,
+} from '@/theme/layout';
 
 export type DeviceClass = 'phone' | 'tablet' | 'largeTablet';
 
@@ -24,6 +23,13 @@ export interface Responsive {
   /** Responsive spacing multiplier */
   spacingScale: number;
   isLandscape: boolean;
+  isPortrait: boolean;
+  /** Canonical screen edge gutter for current device class (phone: 16, tablet: 24, largeTablet: 32) */
+  gutter: number;
+  /** Content width presets (content: 720, wide: 900) */
+  contentWidth: typeof ContentWidths;
+  /** Breakpoints source of truth */
+  breakpoints: typeof Breakpoints;
 }
 
 /**
@@ -33,23 +39,33 @@ export interface Responsive {
 export function useResponsive(): Responsive {
   const { width, height } = useWindowDimensions();
   const isLandscape = width > height;
+  const isPortrait = !isLandscape;
 
   const deviceClass: DeviceClass =
-    width >= BREAKPOINTS.largeTablet ? 'largeTablet' :
-    width >= BREAKPOINTS.tablet      ? 'tablet'      :
+    width >= Breakpoints.largeTablet ? 'largeTablet' :
+    width >= Breakpoints.tablet      ? 'tablet'      :
                                        'phone';
 
   const isPhone       = deviceClass === 'phone';
   const isTablet      = deviceClass === 'tablet' || deviceClass === 'largeTablet';
   const isLargeTablet = deviceClass === 'largeTablet';
 
+  // Canonical page edge gutter for current viewport class
+  const gutter =
+    isLargeTablet ? PageLayout.gutterLargeTablet :
+    isTablet      ? PageLayout.gutterTablet :
+                    PageLayout.gutterPhone;
+
   // Max content width prevents full-bleed stretching on large screens
   const contentMaxWidth =
-    isLargeTablet ? Layout.contentWidth.largeTablet :
-    isTablet      ? Layout.contentWidth.tablet :
+    isLargeTablet ? ContentWidths.wide :
+    isTablet      ? ContentWidths.content :
                     Number.MAX_SAFE_INTEGER; // no cap on phone
 
-  const spacingScale = isLargeTablet ? Layout.spacingScale.largeTablet : isTablet ? Layout.spacingScale.tablet : Layout.spacingScale.phone;
+  const spacingScale =
+    isLargeTablet ? Layout.spacingScale.largeTablet :
+    isTablet      ? Layout.spacingScale.tablet :
+                    Layout.spacingScale.phone;
 
   function columns(base = 1): number {
     if (base === 1) {
@@ -61,5 +77,20 @@ export function useResponsive(): Responsive {
     return base;
   }
 
-  return { width, height, isPhone, isTablet, isLargeTablet, deviceClass, contentMaxWidth, columns, spacingScale, isLandscape };
+  return {
+    width,
+    height,
+    isPhone,
+    isTablet,
+    isLargeTablet,
+    deviceClass,
+    contentMaxWidth,
+    columns,
+    spacingScale,
+    isLandscape,
+    isPortrait,
+    gutter,
+    contentWidth: ContentWidths,
+    breakpoints: Breakpoints,
+  };
 }

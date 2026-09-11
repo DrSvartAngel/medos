@@ -1,8 +1,6 @@
 import React from 'react';
-import { ScrollView, View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useTheme } from '@/hooks/useTheme';
-import { useResponsive } from '@/hooks/useResponsive';
+import { type StyleProp, type ViewStyle } from 'react-native';
+import { PageContainer, type PageContainerProps } from './PageContainer';
 
 export interface ScreenWrapperProps {
   children: React.ReactNode;
@@ -16,6 +14,10 @@ export interface ScreenWrapperProps {
   className?: string;
 }
 
+/**
+ * ScreenWrapper: standard responsive screen wrapper.
+ * Unifies with canonical PageContainer primitive while preserving 100% backward compatibility.
+ */
 export function ScreenWrapper({
   children,
   scrollable = true,
@@ -25,63 +27,16 @@ export function ScreenWrapper({
   includeBottomSafeArea = false,
   className,
 }: ScreenWrapperProps) {
-  const { colors, spacing } = useTheme();
-  const { contentMaxWidth, spacingScale } = useResponsive();
-
-  const padding = spacing.md * spacingScale;
-
-  const inner = (
-    <View
-      style={[
-        styles.content,
-        {
-          padding,
-          // Center content on tablets with a max-width cap
-          maxWidth: centered ? contentMaxWidth : undefined,
-          width: '100%',
-          alignSelf: 'center',
-        },
-        contentStyle,
-      ]}
+  return (
+    <PageContainer
+      scrollable={scrollable}
+      style={style}
+      contentStyle={contentStyle}
+      centered={centered}
+      includeBottomSafeArea={includeBottomSafeArea}
       className={className}
     >
       {children}
-    </View>
-  );
-
-  return (
-    <SafeAreaView
-      edges={
-        includeBottomSafeArea
-          ? ['top', 'right', 'bottom', 'left']
-          : ['top', 'left', 'right']
-      }
-      style={[styles.safe, { backgroundColor: colors.background }, style]}
-    >
-      {scrollable ? (
-        <ScrollView
-          contentContainerStyle={styles.scroll}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-        >
-          {inner}
-        </ScrollView>
-      ) : (
-        inner
-      )}
-    </SafeAreaView>
+    </PageContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  safe: {
-    flex: 1,
-  },
-  scroll: {
-    flexGrow: 1,
-    alignItems: 'center', // centers the maxWidth container
-  },
-  content: {
-    flex: 1,
-  },
-});

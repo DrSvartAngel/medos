@@ -35,8 +35,8 @@
 
 ### Canonical Project Position
 - **LAST ACCEPTED CHECKPOINT:** Phase 14.2 — Typography System (CLOSED / prior physical QA PASS)
-- **CURRENT SLICE:** Phase 14.4 — Shared UI Primitives (IMPLEMENTED / STATIC PASS / PHYSICAL QA DEFERRED)
-- **NEXT SLICE:** Phase 14.5 — Responsive Application Shell
+- **CURRENT SLICE:** Phase 14.5 — Responsive Application Shell (IMPLEMENTED / STATIC PASS / PHYSICAL QA DEFERRED)
+- **NEXT SLICE:** Phase 14.6 — Primary Navigation Shell
 
 ### Roadmap Sequence:
 - **Phase 13 — UX Architecture & Ergonomic Reorganization:** ✅ COMPLETE / ACCEPTED / CLOSED
@@ -46,8 +46,8 @@
   - *Phase 14.2:* Typography System (COMPLETE / ACCEPTED / CLOSED; Physical QA: PASS)
   - *Phase 14.3:* Spacing, grid, radii, borders, icons (IMPLEMENTED; Static: PASS; Physical QA: DEFERRED)
   - *Phase 14.4:* Shared UI Primitives (IMPLEMENTED; Static: PASS; Physical QA: DEFERRED)
-  - *Phase 14.5:* Responsive Application Shell (Phone bottom nav / Tablet nav rail) (NEXT UP)
-  - *Phase 14.6:* Primary Navigation Shell (Today / Study / Review / Plan rebuild)
+  - *Phase 14.5:* Responsive Application Shell (IMPLEMENTED; Static: PASS; Physical QA: DEFERRED)
+  - *Phase 14.6:* Primary Navigation Shell (Today / Study / Review / Plan rebuild) (NEXT UP)
   - *Phase 14.7:* Phone / Tablet Composition Rules
   - *Phase 14.8:* Theme Completion
   - *Phase 14.9:* Accessibility Foundation
@@ -60,10 +60,12 @@
 - **Phase 14.2 Physical QA:** ✅ PASSED
 - **Phase 14.3 Physical QA:** ⏳ DEFERRED / PENDING (14 checks accumulated)
 - **Phase 14.4 Physical QA:** ⏳ DEFERRED / PENDING (19 checks accumulated)
-- **Accumulated Pending Checks:** 33
+- **Phase 14.5 Physical QA:** ⏳ DEFERRED / PENDING (26 checks accumulated)
+- **Accumulated Pending Checks:** 59
 - **Checklist Summary:**
   - *Phase 14.3 (14 checks):* App launches, data intact, no spacing layout shift, cards/controls usable, no clipped content, phone page margins usable, tablet page margins usable, icons render, no missing glyphs, icon sizes usable, Light theme, Dark theme, System theme, Turkish UI.
   - *Phase 14.4 (19 checks):* Shared Button states, Button text/icons do not clip, IconButton hit areas, Card/Surface hierarchy, ListRow alignment, SectionHeader hierarchy, Tag/Chip labels do not clip, Badge legible, Input states/helper/error, Search control behavior, Segmented control selected state, Progress deterministic render, EmptyState composition, Modal/Sheet phone fit, Modal/Sheet tablet fit, Light theme primitive states, Dark theme primitive states, Turkish labels, Screen regression check.
+  - *Phase 14.5 (26 checks):* Phone safe areas, tablet safe areas, phone page gutter, tablet page gutter, large-tablet gutter, tablet content width, max-width behavior, scroll integrity, no nested-scroll regression, no double top safe area, no double bottom safe area, phone bottom clearance, tablet rail geometry, tablet main workspace geometry, optional inspector slot, inspector hidden on phone, modal phone presentation, modal tablet presentation, sheet safe area, orientation resize stability, light theme shell surfaces, dark theme shell surfaces, system theme shell surfaces, shared primitives inside shell, user flows reachable, route/nav integrity.
 
 ### Architecture Pipeline Summary
 

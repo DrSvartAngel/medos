@@ -41,8 +41,8 @@
 ## Canonical Project Position
 
 - **LAST ACCEPTED CHECKPOINT:** Phase 14.2 — Typography System (CLOSED / prior physical QA PASS)
-- **CURRENT SLICE:** Phase 14.4 — Shared UI Primitives (IMPLEMENTED / STATIC PASS / PHYSICAL QA DEFERRED)
-- **NEXT SLICE:** Phase 14.5 — Responsive Application Shell
+- **CURRENT SLICE:** Phase 14.5 — Responsive Application Shell (IMPLEMENTED / STATIC PASS / PHYSICAL QA DEFERRED)
+- **NEXT SLICE:** Phase 14.6 — Primary Navigation Shell
 
 ### Roadmap Sequence:
 - **Phase 13 — UX Architecture & Ergonomic Reorganization:** ✅ COMPLETE / ACCEPTED / CLOSED
@@ -52,8 +52,8 @@
   - *Phase 14.2 — Typography System:* ✅ COMPLETE / ACCEPTED / CLOSED (Physical QA: PASS)
   - *Phase 14.3 — Spacing, Grid, Radius, Borders & Icons:* 🟡 IMPLEMENTED (Static: PASS, Physical QA: DEFERRED)
   - *Phase 14.4 — Shared UI Primitives:* 🟡 IMPLEMENTED (Static: PASS, Physical QA: DEFERRED)
-  - *Phase 14.5 — Responsive Application Shell:* ⬜ NEXT UP
-  - *Phase 14.6 — Primary Navigation Shell:* ⬜ PENDING
+  - *Phase 14.5 — Responsive Application Shell:* 🟡 IMPLEMENTED (Static: PASS, Physical QA: DEFERRED)
+  - *Phase 14.6 — Primary Navigation Shell:* ⬜ NEXT UP
   - *Phase 14.7 — Phone / Tablet Composition Rules:* ⬜ PENDING
   - *Phase 14.8 — Theme Completion:* ⬜ PENDING
   - *Phase 14.9 — Accessibility Foundation:* ⬜ PENDING
@@ -72,7 +72,8 @@
 - **Phase 14.2 Physical QA:** ✅ PASSED (verified on device)
 - **Phase 14.3 Physical QA:** ⏳ DEFERRED / PENDING (14 checks accumulated)
 - **Phase 14.4 Physical QA:** ⏳ DEFERRED / PENDING (19 checks accumulated)
-- **Accumulated Pending Checks:** 33
+- **Phase 14.5 Physical QA:** ⏳ DEFERRED / PENDING (26 checks accumulated)
+- **Accumulated Pending Checks:** 59
 
 ### Phase 14.3 Deferred Checks Checklist (14 checks):
 - [ ] App launches normally
@@ -110,6 +111,34 @@
 - [ ] Dark theme primitive states remain usable
 - [ ] Turkish labels render correctly
 - [ ] No regression in existing screens consuming modified primitives
+
+### Phase 14.5 Deferred Checks Checklist (26 checks):
+- [ ] Phone safe areas render correctly
+- [ ] Tablet safe areas render correctly
+- [ ] Phone horizontal page gutter feels correct
+- [ ] Tablet page gutter feels correct
+- [ ] Large-tablet gutter behaves correctly
+- [ ] Main content does not stretch excessively on tablet
+- [ ] Page max-width behavior looks intentional
+- [ ] Existing screens still scroll correctly
+- [ ] No nested-scroll regression is visible
+- [ ] No double top safe-area padding
+- [ ] No double bottom safe-area padding
+- [ ] Phone content is not obscured near bottom edge
+- [ ] Tablet rail region geometry is stable
+- [ ] Tablet main workspace geometry is stable
+- [ ] Optional inspector region opens/fits structurally where exercised
+- [ ] Inspector does not appear unexpectedly on phone
+- [ ] Modal phone presentation remains correct
+- [ ] Modal tablet presentation remains correct
+- [ ] Sheet safe-area behavior remains correct
+- [ ] Orientation/viewport resizing does not obviously break shell
+- [ ] Light theme shell surfaces remain correct
+- [ ] Dark theme shell surfaces remain correct
+- [ ] System theme shell surfaces remain correct
+- [ ] Existing shared primitives remain visually usable inside shell
+- [ ] Existing persisted user flows remain reachable
+- [ ] No route/navigation regression caused by shell integration
 
 ---
 
