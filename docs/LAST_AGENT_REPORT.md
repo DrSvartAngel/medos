@@ -34,9 +34,9 @@
   - `13.5 Dark & States` (Node `28:4`)
 
 ### Canonical Project Position:
-- **LAST COMPLETED:** Phase 14.2 — Typography System (ACCEPTED / CLOSED)
-- **CURRENT:** Phase 14 — Design System & Application Shell Rebuild
-- **NEXT:** Phase 14.3 — Spacing, Grid, Radius, Borders & Icons
+- **LAST ACCEPTED CHECKPOINT:** Phase 14.2 — Typography System (CLOSED / prior physical QA PASS)
+- **CURRENT SLICE:** Phase 14.3 — Spacing, Grid, Radius, Borders & Icons (IMPLEMENTED / STATIC PASS / PHYSICAL QA DEFERRED)
+- **NEXT SLICE:** Phase 14.4 — Shared UI Primitives
 
 ### Roadmap Sequence:
 - **Phase 13 — UX Architecture & Ergonomic Reorganization:** ✅ COMPLETE / ACCEPTED / CLOSED
@@ -44,10 +44,22 @@
 - **Phase 14 — Design System & Application Shell Rebuild:** 🟡 IN PROGRESS
   - *Phase 14.1:* Visual foundations and semantic tokens (COMPLETE / ACCEPTED / CLOSED; Physical QA: PASS; Branding: IMPLEMENTED / ACCEPTED)
   - *Phase 14.2:* Typography System (COMPLETE / ACCEPTED / CLOSED; Physical QA: PASS)
-  - *Phase 14.3:* Spacing, grid, radii, borders, icons (READY TO START)
-  - *Phase 14.4:* Responsive application shell & navigation
-  - *Phase 14.5:* Light/dark theme behavior & accessibility foundations
-- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
+  - *Phase 14.3:* Spacing, grid, radii, borders, icons (IMPLEMENTED; Static: PASS; Physical QA: DEFERRED)
+  - *Phase 14.4:* Shared UI Primitives (NEXT UP)
+  - *Phase 14.5:* Responsive Application Shell (Phone bottom nav / Tablet nav rail)
+  - *Phase 14.6:* Primary Navigation Shell (Today / Study / Review / Plan rebuild)
+  - *Phase 14.7:* Phone / Tablet Composition Rules
+  - *Phase 14.8:* Theme Completion
+  - *Phase 14.9:* Accessibility Foundation
+  - *Phase 14 Final User Physical QA Gate:* 🔴 BLOCKED (Accumulated checks executed after 14.9)
+- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ BLOCKED (Must not start until Phase 14 Physical QA Gate passes)
+
+### Cumulative Phase 14 Physical QA Register
+- **Phase 14.1 Physical QA:** ✅ PASSED
+- **Phase 14.2 Physical QA:** ✅ PASSED
+- **Phase 14.3 Physical QA:** ⏳ DEFERRED / PENDING (14 checks accumulated)
+- **Accumulated Pending Checks:** 14
+- **Checklist:** App launches, data intact, no spacing layout shift, cards/controls usable, no clipped content, phone page margins usable, tablet page margins usable, icons render, no missing glyphs, icon sizes usable, Light theme, Dark theme, System theme, Turkish UI.
 
 ---
 

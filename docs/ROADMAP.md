@@ -27,15 +27,19 @@
   - `13.5 Tablet — Deep Study` (Node `28:3`)
   - `13.5 Dark & States` (Node `28:4`)
 - **Current Phase:** **Phase 14 — Design System & Application Shell Rebuild**
-- **Active Implementation Slice:** **Phase 14.2 — Typography System: COMPLETE / ACCEPTED / CLOSED** (Physical QA: PASS)
+- **Active Implementation Slice:** **Phase 14.3 — Spacing, Grid, Radius, Borders & Icons: IMPLEMENTED**
+  - **Static Validation:** PASS (TypeScript, Phase12.9, Phase14.1, Phase14.2, Phase14.3, Expo config)
+  - **Physical QA:** DEFERRED / PENDING USER PHYSICAL QA (binding policy: accumulated testing after 14.9 before Phase 15)
+  - **Phase 14 Final Acceptance:** BLOCKED awaiting cumulative user physical QA after Phase 14.9
+  - **Phase 15:** BLOCKED until Phase 14 final physical QA passes
 
 ---
 
 ## Canonical Project Position
 
-- **LAST COMPLETED:** Phase 14.2 — Typography System (ACCEPTED / CLOSED)
-- **CURRENT:** Phase 14 — Design System & Application Shell Rebuild
-- **NEXT:** Phase 14.3 — Spacing, Grid, Radius, Borders & Icons
+- **LAST ACCEPTED CHECKPOINT:** Phase 14.2 — Typography System (CLOSED / prior physical QA PASS)
+- **CURRENT SLICE:** Phase 14.3 — Spacing, Grid, Radius, Borders & Icons (IMPLEMENTED / STATIC PASS / PHYSICAL QA DEFERRED)
+- **NEXT SLICE:** Phase 14.4 — Shared UI Primitives
 
 ### Roadmap Sequence:
 - **Phase 13 — UX Architecture & Ergonomic Reorganization:** ✅ COMPLETE / ACCEPTED / CLOSED
@@ -43,11 +47,45 @@
 - **Phase 14 — Design System & Application Shell Rebuild:** 🟡 IN PROGRESS
   - *Phase 14.1:* Visual foundations and semantic tokens (COMPLETE / ACCEPTED / CLOSED; Physical QA: PASS; Branding: IMPLEMENTED / ACCEPTED)
   - *Phase 14.2:* Typography System (COMPLETE / ACCEPTED / CLOSED; Physical QA: PASS)
-  - *Phase 14.3:* Spacing, grid, radii, borders, icons (READY TO START)
-  - *Phase 14.4:* Responsive application shell & navigation (Phone bottom nav / Tablet nav rail)
-  - *Phase 14.5:* Light/dark theme behavior & accessibility foundations
-- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ PLANNED / NOT STARTED
+  - *Phase 14.3:* Spacing, grid, radii, borders, icons (IMPLEMENTED; Static: PASS; Physical QA: DEFERRED)
+  - *Phase 14.4:* Shared UI Primitives (NEXT UP)
+  - *Phase 14.5:* Responsive Application Shell (Phone bottom nav / Tablet nav rail)
+  - *Phase 14.6:* Primary Navigation Shell (Today / Study / Review / Plan rebuild)
+  - *Phase 14.7:* Phone / Tablet Composition Rules
+  - *Phase 14.8:* Theme Completion
+  - *Phase 14.9:* Accessibility Foundation
+  - *Phase 14 Final User Physical QA Gate:* 🔴 BLOCKED (Accumulated checks executed after 14.9)
+- **Phase 15 — Full Screen UI Rebuild & Visual QA:** ⬜ BLOCKED (Must not start until Phase 14 Physical QA Gate passes)
   - Implementation of individual detailed workspace, reader, review, and activity screens against Phase 13/13.5 design contracts.
+
+---
+
+## Cumulative Phase 14 Physical QA Register
+
+> [!NOTE]
+> Physical QA is intentionally deferred for slices 14.3–14.9 to allow continuous implementation cadence. The full accumulated checklist will be executed by the user on device/tablet after Phase 14.9 and before Phase 15 begins.
+
+### Status Summary
+- **Phase 14.1 Physical QA:** ✅ PASSED (verified on device)
+- **Phase 14.2 Physical QA:** ✅ PASSED (verified on device)
+- **Phase 14.3 Physical QA:** ⏳ DEFERRED / PENDING (14 checks accumulated)
+- **Accumulated Pending Checks:** 14
+
+### Phase 14.3 Deferred Checks Checklist:
+- [ ] App launches normally
+- [ ] Persisted data remains intact
+- [ ] No unexpected layout shift from spacing token integration
+- [ ] Existing cards/controls remain visually usable
+- [ ] No clipped content caused by geometry changes
+- [ ] Phone page margins remain usable
+- [ ] Tablet page margins remain usable
+- [ ] Existing icons render
+- [ ] No missing icon glyphs
+- [ ] Icon sizes remain usable
+- [ ] Light theme unaffected
+- [ ] Dark theme unaffected
+- [ ] System theme unaffected
+- [ ] Turkish UI unaffected
 
 ---
 

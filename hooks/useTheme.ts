@@ -2,6 +2,9 @@ import { useColorScheme as useRNColorScheme } from 'react-native';
 import { useAppStore } from '@/store/useAppStore';
 import { DarkColors, LightColors, type ThemeColors } from '@/theme/colors';
 import { Spacing, Radius } from '@/theme/spacing';
+import { Borders } from '@/theme/borders';
+import { Layout } from '@/theme/layout';
+import { Icons } from '@/theme/icons';
 import { Typography } from '@/theme/typography';
 import { Shadows } from '@/theme/shadows';
 
@@ -22,6 +25,9 @@ export function useTheme() {
     colors,
     spacing: Spacing,
     radius: Radius,
+    borders: Borders,
+    layout: Layout,
+    icons: Icons,
     typography: Typography,
     shadows: Shadows,
   };
