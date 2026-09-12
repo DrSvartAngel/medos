@@ -33,19 +33,20 @@ import { useTranslation } from '@/i18n';
 
 export default function FocusScreen() {
   const params = useLocalSearchParams<{ returnTo?: string; topicId?: string }>();
-  const returnTo = params.returnTo;
+  // Canonical Phase 14: Focus is an immersive child flow of Practice; exiting always resolves to Practice.
+  const returnTo = '/(tabs)/practice';
   
   const { colors, spacing } = useTheme();
   const { isTablet, isLargeTablet } = useResponsive();
   const t = useTranslation();
+  const returnLabel = t.tabs.practice || 'Practice';
   const [gentleReturnOpen, setGentleReturnOpen] = useState(false);
   const [showVictory, setShowVictory] = useState(false);
   useFocusEffect(useCallback(() => () => setShowVictory(false), []));
   useFocusEffect(
     useCallback(() => {
-      if (!returnTo) return;
       const sub = BackHandler.addEventListener('hardwareBackPress', () => {
-        router.dismissTo(returnTo as Href);
+        router.replace(returnTo as Href);
         return true;
       });
       return () => sub.remove();
@@ -87,7 +88,11 @@ export default function FocusScreen() {
   const clearGentleBreak = useFocusStore((state) => state.clearGentleBreak);
   const resumeTimer = useFocusStore((state) => state.resumeTimer);
   const finishSession = useFocusStore((state) => state.finishSession);
-  const cancelSession = useFocusStore((state) => state.cancelSession);
+  const storeCancelSession = useFocusStore((state) => state.cancelSession);
+  const cancelSession = useCallback(() => {
+    storeCancelSession();
+    router.replace(returnTo as Href);
+  }, [storeCancelSession, returnTo]);
   const resetTimer = useFocusStore((state) => state.resetTimer);
   const keepGoingFromEntry = useFocusStore((state) => state.keepGoingFromEntry);
   const continueEntryToDefault = useFocusStore(
@@ -231,7 +236,7 @@ export default function FocusScreen() {
   if (isActive) {
     return (
       <ScreenWrapper contentStyle={styles.activeScreen}>
-        <TabTopHeader returnTo={returnTo} returnLabel={t.common.back || 'Back to Topic'} />
+        <TabTopHeader returnTo={returnTo} returnLabel={returnLabel} />
         <View
           style={[
             styles.activeShell,
@@ -337,7 +342,7 @@ export default function FocusScreen() {
 
   return (
     <ScreenWrapper>
-      <TabTopHeader returnTo={returnTo} returnLabel={t.common.back || 'Back to Topic'} />
+      <TabTopHeader returnTo={returnTo} returnLabel={returnLabel} />
       <View style={styles.header}>
         <AppText variant={isTablet ? 'h1' : 'h2'}>{t.focus.title}</AppText>
         <AppText variant="body" color={colors.textSecondary} style={{ marginTop: spacing.xs }}>

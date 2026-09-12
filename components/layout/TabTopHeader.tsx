@@ -27,7 +27,7 @@ export function TabTopHeader({ showHome = true, returnTo, returnLabel = 'Back' }
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={returnLabel}
-          onPress={() => router.dismissTo(returnTo as Href)}
+          onPress={() => router.replace(returnTo as Href)}
           style={({ pressed }) => [
             {
               flexDirection: 'row',

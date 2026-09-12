@@ -298,6 +298,12 @@ const en = {
   },
   // ── Tab labels ──────────────────────────────────────────────────────────────
   tabs: {
+    // Phase 14.6F canonical destinations
+    today: 'Today',
+    atlas: 'Atlas',
+    practice: 'Practice',
+    plan: 'Plan',
+    // Legacy / backward-compatible aliases
     home: 'Home',
     dashboard: 'Home',
     curriculum: 'Committees',
@@ -339,8 +345,38 @@ const en = {
     prefsRetryAccessibility: 'Retry loading local preferences',
   },
 
+  // ── Practice workspace ──────────────────────────────────────────────────────
+  practice: {
+    title: 'Practice',
+    subtitle: 'Review · Practice · Focus',
+    continueSession: 'Continue Session',
+    startSession: 'Start Session',
+    modesTitle: 'Practice Modes',
+    questionsTitle: 'Questions',
+    questionsDesc: 'Q-Bank practice and timed drills',
+    flashcardsTitle: 'Flashcards',
+    flashcardsDesc: 'Spaced repetition recall',
+    topicReviewTitle: 'Topic Review',
+    topicReviewDesc: 'Curriculum topics by committee',
+    focusSessionTitle: 'Focus Session',
+    focusSessionDesc: 'Quiet immersive deep work timer',
+    needsAttentionTitle: 'Needs Attention',
+    noAttentionNeeded: 'All topics are currently in good standing',
+    last7Days: 'Last 7 Days',
+    questionsAnswered: 'Questions Answered',
+    questionsAnsweredCount: (n: number) => `${n} questions answered`,
+    accuracy: (pct: number) => `${pct}% accuracy`,
+    recentSessions: 'Recent Sessions',
+    noRecentSessions: 'No recent practice sessions',
+    cardsDue: (n: number) => `${n} due`,
+    startPractice: 'Start Practice',
+    viewAllModes: 'View all modes',
+  },
+
   // ── Dashboard ────────────────────────────────────────────────────────────────
   topics: {
+    continueLearning: 'Continue Learning',
+    startPractice: 'Start Practice',
     studyRecorded: 'Study activity recorded',
     studyUnrecorded: 'No study activity recorded yet',
     studyEvidenceHelp: 'This reflects saved Focus activity only, not learning or completion.',

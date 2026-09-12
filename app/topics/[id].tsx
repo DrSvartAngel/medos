@@ -85,7 +85,7 @@ export default function TopicDetailScreen() {
 
   function startFocus() {
     setStartError(false);
-    const returnUrl = `/(tabs)/focus?returnTo=${encodeURIComponent(`/topics/${id}`)}` as Href;
+    const returnUrl = '/(tabs)/focus?returnTo=%2F%28tabs%29%2Fpractice' as Href;
     if (useFocusStore.getState().timerStatus !== 'idle') {
       router.push(returnUrl);
       return;
@@ -184,15 +184,15 @@ export default function TopicDetailScreen() {
   useFocusEffect(
     useCallback(() => {
       const listener = BackHandler.addEventListener('hardwareBackPress', () => {
-        router.dismissTo(target());
+        router.dismissTo('/(tabs)/committees' as Href);
         return true;
       });
       return () => listener.remove();
-    }, [id])
+    }, [])
   );
 
   return (
-    <ScreenWrapper includeBottomSafeArea>
+    <ScreenWrapper includeBottomSafeArea contentStyle={{ paddingBottom: 48 }}>
       {data.status === 'loading' && (
         <FeedbackState kind="loading" message={t.common.loading} />
       )}
@@ -209,11 +209,27 @@ export default function TopicDetailScreen() {
 
       {data.status === 'ready' && (
         <View style={{ gap: spacing.lg }}>
+          {/* ── 0. Back to Atlas ──────────────────────────── */}
+          <View style={styles.backRow}>
+            <TouchableOpacity
+              accessibilityRole="button"
+              accessibilityLabel={t.tabs.atlas}
+              onPress={() => router.dismissTo('/(tabs)/committees' as Href)}
+              style={styles.backButton}
+              hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+              <Feather name="arrow-left" size={18} color={colors.primary} />
+              <AppText variant="label" style={{ color: colors.primary, fontWeight: '600', marginLeft: 6 }}>
+                {t.tabs.atlas}
+              </AppText>
+            </TouchableOpacity>
+          </View>
+
           {/* ── 1. Breadcrumb Hierarchy Navigation ──────────── */}
           <Breadcrumb
             items={[
               {
-                label: t.committees.title,
+                label: t.tabs.atlas,
                 onPress: () => router.dismissTo('/(tabs)/committees' as Href),
               },
               {
@@ -333,12 +349,20 @@ export default function TopicDetailScreen() {
                 <Button
                   label={
                     timerStatus === 'idle'
-                      ? t.topics.startFocus
+                      ? t.topics.continueLearning
                       : t.topics.continueFocus
                   }
                   onPress={startFocus}
                   size="lg"
                   icon={<Feather name="play" size={18} color={colors.textInverse} />}
+                  style={{ marginTop: spacing.xs }}
+                />
+                <Button
+                  label={t.topics.startPractice}
+                  variant="secondary"
+                  size="lg"
+                  icon={<Feather name="layers" size={18} color={colors.primary} />}
+                  onPress={() => router.push('/(tabs)/practice' as Href)}
                   style={{ marginTop: spacing.xs }}
                 />
                 {startError && (
@@ -513,6 +537,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  backRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: -4,
+  },
+  backButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    minHeight: 44,
+    minWidth: 44,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
   },
 });
 

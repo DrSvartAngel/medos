@@ -300,6 +300,12 @@ const tr: Strings = {
   },
   // ── Sekme etiketleri ─────────────────────────────────────────────────────────
   tabs: {
+    // Phase 14.6F kanonik hedefler
+    today: 'Bugün',
+    atlas: 'Atlas',
+    practice: 'Pratik',
+    plan: 'Plan',
+    // Geräye dönük / uyumluluk takma adları
     home: 'Ana Sayfa',
     dashboard: 'Ana Sayfa',
     curriculum: 'Komiteler',
@@ -341,8 +347,38 @@ const tr: Strings = {
     prefsRetryAccessibility: 'Yerel tercihleri yeniden yüklemeyi dene',
   },
 
+  // ── Pratik Çalışma Alanı ───────────────────────────────────────────────────
+  practice: {
+    title: 'Pratik',
+    subtitle: 'Tekrar · Soru · Odak',
+    continueSession: 'Oturuma Devam Et',
+    startSession: 'Oturum Başlat',
+    modesTitle: 'Pratik Modları',
+    questionsTitle: 'Sorular',
+    questionsDesc: 'Soru bankası ve zamanlı alıştırma',
+    flashcardsTitle: 'Flaş Kartlar',
+    flashcardsDesc: 'Aralıklı tekrar hafıza kartları',
+    topicReviewTitle: 'Konu Tekrarı',
+    topicReviewDesc: 'Komiteye göre müfredat konuları',
+    focusSessionTitle: 'Odak Oturumu',
+    focusSessionDesc: 'Sessiz derin çalışma zamanlayıcısı',
+    needsAttentionTitle: 'Dikkat Gerektirenler',
+    noAttentionNeeded: 'Tüm konular şu anda iyi durumda',
+    last7Days: 'Son 7 Gün',
+    questionsAnswered: 'Cevaplanan Sorular',
+    questionsAnsweredCount: (n: number) => `${n} soru cevaplandı`,
+    accuracy: (pct: number) => `%${pct} doğruluk`,
+    recentSessions: 'Son Oturumlar',
+    noRecentSessions: 'Henüz son oturum yok',
+    cardsDue: (n: number) => `${n} tekrar`,
+    startPractice: 'Pratiğe Başla',
+    viewAllModes: 'Tüm modları gör',
+  },
+
   // ── Genel Bakış ──────────────────────────────────────────────────────────────
   topics: {
+    continueLearning: 'Öğrenmeye Devam Et',
+    startPractice: 'Pratiğe Başla',
     studyRecorded: 'Çalışma kaydı var',
     studyUnrecorded: 'Henüz çalışma kaydı yok',
     studyEvidenceHelp: 'Yalnızca kaydedilmiş odaklanma etkinliğini gösterir; öğrenme veya tamamlanma durumunu göstermez.',
