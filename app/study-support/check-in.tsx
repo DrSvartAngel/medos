@@ -115,9 +115,11 @@ export default function StudyCheckInScreen() {
   }, [clearCommitteeContext, committeeHint, setCommitteeContext, setContextError]);
 
   const handleClose = useCallback(() => {
-    resetCheckIn();
+    if (step !== 'recommendation') {
+      resetCheckIn();
+    }
     router.replace('/(tabs)' as Href);
-  }, [resetCheckIn]);
+  }, [resetCheckIn, step]);
 
   const handleOpenFocusSetup = useCallback(() => {
     resetCheckIn();

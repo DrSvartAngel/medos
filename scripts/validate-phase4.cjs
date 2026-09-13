@@ -282,12 +282,15 @@ async function main() {
       assert.throws(() => r.topics.update({ ...saved, learningObjectives: value }), /learning_objectives/);
       assert.throws(() => r.topics.insert({ ...topic('bad'), learningObjectives: value }), /learning_objectives/);
     }
-    assert.equal(r.topics.update({ ...saved, subjectId: 's2', learningObjectives: text }), false);
+    assert.equal(r.topics.update({ ...saved, subjectId: 's2', learningObjectives: text }), true);
+    const reparented = r.topics.getById('t');
+    assert.equal(reparented.subjectId, 's2');
+    assert.throws(() => r.topics.update({ ...saved, subjectId: 'missing' }), /subject_not_found/);
     assert.equal(r.topics.update({ ...saved, id: 'missing' }), false);
     db.fail = sql => sql.startsWith('UPDATE topics');
-    assert.throws(() => r.topics.update({ ...saved, learningObjectives: '' }), /injected/);
-    db.fail = () => false; assert.deepEqual(r.topics.getById('t'), saved);
-    assert.equal(r.topics.update({ ...saved, learningObjectives: ' \n ' }), true);
+    assert.throws(() => r.topics.update({ ...reparented, learningObjectives: '' }), /injected/);
+    db.fail = () => false; assert.deepEqual(r.topics.getById('t'), reparented);
+    assert.equal(r.topics.update({ ...reparented, learningObjectives: ' \n ' }), true);
     assert.equal(repositories(db).topics.getById('t').learningObjectives, '');
   }));
   await check('Objectives UI is optional Topic-only descriptive text with localized Foundation wiring', () => {
@@ -459,7 +462,9 @@ async function main() {
     assert.equal(r.subjects.getById('s').createdAt, 1);
     assert.equal(r.subjects.getById('s').name, 'Yeni');
     assert.equal(r.subjects.update(subject('s','other')), false);
-    assert.equal(r.topics.update(topic('t','s2')), false);
+    assert.equal(r.topics.update(topic('t','s2')), true);
+    assert.equal(r.topics.getById('t').subjectId, 's2');
+    assert.throws(() => r.topics.update(topic('t','missing')), /subject_not_found/);
     assert.equal(r.topics.update({ ...topic(), name: 'Yeni konu', updatedAt: 3 }), true);
     assert.equal(r.topics.getById('t').updatedAt, 3);
     assert.equal(r.topics.delete('t'), true); assert.equal(r.subjects.getById('s').id, 's');

@@ -4,6 +4,7 @@ import { router, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
 import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
 import { CommitteeOverviewCard } from '@/components/dashboard/CommitteeOverviewCard';
+import { DailyStateCard } from '@/components/dashboard/DailyStateCard';
 import { QuickStartCard } from '@/components/dashboard/QuickStartCard';
 import { TodayAgenda } from '@/components/dashboard/TodayAgenda';
 import { TodayMetrics } from '@/components/dashboard/TodayMetrics';
@@ -156,6 +157,14 @@ export default function DashboardScreen() {
     />
   );
 
+  const dailyState = (
+    <DailyStateCard
+      committeeId={snapshot.committee?.id ?? null}
+      onStartSmall={timerStatus === 'idle' ? handleStartSmall : undefined}
+      onCheckIn={timerStatus === 'idle' ? handleCheckIn : undefined}
+    />
+  );
+
   const quickStart = (
     <QuickStartCard
       recommendation={recommendation}
@@ -242,39 +251,51 @@ export default function DashboardScreen() {
       {/* Global Top Header Navigation: Dashboard (left) & Profile (right) */}
       <TabTopHeader />
 
-      {/* Under Header Row: Greeting, Committee/countdown, Date */}
+      {/* Under Header Row: Greeting, Committee/countdown, Date, Quick Add Topic */}
       <VStack space="xs" style={styles.header}>
-        <Heading
-          size={isTablet ? '2xl' : 'xl'}
-          style={[styles.greetingHeading, { color: colors.textPrimary }]}
-        >
-          {t.dashboard.greeting(getDashboardGreeting())}
-        </Heading>
+        <HStack style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <VStack space="xs" style={{ flex: 1, paddingRight: spacing.sm }}>
+            <Heading
+              size={isTablet ? '2xl' : 'xl'}
+              style={[styles.greetingHeading, { color: colors.textPrimary }]}
+            >
+              {t.dashboard.greeting(getDashboardGreeting())}
+            </Heading>
 
-        {snapshot.committee ? (
-          <GSText size="xs" style={{ color: colors.primary, fontWeight: '600' }}>
-            {snapshot.committee.name} · {t.dashboard.examTiming(snapshot.committee.daysToExam, snapshot.committee.status === 'recently_completed')}
-          </GSText>
-        ) : (
-          <GSText size="xs" style={{ color: colors.textSecondary }}>
-            {headerStatus}
-          </GSText>
-        )}
+            {snapshot.committee ? (
+              <GSText size="xs" style={{ color: colors.primary, fontWeight: '600' }}>
+                {snapshot.committee.name} · {t.dashboard.examTiming(snapshot.committee.daysToExam, snapshot.committee.status === 'recently_completed')}
+              </GSText>
+            ) : (
+              <GSText size="xs" style={{ color: colors.textSecondary }}>
+                {headerStatus}
+              </GSText>
+            )}
 
-        <GSText
-          size="xs"
-          style={[
-            styles.dateLabel,
-            {
-              color: colors.textMuted,
-            },
-          ]}
-        >
-          {new Date(getLocalDayRange(snapshot.date).startMs).toLocaleDateString(
-            t.dashboard.locale,
-            { weekday: 'long', month: 'short', day: 'numeric' }
-          )}
-        </GSText>
+            <GSText
+              size="xs"
+              style={[
+                styles.dateLabel,
+                {
+                  color: colors.textMuted,
+                },
+              ]}
+            >
+              {new Date(getLocalDayRange(snapshot.date).startMs).toLocaleDateString(
+                t.dashboard.locale,
+                { weekday: 'long', month: 'short', day: 'numeric' }
+              )}
+            </GSText>
+          </VStack>
+
+          <Button
+            label={t.dashboard.addTopic}
+            variant="secondary"
+            size="sm"
+            onPress={() => router.push('/topics/new' as Href)}
+            accessibilityLabel={t.dashboard.addTopic}
+          />
+        </HStack>
       </VStack>
 
       {partialErrorCount > 0 && (
@@ -311,6 +332,7 @@ export default function DashboardScreen() {
         <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.lg }]}>
           <View style={[styles.column, { gap: spacing.lg }]}>
             {committee}
+            {dailyState}
             {quickStart}
             {metrics}
           </View>
@@ -322,6 +344,7 @@ export default function DashboardScreen() {
       ) : (
         <View style={[styles.stacked, { gap: spacing.lg, marginTop: spacing.lg }]}>
           {committee}
+          {dailyState}
           {quickStart}
           {metrics}
           {agenda}

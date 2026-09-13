@@ -405,6 +405,16 @@ const en = {
       name_required: 'Enter a Topic name.', name_too_long: 'Use at most 120 characters for the name.',
       description_invalid: 'Enter a text description.', description_too_long: 'Use at most 2000 characters for the description.',
     },
+    selectSubject: 'Select Subject',
+    searchSubjects: 'Search subjects...',
+    subjectRequired: 'Please select a Subject.',
+    topicCreated: 'Topic Created',
+    topicCreatedDetail: 'You can import study materials now or proceed directly to the topic.',
+    importMaterials: 'Import Materials',
+    goToTopic: 'Go to Topic',
+    noSubjectsFound: 'No subjects found',
+    changeSubject: 'Change Subject',
+    selectSubjectPrompt: 'Select a Subject to assign this Topic.',
   },
 
   subjects: {
@@ -431,6 +441,7 @@ const en = {
     },
   },
   dashboard: {
+    addTopic: 'Add Topic',
     nextBestStep: 'Next Best Step',
     startSmall: 'Start small (2 min)',
     weeklyFocus: 'Weekly Focus',

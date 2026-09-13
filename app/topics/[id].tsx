@@ -234,11 +234,11 @@ export default function TopicDetailScreen() {
               },
               {
                 label: data.committee.name,
-                onPress: () => router.dismissTo(target(true)),
+                onPress: () => router.push(target(true)),
               },
               {
                 label: data.subject.name,
-                onPress: () => router.dismissTo(target(false)),
+                onPress: () => router.push(target(false)),
               },
               {
                 label: data.topic.name,

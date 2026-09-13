@@ -72,12 +72,12 @@ export const topicRepo = {
     );
   },
 
-  /** Parent and creation time are immutable; a mismatched/missing row returns false. */
+  /** Creation time is immutable; subjectId can change if destination subject exists. */
   update(record: Topic): boolean {
     const value = validate(record);
     return getDB().runSync(
-      'UPDATE topics SET name = ?, description = ?, learning_objectives = ?, updated_at = ? WHERE id = ? AND subject_id = ?',
-      [value.name, value.description, value.learningObjectives, record.updatedAt, record.id, record.subjectId]
+      'UPDATE topics SET subject_id = ?, name = ?, description = ?, learning_objectives = ?, updated_at = ? WHERE id = ?',
+      [record.subjectId, value.name, value.description, value.learningObjectives, record.updatedAt, record.id]
     ).changes > 0;
   },
 

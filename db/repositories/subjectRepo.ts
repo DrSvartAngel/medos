@@ -62,4 +62,64 @@ export const subjectRepo = {
   delete(id: string): boolean {
     return getDB().runSync('DELETE FROM subjects WHERE id = ?', [id]).changes > 0;
   },
+
+  /**
+   * Bounded query for Subject selector to display Subjects with their parent Committee.
+   * Enables direct Subject selection with disambiguating Committee context without loading whole curriculum.
+   */
+  listWithCommittees(options?: { query?: string; committeeId?: string; limit?: number }): SubjectWithCommittee[] {
+    const limit = Math.min(Math.max(1, options?.limit ?? 50), 100);
+    const query = options?.query?.trim();
+    if (query) {
+      const pattern = `%${query}%`;
+      if (options?.committeeId) {
+        return getDB().getAllSync<{ id: string; name: string; committee_id: string; committee_name: string }>(
+          `SELECT s.id, s.name, s.committee_id, c.name AS committee_name
+           FROM subjects s
+           JOIN committees c ON c.id = s.committee_id
+           WHERE s.committee_id = ? AND (s.name LIKE ? OR c.name LIKE ?)
+           ORDER BY c.name ASC, s.name ASC
+           LIMIT ?`,
+          [options.committeeId, pattern, pattern, limit]
+        ).map((r) => ({ id: r.id, name: r.name, committeeId: r.committee_id, committeeName: r.committee_name }));
+      }
+      return getDB().getAllSync<{ id: string; name: string; committee_id: string; committee_name: string }>(
+        `SELECT s.id, s.name, s.committee_id, c.name AS committee_name
+         FROM subjects s
+         JOIN committees c ON c.id = s.committee_id
+         WHERE s.name LIKE ? OR c.name LIKE ?
+         ORDER BY c.name ASC, s.name ASC
+         LIMIT ?`,
+        [pattern, pattern, limit]
+      ).map((r) => ({ id: r.id, name: r.name, committeeId: r.committee_id, committeeName: r.committee_name }));
+    }
+
+    if (options?.committeeId) {
+      return getDB().getAllSync<{ id: string; name: string; committee_id: string; committee_name: string }>(
+        `SELECT s.id, s.name, s.committee_id, c.name AS committee_name
+         FROM subjects s
+         JOIN committees c ON c.id = s.committee_id
+         WHERE s.committee_id = ?
+         ORDER BY s.created_at ASC, s.id ASC
+         LIMIT ?`,
+        [options.committeeId, limit]
+      ).map((r) => ({ id: r.id, name: r.name, committeeId: r.committee_id, committeeName: r.committee_name }));
+    }
+
+    return getDB().getAllSync<{ id: string; name: string; committee_id: string; committee_name: string }>(
+      `SELECT s.id, s.name, s.committee_id, c.name AS committee_name
+       FROM subjects s
+       JOIN committees c ON c.id = s.committee_id
+       ORDER BY c.name ASC, s.name ASC
+       LIMIT ?`,
+      [limit]
+    ).map((r) => ({ id: r.id, name: r.name, committeeId: r.committee_id, committeeName: r.committee_name }));
+  },
 };
+
+export interface SubjectWithCommittee {
+  id: string;
+  name: string;
+  committeeId: string;
+  committeeName: string;
+}

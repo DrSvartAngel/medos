@@ -407,6 +407,16 @@ const tr: Strings = {
       name_required: 'Konu adını gir.', name_too_long: 'Konu adı en fazla 120 karakter olabilir.',
       description_invalid: 'Açıklamayı metin olarak gir.', description_too_long: 'Açıklama en fazla 2000 karakter olabilir.',
     },
+    selectSubject: 'Ders Seçin',
+    searchSubjects: 'Derslerde ara...',
+    subjectRequired: 'Lütfen bir Ders seçin.',
+    topicCreated: 'Konu Oluşturuldu',
+    topicCreatedDetail: 'Şimdi çalışma materyalleri aktarabilir veya doğrudan konuya geçebilirsiniz.',
+    importMaterials: 'Materyal Aktar',
+    goToTopic: 'Konuya Git',
+    noSubjectsFound: 'Ders bulunamadı',
+    changeSubject: 'Dersi Değiştir',
+    selectSubjectPrompt: 'Bu konuyu atamak için bir Ders seçin.',
   },
 
   subjects: {
@@ -433,6 +443,7 @@ const tr: Strings = {
     },
   },
   dashboard: {
+    addTopic: 'Konu Ekle',
     nextBestStep: 'Sıradaki En İyi Adım',
     startSmall: 'Küçük başla (2 dk)',
     weeklyFocus: 'Haftalık Odak',
