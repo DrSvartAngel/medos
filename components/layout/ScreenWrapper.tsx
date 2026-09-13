@@ -1,6 +1,6 @@
 import React from 'react';
 import { type StyleProp, type ViewStyle } from 'react-native';
-import { PageContainer, type PageContainerProps } from './PageContainer';
+import { PageContainer, type PageContainerProps, type PageMaxWidthRole } from './PageContainer';
 
 export interface ScreenWrapperProps {
   children: React.ReactNode;
@@ -11,6 +11,8 @@ export interface ScreenWrapperProps {
   centered?: boolean;
   /** Standalone stack routes can opt into the bottom system inset. */
   includeBottomSafeArea?: boolean;
+  /** Maximum readable content width constraint (default: 'workspace'/'wide' on tablet, 'full' on phone) */
+  maxWidth?: PageMaxWidthRole;
   className?: string;
 }
 
@@ -25,6 +27,7 @@ export function ScreenWrapper({
   contentStyle,
   centered = true,
   includeBottomSafeArea = false,
+  maxWidth,
   className,
 }: ScreenWrapperProps) {
   return (
@@ -34,6 +37,7 @@ export function ScreenWrapper({
       contentStyle={contentStyle}
       centered={centered}
       includeBottomSafeArea={includeBottomSafeArea}
+      maxWidth={maxWidth}
       className={className}
     >
       {children}

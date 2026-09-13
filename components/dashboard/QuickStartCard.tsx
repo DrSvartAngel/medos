@@ -155,8 +155,9 @@ export function QuickStartCard({
                 styles.secondaryActions,
                 {
                   flexDirection: isTablet ? 'row' : 'column',
+                  flexWrap: 'wrap',
                   alignItems: isTablet ? 'center' : 'stretch',
-                  gap: spacing.sm,
+                  gap: spacing.xs,
                 },
               ]}
             >
@@ -169,6 +170,7 @@ export function QuickStartCard({
                   variant="secondary"
                   style={{
                     alignSelf: isTablet ? 'flex-start' : 'stretch',
+                    maxWidth: '100%',
                   }}
                 />
               ) : null}
@@ -182,6 +184,7 @@ export function QuickStartCard({
                   variant="ghost"
                   style={{
                     alignSelf: isTablet ? 'flex-start' : 'stretch',
+                    maxWidth: '100%',
                   }}
                 />
               ) : null}

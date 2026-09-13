@@ -58,8 +58,8 @@ export function useResponsive(): Responsive {
 
   // Max content width prevents full-bleed stretching on large screens
   const contentMaxWidth =
-    isLargeTablet ? ContentWidths.wide :
-    isTablet      ? ContentWidths.content :
+    isLargeTablet ? ContentWidths.workspace :
+    isTablet      ? (isLandscape ? ContentWidths.workspace : ContentWidths.wide) :
                     Number.MAX_SAFE_INTEGER; // no cap on phone
 
   const spacingScale =

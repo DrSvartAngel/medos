@@ -30,7 +30,7 @@ import { useTranslation } from '@/i18n';
 
 export default function DashboardScreen() {
   const { colors, spacing, radius, borders } = useTheme();
-  const { isTablet, isLargeTablet, isLandscape } = useResponsive();
+  const { isTablet, isLargeTablet, isLandscape, width } = useResponsive();
   const t = useTranslation();
   const isDBReady = useAppStore((state) => state.isDBReady);
   const snapshot = useDashboardStore((state) => state.snapshot);
@@ -283,8 +283,15 @@ export default function DashboardScreen() {
     </Pressable>
   );
 
+  const isTwoPane =
+    isLargeTablet ||
+    (isTablet && isLandscape) ||
+    (isTablet && width >= 680);
+
+  const twoPaneGap = isLandscape || isLargeTablet ? spacing.xl : spacing.md;
+
   return (
-    <ScreenWrapper>
+    <ScreenWrapper maxWidth={isTablet ? (isLandscape || isLargeTablet ? 'workspace' : 'wide') : undefined}>
       {/* Editorial ScreenHeader with Greeting, Date, Committee Timing, and Add Topic */}
       <ScreenHeader
         title={t.dashboard.greeting(getDashboardGreeting())}
@@ -339,40 +346,40 @@ export default function DashboardScreen() {
       )}
 
       {/* Responsive Editorial Composition: Tablet 2-Pane (Figma 23:110) vs Phone Single Column (Figma 23:7) */}
-      {isLargeTablet ? (
-        <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.md }]}>
+      {isTwoPane ? (
+        <View style={[styles.twoPane, { gap: twoPaneGap, marginTop: spacing.md }]}>
           {/* LEFT / PRIMARY: Screen context, study intention, daily state, committee */}
-          <View style={[styles.primaryColumn, { gap: spacing.md }]}>
+          <View
+            style={[
+              styles.primaryColumn,
+              {
+                flex: isLandscape || isLargeTablet ? 1.15 : 1,
+                gap: spacing.md,
+              },
+            ]}
+          >
             {quickStart}
             {dailyState}
             {committee}
           </View>
 
           {/* RIGHT / EVIDENCE: Agenda, metrics ledger, contextual action */}
-          <View style={[styles.evidenceColumn, { gap: spacing.md }]}>
-            {agenda}
-            {metrics}
-            {aiContextual}
-          </View>
-        </View>
-      ) : isTablet && isLandscape ? (
-        <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.md }]}>
-          {/* LEFT / PRIMARY: Study intention, daily state, committee */}
-          <View style={[styles.primaryColumn, { gap: spacing.md }]}>
-            {quickStart}
-            {dailyState}
-            {committee}
-          </View>
-
-          {/* RIGHT / EVIDENCE: Agenda, metrics ledger, contextual action */}
-          <View style={[styles.evidenceColumn, { gap: spacing.md }]}>
+          <View
+            style={[
+              styles.evidenceColumn,
+              {
+                flex: 1,
+                gap: spacing.md,
+              },
+            ]}
+          >
             {agenda}
             {metrics}
             {aiContextual}
           </View>
         </View>
       ) : (
-        /* PHONE (Figma 23:7): Single continuous editorial flow */
+        /* PHONE / COMPACT (Figma 23:7): Single continuous editorial flow */
         <View style={[styles.stacked, { gap: spacing.md, marginTop: spacing.md }]}>
           {quickStart}
           {dailyState}
@@ -411,12 +418,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   primaryColumn: {
-    flex: 1.2,
-    minWidth: 0,
+    minWidth: 290,
   },
   evidenceColumn: {
-    flex: 1.0,
-    minWidth: 0,
+    minWidth: 280,
   },
   aiStrip: {
     width: '100%',

@@ -52,7 +52,7 @@ function formatExamDate(ts: number, locale: string): string {
 
 export default function CommitteesScreen() {
   const { colors, spacing, radius, borders } = useTheme();
-  const { isTablet, columns } = useResponsive();
+  const { isTablet, isLargeTablet, columns } = useResponsive();
   const t = useTranslation();
 
   const isDBReady = useAppStore((s) => s.isDBReady);
@@ -300,7 +300,7 @@ export default function CommitteesScreen() {
   }
 
   return (
-    <ScreenWrapper scrollable={!isTablet}>
+    <ScreenWrapper scrollable={!isTablet} maxWidth="workspace">
       {/* ── Screen Header ─────────────────────────────────────────── */}
       <ScreenHeader
         title={t.atlas?.title ?? 'Atlas'}
@@ -325,6 +325,7 @@ export default function CommitteesScreen() {
             style={[
               styles.tabletMaster,
               {
+                width: isLargeTablet ? 360 : 320,
                 backgroundColor: colors.surface,
                 borderColor: colors.borderSubtle,
                 borderWidth: borders.standard,
@@ -1058,8 +1059,9 @@ const styles = StyleSheet.create({
     minHeight: 560,
   },
   tabletMaster: {
-    flex: 0.36,
-    maxWidth: 360,
+    minWidth: 280,
+    maxWidth: 400,
+    flexShrink: 0,
   },
   masterCommitteeBox: {},
   masterCommitteeHeader: {
@@ -1070,6 +1072,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: 4,
   },
   masterSectionHeader: {
     alignItems: 'center',
@@ -1083,6 +1087,7 @@ const styles = StyleSheet.create({
   },
   tabletDetail: {
     flex: 1,
+    minWidth: 0,
   },
   detailHeaderRow: {
     alignItems: 'flex-start',

@@ -11,7 +11,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { useResponsive } from '@/hooks/useResponsive';
 import { ContentWidths, type ContentWidthRole } from '@/theme/layout';
 
-export type PageMaxWidthRole = 'content' | 'wide' | 'full' | 'none' | number;
+export type PageMaxWidthRole = 'content' | 'wide' | 'workspace' | 'full' | 'none' | number;
 
 export interface PageContainerProps {
   children: React.ReactNode;
@@ -19,7 +19,7 @@ export interface PageContainerProps {
   scrollable?: boolean;
   /** Explicit horizontal edge gutter override; defaults to canonical responsive gutter (16/24/32) */
   gutter?: number;
-  /** Maximum readable content width constraint (default: 'content' on tablet, 'full' on phone) */
+  /** Maximum readable content width constraint (default: 'workspace' on large/landscape tablet, 'wide' on portrait tablet, 'full' on phone) */
   maxWidth?: PageMaxWidthRole;
   /** Whether to center the content container within available width (default: true) */
   centered?: boolean;
@@ -40,7 +40,7 @@ export interface PageContainerProps {
  * PageContainer primitive
  * Canonical screen/page layout foundation enforcing Neutral Zen geometry:
  * - Responsive edge gutters: 16dp (phone), 24dp (tablet), 32dp (large tablet)
- * - Controlled readable content widths (720dp content / 900dp wide)
+ * - Controlled readable content widths (720dp content / 900dp wide / 1200dp workspace)
  * - Coordinated safe-area insets without nested duplication
  */
 export function PageContainer({
@@ -57,7 +57,7 @@ export function PageContainer({
   className,
 }: PageContainerProps) {
   const { colors } = useTheme();
-  const { gutter: responsiveGutter, isTablet } = useResponsive();
+  const { gutter: responsiveGutter, isTablet, isLargeTablet, isLandscape } = useResponsive();
 
   const resolvedGutter = customGutter ?? responsiveGutter;
 
@@ -69,11 +69,17 @@ export function PageContainer({
     resolvedMaxWidth = ContentWidths.content;
   } else if (maxWidth === 'wide') {
     resolvedMaxWidth = ContentWidths.wide;
+  } else if (maxWidth === 'workspace') {
+    resolvedMaxWidth = ContentWidths.workspace;
   } else if (maxWidth === 'full' || maxWidth === 'none') {
     resolvedMaxWidth = undefined;
   } else {
     // Default: constrained on tablet, full width on phone
-    resolvedMaxWidth = isTablet ? ContentWidths.content : undefined;
+    resolvedMaxWidth = isLargeTablet
+      ? ContentWidths.workspace
+      : isTablet
+        ? (isLandscape ? ContentWidths.workspace : ContentWidths.wide)
+        : undefined;
   }
 
   const resolvedEdges: Edge[] =

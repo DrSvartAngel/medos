@@ -26,6 +26,7 @@ export const ContentWidths = {
   tablet: 720,       // Backwards-compatible key
   wide: 900,         // Wide dashboard / multi-column workspace
   largeTablet: 900,  // Backwards-compatible key
+  workspace: 1200,   // Wide tablet multi-pane editorial workspace
 } as const;
 
 export type ContentWidthRole = keyof typeof ContentWidths;

@@ -218,26 +218,20 @@ export function DailyStateCard({
         },
       ]}
     >
-      <View
-        style={[
-          styles.promptRow,
-          {
-            flexDirection: isTablet ? 'row' : 'column',
-            alignItems: isTablet ? 'center' : 'stretch',
-            gap: spacing.sm,
-          },
-        ]}
-      >
-        <View style={styles.promptContent}>
-          <View style={[styles.inlineLabelRow, { gap: spacing.xs, marginBottom: 2 }]}>
-            <Feather name="compass" size={13} color={colors.textMuted} />
-            <AppText
-              variant="labelS"
-              style={[styles.contextLabel, { color: colors.textMuted }]}
-            >
-              {t.checkIn.title.toUpperCase()}
-            </AppText>
-          </View>
+      <View style={{ gap: spacing.xs, width: '100%' }}>
+        {/* Subtle State Summary Header */}
+        <View style={[styles.inlineLabelRow, { gap: spacing.xs }]}>
+          <Feather name="compass" size={13} color={colors.textMuted} />
+          <AppText
+            variant="labelS"
+            style={[styles.contextLabel, { color: colors.textMuted }]}
+          >
+            {t.checkIn.title.toUpperCase()}
+          </AppText>
+        </View>
+
+        {/* Prompt Question and Hint */}
+        <View style={{ gap: 2, minWidth: 0 }}>
           <AppText
             variant="bodyM"
             style={{ color: colors.textPrimary, fontWeight: '600' }}
@@ -252,13 +246,16 @@ export function DailyStateCard({
           </AppText>
         </View>
 
+        {/* Restrained Actions (never steal horizontal space from text) */}
         <View
           style={[
             styles.promptActions,
             {
               flexDirection: 'row',
               alignItems: 'center',
+              flexWrap: 'wrap',
               gap: spacing.xs,
+              marginTop: 4,
             },
           ]}
         >
@@ -268,9 +265,6 @@ export function DailyStateCard({
             onPress={handleOpenCheckIn}
             size="sm"
             variant="secondary"
-            style={{
-              flex: isTablet ? undefined : 1,
-            }}
           />
           {timerStatus === 'idle' && (
             <Button
@@ -289,9 +283,6 @@ export function DailyStateCard({
               }}
               size="sm"
               variant="ghost"
-              style={{
-                flex: isTablet ? undefined : 1,
-              }}
             />
           )}
         </View>
@@ -302,6 +293,7 @@ export function DailyStateCard({
 
 const styles = StyleSheet.create({
   container: {
+    minWidth: 0,
     width: '100%',
   },
   headerRow: {
@@ -320,14 +312,8 @@ const styles = StyleSheet.create({
   actionRow: {
     marginTop: 2,
   },
-  promptRow: {
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  promptContent: {
-    flex: 1,
-  },
   promptActions: {
+    flexDirection: 'row',
     flexWrap: 'wrap',
   },
 });
