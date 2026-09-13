@@ -1,7 +1,10 @@
 import React from 'react';
-import { type TextStyle, type StyleProp, StyleSheet } from 'react-native';
-import { Text as GSText } from './text/index';
-import { Heading } from './heading/index';
+import {
+  Text,
+  type TextStyle,
+  type StyleProp,
+  StyleSheet,
+} from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 
 export type TextVariant =
@@ -106,15 +109,6 @@ export function AppText({
     variant === 'stat' ||
     variant === 'metric';
 
-  const headingSize =
-    variant === 'display' || variant === 'displayXL' || variant === 'stat' || variant === 'metric'
-      ? '3xl'
-      : variant === 'h1' || variant === 'headingL'
-      ? '2xl'
-      : variant === 'h2' || variant === 'headingM'
-      ? 'xl'
-      : 'lg';
-
   const targetStyle = variantStyles[variant];
   const resolvedStyle: StyleProp<TextStyle> = [
     styles.base,
@@ -126,31 +120,17 @@ export function AppText({
     style,
   ];
 
-  if (isHeadingVariant) {
-    return (
-      <Heading
-        size={headingSize}
-        numberOfLines={numberOfLines}
-        accessibilityLabel={accessibilityLabel}
-        style={resolvedStyle as any}
-        className={className}
-      >
-        {children}
-      </Heading>
-    );
-  }
-
   return (
-    <GSText
+    <Text
       numberOfLines={numberOfLines}
       accessibilityLabel={accessibilityLabel}
+      accessibilityRole={isHeadingVariant ? 'header' : undefined}
       adjustsFontSizeToFit={adjustsFontSizeToFit}
       minimumFontScale={minimumFontScale}
       style={resolvedStyle}
-      className={className}
     >
       {children}
-    </GSText>
+    </Text>
   );
 }
 

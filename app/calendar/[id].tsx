@@ -14,6 +14,8 @@ import { useTheme } from '@/hooks/useTheme';
 import { useAppStore } from '@/store/useAppStore';
 import { useCalendarStore } from '@/store/useCalendarStore';
 import { useCommitteeStore } from '@/store/useCommitteeStore';
+import { subjectRepo } from '@/db/repositories/subjectRepo';
+import { topicRepo } from '@/db/repositories/topicRepo';
 import { formatAgendaDate } from '@/utils/calendarDate';
 
 export default function CalendarEventDetailScreen() {
@@ -41,6 +43,8 @@ export default function CalendarEventDetailScreen() {
   const committee = event?.committeeId
     ? committees.find((item) => item.id === event.committeeId)
     : undefined;
+  const subject = event?.subjectId ? subjectRepo.getById(event.subjectId) : undefined;
+  const topic = event?.topicId ? topicRepo.getById(event.topicId) : undefined;
 
   function handleDelete() {
     if (!event) return;
@@ -148,13 +152,29 @@ export default function CalendarEventDetailScreen() {
         </View>
         {event.committeeId !== null && (
           <View style={[styles.detailRow, { marginTop: spacing.sm }]}>
-            <Feather name="book-open" size={17} color={committee ? colors.info : colors.warning} />
+            <Feather name="layers" size={17} color={committee ? colors.info : colors.warning} />
             <AppText
               variant="body"
               color={committee ? colors.textSecondary : colors.warning}
               style={styles.detailText}
             >
               {committee?.name ?? t.sweep.committeeRemoved}
+            </AppText>
+          </View>
+        )}
+        {subject != null && (
+          <View style={[styles.detailRow, { marginTop: spacing.sm }]}>
+            <Feather name="book-open" size={17} color={colors.info} />
+            <AppText variant="body" color={colors.textSecondary} style={styles.detailText}>
+              {subject.name}
+            </AppText>
+          </View>
+        )}
+        {topic != null && (
+          <View style={[styles.detailRow, { marginTop: spacing.sm }]}>
+            <Feather name="file-text" size={17} color={colors.info} />
+            <AppText variant="body" color={colors.textSecondary} style={styles.detailText}>
+              {topic.name}
             </AppText>
           </View>
         )}

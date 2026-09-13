@@ -19,6 +19,8 @@ export interface CalendarEvent {
   startTime: string | null;
   endTime: string | null;
   committeeId: string | null;
+  subjectId?: string | null;
+  topicId?: string | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -30,6 +32,8 @@ export interface CalendarEventInput {
   startTime: string | null;
   endTime: string | null;
   committeeId: string | null;
+  subjectId?: string | null;
+  topicId?: string | null;
 }
 
 export type CalendarItemType =
@@ -204,6 +208,8 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
       startTime: input.startTime,
       endTime: input.endTime,
       committeeId: input.committeeId,
+      subjectId: input.subjectId ?? null,
+      topicId: input.topicId ?? null,
       createdAt: now,
       updatedAt: now,
     };
@@ -245,6 +251,8 @@ export const useCalendarStore = create<CalendarState>()((set, get) => ({
       startTime: input.startTime,
       endTime: input.endTime,
       committeeId: input.committeeId,
+      subjectId: input.subjectId ?? null,
+      topicId: input.topicId ?? null,
       updatedAt: Date.now(),
     };
 

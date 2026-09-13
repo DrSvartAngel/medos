@@ -17,6 +17,8 @@ interface CalendarEventRow {
   end_time: number;
   is_all_day: number;
   committee_id: string | null;
+  subject_id: string | null;
+  topic_id: string | null;
   created_at: number;
   updated_at: number;
 }
@@ -45,6 +47,8 @@ function rowToEvent(row: CalendarEventRow): CalendarEvent {
     endTime:
       isAllDay || row.end_time <= row.start_time ? null : formatLocalTime(row.end_time),
     committeeId: row.committee_id,
+    subjectId: row.subject_id,
+    topicId: row.topic_id,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -71,9 +75,50 @@ function eventTimestamps(event: CalendarEvent): {
   return { startTime, endTime, isAllDay: 0 };
 }
 
+function resolveAcademicContext(event: CalendarEvent): {
+  committeeId: string | null;
+  subjectId: string | null;
+  topicId: string | null;
+} {
+  const db = getDB();
+  let committeeId = event.committeeId ?? null;
+  let subjectId: string | null = null;
+  let topicId: string | null = null;
+
+  if (event.topicId) {
+    const topicRow = db.getFirstSync<{ id: string; subject_id: string; committee_id: string }>(
+      `SELECT t.id, s.id AS subject_id, c.id AS committee_id
+       FROM topics t
+       JOIN subjects s ON s.id = t.subject_id
+       JOIN committees c ON c.id = s.committee_id
+       WHERE t.id = ?`,
+      [event.topicId]
+    );
+    if (topicRow) {
+      topicId = topicRow.id;
+      subjectId = topicRow.subject_id;
+      committeeId = topicRow.committee_id;
+    }
+  } else if (event.subjectId) {
+    const subjectRow = db.getFirstSync<{ id: string; committee_id: string }>(
+      `SELECT s.id, c.id AS committee_id
+       FROM subjects s
+       JOIN committees c ON c.id = s.committee_id
+       WHERE s.id = ?`,
+      [event.subjectId]
+    );
+    if (subjectRow) {
+      subjectId = subjectRow.id;
+      committeeId = subjectRow.committee_id;
+    }
+  }
+
+  return { committeeId, subjectId, topicId };
+}
+
 const EVENT_SELECT = `
   SELECT id, title, description, event_date, start_time, end_time, is_all_day,
-         committee_id, created_at, updated_at
+         committee_id, subject_id, topic_id, created_at, updated_at
   FROM calendar_events`;
 
 export const calendarRepo = {
@@ -81,7 +126,7 @@ export const calendarRepo = {
     const db = getDB();
     const rows = db.getAllSync<CalendarEventWithCommitteeRow>(
       `SELECT e.id, e.title, e.description, e.event_date, e.start_time, e.end_time,
-              e.is_all_day, e.committee_id, e.created_at, e.updated_at,
+              e.is_all_day, e.committee_id, e.subject_id, e.topic_id, e.created_at, e.updated_at,
               c.name AS committee_name
        FROM calendar_events e
        LEFT JOIN committees c ON c.id = e.committee_id
@@ -105,11 +150,12 @@ export const calendarRepo = {
   insert(event: CalendarEvent): void {
     const db = getDB();
     const timestamps = eventTimestamps(event);
+    const context = resolveAcademicContext(event);
     db.runSync(
       `INSERT INTO calendar_events
          (id, title, description, event_date, start_time, end_time, is_all_day,
-          color, committee_id, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          color, committee_id, subject_id, topic_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         event.id,
         event.title,
@@ -119,7 +165,9 @@ export const calendarRepo = {
         timestamps.endTime,
         timestamps.isAllDay,
         '#6C63FF',
-        event.committeeId,
+        context.committeeId,
+        context.subjectId,
+        context.topicId,
         event.createdAt,
         event.updatedAt,
       ]
@@ -129,10 +177,11 @@ export const calendarRepo = {
   update(event: CalendarEvent): void {
     const db = getDB();
     const timestamps = eventTimestamps(event);
+    const context = resolveAcademicContext(event);
     db.runSync(
       `UPDATE calendar_events
        SET title = ?, description = ?, event_date = ?, start_time = ?, end_time = ?,
-           is_all_day = ?, committee_id = ?, updated_at = ?
+           is_all_day = ?, committee_id = ?, subject_id = ?, topic_id = ?, updated_at = ?
        WHERE id = ?`,
       [
         event.title,
@@ -141,7 +190,9 @@ export const calendarRepo = {
         timestamps.startTime,
         timestamps.endTime,
         timestamps.isAllDay,
-        event.committeeId,
+        context.committeeId,
+        context.subjectId,
+        context.topicId,
         event.updatedAt,
         event.id,
       ]

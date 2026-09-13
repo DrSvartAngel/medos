@@ -517,6 +517,7 @@ const tr: Strings = {
     examTiming: (days: number, completed: boolean) => completed
       ? `Sınav ${Math.abs(days)} gün önceydi`
       : days === 0 ? 'Sınav bugün' : `Sınava ${days} gün kaldı`,
+    selectContext: 'Ders / Konu seç',
     title: 'Genel Bakış',
     subtitle: 'Seni görmek güzel.',
     startCheckIn: 'Durumu değerlendir',
@@ -638,6 +639,9 @@ const tr: Strings = {
         cancelled: 'İptal edildi',
         inProgress: 'Devam ediyor',
       },
+      editContext: 'Bağlamı düzenle',
+      editContextTitle: 'Oturum Bağlamını Düzenle',
+      noContext: 'Bağlam yok',
     },
     error: {
       startFailed: 'Oturum başlatılamadı.',
@@ -669,6 +673,35 @@ const tr: Strings = {
     startFailed: 'Mola başlamadan önce oturum değişti.',
     continueSession: 'Oturuma devam et',
     endSession: 'Bu oturumu bitir',
+  },
+
+  // ── Atlas sekmesi ────────────────────────────────────────────────────────────
+  atlas: {
+    title: 'Atlas',
+    eyebrow: 'Müfredat Atlası',
+    subtitle: 'Akademik müfredat hiyerarşisi ve çalışma kapsamı.',
+    activeCommittee: 'Aktif Komite',
+    allCommittees: 'Komiteler',
+    manageCommittees: 'Komiteleri Yönet',
+    subjects: 'Dersler',
+    topics: 'Konular',
+    noCommittees: 'Henüz komite yok.',
+    noCommitteesDesc: 'Müfredatını yapılandırmak için ilk komiteni oluştur.',
+    createCommittee: 'Komite Oluştur',
+    noSubjects: 'Bu komiteye henüz ders eklenmedi.',
+    noSubjectsDesc: 'Müfredatı yapılandırmak için ilk dersi ekleyin.',
+    addSubject: 'Ders Ekle',
+    noTopics: 'Bu derse henüz konu eklenmedi.',
+    noTopicsDesc: 'Çalışma hedeflerini belirlemek için ilk konuyu ekleyin.',
+    addTopic: 'Konu Ekle',
+    openTopic: 'Konuyu Aç',
+    focusTopic: 'Odaklan',
+    practiced: 'Çalışıldı',
+    unpracticed: 'Henüz çalışılmadı',
+    studyRecorded: 'Çalışma kaydı var',
+    subjectCount: (n: number) => `${n} ders`,
+    topicCount: (n: number) => `${n} konu`,
+    coverageSummary: (practiced: number, total: number) => `${practiced} / ${total} konu çalışıldı`,
   },
 
   // ── Komiteler sekmesi ────────────────────────────────────────────────────────

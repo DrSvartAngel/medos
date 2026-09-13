@@ -18,6 +18,7 @@ import {
 } from '@/utils/calendarDate';
 import type { Committee } from '@/store/useCommitteeStore';
 import type { CalendarEventInput } from '@/store/useCalendarStore';
+import { AcademicContextSelector } from '@/components/curriculum/AcademicContextSelector';
 
 interface CalendarEventFormProps {
   initialTitle?: string;
@@ -26,6 +27,8 @@ interface CalendarEventFormProps {
   initialStartTime?: string | null;
   initialEndTime?: string | null;
   initialCommitteeId?: string | null;
+  initialSubjectId?: string | null;
+  initialTopicId?: string | null;
   committees: Committee[];
   submitLabel: string;
   error?: string | null;
@@ -40,6 +43,8 @@ export function CalendarEventForm({
   initialStartTime = null,
   initialEndTime = null,
   initialCommitteeId = null,
+  initialSubjectId = null,
+  initialTopicId = null,
   committees,
   submitLabel,
   error,
@@ -55,6 +60,8 @@ export function CalendarEventForm({
   const [startTime, setStartTime] = useState(initialStartTime ?? '');
   const [endTime, setEndTime] = useState(initialEndTime ?? '');
   const [committeeId, setCommitteeId] = useState<string | null>(initialCommitteeId);
+  const [subjectId, setSubjectId] = useState<string | null>(initialSubjectId);
+  const [topicId, setTopicId] = useState<string | null>(initialTopicId);
   const [titleError, setTitleError] = useState('');
   const [dateError, setDateError] = useState('');
   const [timeError, setTimeError] = useState('');
@@ -114,6 +121,8 @@ export function CalendarEventForm({
       startTime: trimmedStart.length > 0 ? trimmedStart : null,
       endTime: trimmedEnd.length > 0 ? trimmedEnd : null,
       committeeId,
+      subjectId,
+      topicId,
     });
     if (!saved) setSaving(false);
   }
@@ -218,22 +227,22 @@ export function CalendarEventForm({
 
       <Card>
         <AppText variant="label">{t.sweep.optionalCommittee}</AppText>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.options, { gap: spacing.sm, paddingTop: spacing.md }]}
-        >
-          <CommitteeOption label={t.sweep.noCommittee} selected={committeeId === null} onPress={() => setCommitteeId(null)} />
-          {committees.map((committee) => (
-            <CommitteeOption
-              key={committee.id}
-              label={committee.name}
-              color={committee.color}
-              selected={committeeId === committee.id}
-              onPress={() => setCommitteeId(committee.id)}
-            />
-          ))}
-        </ScrollView>
+        <View style={{ marginTop: spacing.sm }}>
+          <AcademicContextSelector
+            maxDepth="topic"
+            requiredDepth="none"
+            value={{
+              committeeId,
+              subjectId,
+              topicId,
+            }}
+            onChange={(ctx) => {
+              setCommitteeId(ctx.committeeId);
+              setSubjectId(ctx.subjectId);
+              setTopicId(ctx.topicId);
+            }}
+          />
+        </View>
         {missingCommittee && (
           <AppText variant="caption" color={colors.warning} style={{ marginTop: spacing.sm }}>
             {t.sweep.missingCommitteeHelp}

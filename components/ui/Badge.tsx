@@ -1,6 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, type ViewStyle, type TextStyle, type StyleProp } from 'react-native';
-import { Badge as GSBadge, BadgeText } from './badge/index';
+import { View, Text, StyleSheet, type ViewStyle, type TextStyle, type StyleProp } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useTheme } from '@/hooks/useTheme';
 import { FontFamily } from '@/theme/typography';
@@ -71,7 +70,7 @@ export function Badge({
   const resolvedColor = textMap[variant];
 
   return (
-    <GSBadge
+    <View
       style={[
         styles.badge,
         {
@@ -102,7 +101,7 @@ export function Badge({
           style={{ marginRight: spacing.xxs }}
         />
       )}
-      <BadgeText
+      <Text
         style={[
           styles.text,
           {
@@ -117,8 +116,8 @@ export function Badge({
         ]}
       >
         {String(label)}
-      </BadgeText>
-    </GSBadge>
+      </Text>
+    </View>
   );
 }
 
@@ -135,5 +134,6 @@ const styles = StyleSheet.create({
   },
   text: {
     letterSpacing: 0.1,
+    includeFontPadding: false,
   },
 });

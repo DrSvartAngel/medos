@@ -1,6 +1,5 @@
 import React from 'react';
-import { ViewStyle, StyleProp, Pressable } from 'react-native';
-import { Card as GSCard } from './card/index';
+import { View, ViewStyle, StyleProp, Pressable, StyleSheet } from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Interaction } from '@/theme/interaction';
 
@@ -75,6 +74,7 @@ export function Card({
   };
 
   const cardStyle: StyleProp<ViewStyle> = [
+    styles.card,
     {
       backgroundColor: bgColors[resolvedVariant],
       borderColor: borderColors[resolvedVariant],
@@ -93,25 +93,28 @@ export function Card({
         accessibilityLabel={accessibilityLabel}
         accessibilityState={{ selected }}
         style={({ pressed }) => [
+          cardStyle,
           { opacity: pressed ? Interaction.pressedOpacity : 1 },
         ]}
       >
-        <GSCard
-          className={`overflow-hidden ${className ?? ''}`}
-          style={cardStyle}
-        >
-          {children}
-        </GSCard>
+        {children}
       </Pressable>
     );
   }
 
   return (
-    <GSCard
-      className={`overflow-hidden ${className ?? ''}`}
+    <View
       style={cardStyle}
+      accessibilityRole={accessibilityRole ?? 'none'}
+      accessibilityLabel={accessibilityLabel}
     >
       {children}
-    </GSCard>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  card: {
+    overflow: 'hidden',
+  },
+});

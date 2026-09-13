@@ -1,11 +1,10 @@
 import React, { useEffect } from 'react';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { router, type Href } from 'expo-router';
-import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
+import { AppText } from '@/components/ui/Typography';
 import { useTranslation, translateStudySupportMessage } from '@/i18n';
 import { useTheme } from '@/hooks/useTheme';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -24,12 +23,16 @@ interface DailyStateCardProps {
   onCheckIn?: () => void;
 }
 
+/**
+ * Integrated Daily State component.
+ * Subtle, non-dominant presentation preserving all Phase 14.6G / adaptive logic.
+ */
 export function DailyStateCard({
   committeeId,
   onStartSmall,
   onCheckIn,
 }: DailyStateCardProps) {
-  const { colors, spacing, radius } = useTheme();
+  const { colors, spacing, radius, borders } = useTheme();
   const { isTablet } = useResponsive();
   const t = useTranslation();
   const lowStimulation = useAppStore((state) => state.lowStimulationMode);
@@ -109,175 +112,153 @@ export function DailyStateCard({
       : t.adaptiveRec.startFocus(targetSec / 60);
 
     return (
-      <Card
-        elevated={!lowStimulation}
+      <View
         style={[
-          styles.card,
+          styles.container,
           {
-            borderLeftColor: colors.primary,
-            borderLeftWidth: 4,
-            padding: isTablet ? spacing.xl : spacing.lg,
+            backgroundColor: colors.surface,
+            borderColor: colors.borderSubtle,
+            borderWidth: borders.hairline,
+            borderRadius: radius.md,
+            padding: spacing.md,
           },
         ]}
       >
-        <VStack space="md" style={styles.stack}>
-          <HStack style={styles.headerRow} space="sm">
-            <Box
-              style={[
-                styles.iconWrap,
-                {
-                  backgroundColor: colors.primaryMuted,
-                  borderRadius: radius.sm,
-                },
-              ]}
-            >
-              <Feather name="activity" size={18} color={colors.primary} />
-            </Box>
-            <GSText
-              size="xs"
-              style={[styles.contextLabel, { color: colors.textMuted }]}
-            >
-              {t.checkIn.title.toUpperCase()}
-            </GSText>
-            <Box style={styles.badgeWrap}>
-              <Badge
-                label={t.checkIn.summary(
-                  t.checkIn.energy[energy],
-                  t.checkIn.attention[attention]
-                )}
-                variant={lowStimulation ? 'default' : 'primary'}
-                size="sm"
-              />
-            </Box>
-          </HStack>
+        <View style={{ gap: spacing.xs }}>
+          {/* Subtle State Summary Header */}
+          <View style={styles.headerRow}>
+            <View style={[styles.inlineLabelRow, { gap: spacing.xs }]}>
+              <Feather name="activity" size={13} color={colors.accent} />
+              <AppText
+                variant="labelS"
+                style={[styles.contextLabel, { color: colors.textMuted }]}
+              >
+                {t.checkIn.title.toUpperCase()}
+              </AppText>
+            </View>
+            <Badge
+              label={t.checkIn.summary(
+                t.checkIn.energy[energy],
+                t.checkIn.attention[attention]
+              )}
+              variant={lowStimulation ? 'default' : 'primary'}
+              size="sm"
+            />
+          </View>
 
-          <VStack space="xs">
-            <Heading
-              size={isTablet ? '2xl' : 'xl'}
-              style={[styles.heading, { color: colors.textPrimary }]}
+          {/* Context Note */}
+          <View style={{ gap: 2 }}>
+            <AppText
+              variant="bodyM"
+              style={{ color: colors.textPrimary, fontWeight: '600' }}
             >
               {isEntry
                 ? t.recovery.smallStart
                 : t.adaptiveRec.durationMin(targetSec / 60)}
-            </Heading>
-            <GSText
-              size="sm"
-              style={[styles.detail, { color: colors.textSecondary }]}
+            </AppText>
+            <AppText
+              variant="bodyS"
+              style={{ color: colors.textSecondary, lineHeight: 18 }}
             >
               {translateStudySupportMessage(recommendation.reason, t)}
-            </GSText>
-          </VStack>
+            </AppText>
+          </View>
 
-          <VStack space="sm" style={styles.actionContainer}>
-            <Button
-              label={durationLabel}
-              onPress={() => handleStartAdaptive(targetSec)}
-              size={isTablet ? 'lg' : 'md'}
-              variant="primary"
-              accessibilityLabel={durationLabel}
-              style={{
-                alignSelf: isTablet ? 'flex-start' : 'stretch',
-                minWidth: isTablet ? 220 : undefined,
-              }}
-            />
-
-            <HStack
-              space="sm"
-              style={[
-                styles.secondaryRow,
-                {
-                  flexDirection: isTablet ? 'row' : 'column',
-                  alignItems: isTablet ? 'center' : 'stretch',
-                },
-              ]}
-            >
-              <Button
-                label={t.adaptiveRec.changeAnswers}
-                accessibilityLabel={t.adaptiveRec.changeAnswers}
-                onPress={handleOpenCheckIn}
-                size="sm"
-                variant="secondary"
-                style={{
-                  alignSelf: isTablet ? 'flex-start' : 'stretch',
-                }}
-              />
-              <Button
-                label={t.adaptiveRec.chooseLighterPlan}
-                accessibilityLabel={t.adaptiveRec.chooseLighterPlan}
-                onPress={handleOpenRecovery}
-                size="sm"
-                variant="ghost"
-                style={{
-                  alignSelf: isTablet ? 'flex-start' : 'stretch',
-                }}
-              />
-            </HStack>
-          </VStack>
-        </VStack>
-      </Card>
-    );
-  }
-
-  // Not checked in or expired: render entry point panel
-  return (
-    <Card
-      elevated={!lowStimulation}
-      style={[
-        styles.card,
-        {
-          borderColor: colors.border,
-          padding: isTablet ? spacing.xl : spacing.lg,
-        },
-      ]}
-    >
-      <VStack space="md" style={styles.stack}>
-        <HStack style={styles.headerRow} space="sm">
-          <Box
+          {/* Restrained Actions */}
+          <View
             style={[
-              styles.iconWrap,
+              styles.actionRow,
               {
-                backgroundColor: colors.primaryMuted,
-                borderRadius: radius.sm,
+                flexDirection: 'row',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: spacing.xs,
+                marginTop: 4,
               },
             ]}
           >
-            <Feather name="compass" size={18} color={colors.primary} />
-          </Box>
-          <GSText
-            size="xs"
-            style={[styles.contextLabel, { color: colors.textMuted }]}
-          >
-            {t.checkIn.title.toUpperCase()}
-          </GSText>
-          <Box style={styles.badgeWrap}>
-            <GSText size="xs" style={{ color: colors.textMuted }}>
-              {t.checkIn.optionalNotice}
-            </GSText>
-          </Box>
-        </HStack>
+            <Button
+              label={durationLabel}
+              onPress={() => handleStartAdaptive(targetSec)}
+              size="sm"
+              variant="secondary"
+              accessibilityLabel={durationLabel}
+            />
+            <Button
+              label={t.adaptiveRec.changeAnswers}
+              accessibilityLabel={t.adaptiveRec.changeAnswers}
+              onPress={handleOpenCheckIn}
+              size="sm"
+              variant="ghost"
+            />
+            <Button
+              label={t.adaptiveRec.chooseLighterPlan}
+              accessibilityLabel={t.adaptiveRec.chooseLighterPlan}
+              onPress={handleOpenRecovery}
+              size="sm"
+              variant="ghost"
+            />
+          </View>
+        </View>
+      </View>
+    );
+  }
 
-        <VStack space="xs">
-          <Heading
-            size={isTablet ? 'xl' : 'lg'}
-            style={[styles.heading, { color: colors.textPrimary }]}
+  // Not checked in or expired: render compact low-stimulation prompt
+  return (
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.borderSubtle,
+          borderWidth: borders.hairline,
+          borderRadius: radius.md,
+          padding: spacing.md,
+        },
+      ]}
+    >
+      <View
+        style={[
+          styles.promptRow,
+          {
+            flexDirection: isTablet ? 'row' : 'column',
+            alignItems: isTablet ? 'center' : 'stretch',
+            gap: spacing.sm,
+          },
+        ]}
+      >
+        <View style={styles.promptContent}>
+          <View style={[styles.inlineLabelRow, { gap: spacing.xs, marginBottom: 2 }]}>
+            <Feather name="compass" size={13} color={colors.textMuted} />
+            <AppText
+              variant="labelS"
+              style={[styles.contextLabel, { color: colors.textMuted }]}
+            >
+              {t.checkIn.title.toUpperCase()}
+            </AppText>
+          </View>
+          <AppText
+            variant="bodyM"
+            style={{ color: colors.textPrimary, fontWeight: '600' }}
           >
             {t.checkIn.energyTitle}
-          </Heading>
-          <GSText
-            size="sm"
-            style={[styles.detail, { color: colors.textSecondary }]}
+          </AppText>
+          <AppText
+            variant="bodyS"
+            style={{ color: colors.textSecondary }}
           >
             {t.dashboard.checkInHint}
-          </GSText>
-        </VStack>
+          </AppText>
+        </View>
 
-        <HStack
-          space="sm"
+        <View
           style={[
-            styles.actionRow,
+            styles.promptActions,
             {
-              flexDirection: isTablet ? 'row' : 'column',
-              alignItems: isTablet ? 'center' : 'stretch',
+              flexDirection: 'row',
+              alignItems: 'center',
+              gap: spacing.xs,
             },
           ]}
         >
@@ -285,10 +266,10 @@ export function DailyStateCard({
             label={t.dashboard.startCheckIn}
             accessibilityLabel={t.dashboard.checkInAccessibility}
             onPress={handleOpenCheckIn}
-            size={isTablet ? 'md' : 'sm'}
-            variant="primary"
+            size="sm"
+            variant="secondary"
             style={{
-              alignSelf: isTablet ? 'flex-start' : 'stretch',
+              flex: isTablet ? undefined : 1,
             }}
           />
           {timerStatus === 'idle' && (
@@ -307,57 +288,46 @@ export function DailyStateCard({
                 }
               }}
               size="sm"
-              variant="secondary"
+              variant="ghost"
               style={{
-                alignSelf: isTablet ? 'flex-start' : 'stretch',
+                flex: isTablet ? undefined : 1,
               }}
             />
           )}
-        </HStack>
-      </VStack>
-    </Card>
+        </View>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  card: {
-    width: '100%',
-    borderWidth: 1,
-  },
-  stack: {
+  container: {
     width: '100%',
   },
   headerRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
-  iconWrap: {
-    width: 32,
-    height: 32,
+  inlineLabelRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
   },
   contextLabel: {
     fontWeight: '700',
     letterSpacing: 0.8,
   },
-  badgeWrap: {
-    marginLeft: 'auto',
+  actionRow: {
+    marginTop: 2,
   },
-  heading: {
-    fontWeight: '700',
-    letterSpacing: -0.3,
-  },
-  detail: {
-    lineHeight: 20,
-  },
-  actionContainer: {
-    marginTop: 4,
+  promptRow: {
+    justifyContent: 'space-between',
     width: '100%',
   },
-  secondaryRow: {
-    marginTop: 4,
+  promptContent: {
+    flex: 1,
   },
-  actionRow: {
-    marginTop: 4,
+  promptActions: {
+    flexWrap: 'wrap',
   },
 });

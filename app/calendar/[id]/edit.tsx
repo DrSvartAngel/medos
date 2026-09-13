@@ -92,6 +92,8 @@ export default function EditCalendarEventScreen() {
             initialStartTime={event.startTime}
             initialEndTime={event.endTime}
             initialCommitteeId={event.committeeId}
+            initialSubjectId={event.subjectId}
+            initialTopicId={event.topicId}
             committees={committees}
             submitLabel={t.sweep.save}
             error={error}

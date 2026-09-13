@@ -515,6 +515,7 @@ const en = {
     examTiming: (days: number, completed: boolean) => completed
       ? `Exam was ${Math.abs(days)} ${Math.abs(days) === 1 ? 'day' : 'days'} ago`
       : days === 0 ? 'Exam today' : `Exam in ${days} ${days === 1 ? 'day' : 'days'}`,
+    selectContext: 'Select Subject / Topic',
     title: 'Dashboard',
     subtitle: 'Good to see you.',
     startCheckIn: 'Start check-in',
@@ -632,6 +633,9 @@ const en = {
         cancelled: 'Cancelled',
         inProgress: 'In progress',
       },
+      editContext: 'Edit context',
+      editContextTitle: 'Edit Session Context',
+      noContext: 'No context',
     },
     error: {
       startFailed: 'Could not start session.',
@@ -663,6 +667,35 @@ const en = {
     startFailed: 'The session changed before the break started.',
     continueSession: 'Continue session',
     endSession: 'End this session',
+  },
+
+  // ── Atlas tab ────────────────────────────────────────────────────────────────
+  atlas: {
+    title: 'Atlas',
+    eyebrow: 'Curriculum Atlas',
+    subtitle: 'Academic curriculum hierarchy and factual coverage.',
+    activeCommittee: 'Active Committee',
+    allCommittees: 'Committees',
+    manageCommittees: 'Manage Committees',
+    subjects: 'Subjects',
+    topics: 'Topics',
+    noCommittees: 'No committees yet.',
+    noCommitteesDesc: 'Create your first committee to organize your curriculum.',
+    createCommittee: 'Create Committee',
+    noSubjects: 'No subjects added to this committee yet.',
+    noSubjectsDesc: 'Add your first subject to structure the curriculum.',
+    addSubject: 'Add Subject',
+    noTopics: 'No topics added to this subject yet.',
+    noTopicsDesc: 'Add your first topic to define learning objectives.',
+    addTopic: 'Add Topic',
+    openTopic: 'Open Topic',
+    focusTopic: 'Focus',
+    practiced: 'Studied',
+    unpracticed: 'Not studied yet',
+    studyRecorded: 'Study activity recorded',
+    subjectCount: (n: number) => `${n} subject${n === 1 ? '' : 's'}`,
+    topicCount: (n: number) => `${n} topic${n === 1 ? '' : 's'}`,
+    coverageSummary: (practiced: number, total: number) => `${practiced} / ${total} topics studied`,
   },
 
   // ── Committees tab ────────────────────────────────────────────────────────────

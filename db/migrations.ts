@@ -1,7 +1,8 @@
 import { getDB } from './client';
 import { formatLocalDateKey } from '@/utils/calendarDate';
 
-const CURRENT_VERSION = 14;
+// Base v14: const CURRENT_VERSION = 14;
+const CURRENT_VERSION = 15;
 
 interface TableInfoRow {
   name: string;
@@ -398,6 +399,53 @@ export async function runMigrations(): Promise<void> {
     db.withTransactionSync(() => {
       ensureChunkEmbeddingsSchema(db);
       db.runSync('UPDATE _schema_version SET version = ?', [14]);
+    });
+  }
+
+  if (currentVersion < 15) {
+    // --- Version 15: unified academic context (subject_id on focus_sessions, subject_id & topic_id on calendar_events) ---
+    db.withTransactionSync(() => {
+      const hasFocusSessions = Boolean(
+        db.getFirstSync("SELECT 1 FROM sqlite_master WHERE type='table' AND name='focus_sessions'")
+      );
+      if (hasFocusSessions) {
+        const focusColumns = getColumnNames('focus_sessions');
+        if (!focusColumns.has('subject_id')) {
+          db.execSync(
+            'ALTER TABLE focus_sessions ADD COLUMN subject_id TEXT REFERENCES subjects(id) ON DELETE SET NULL;'
+          );
+        }
+        db.execSync(`
+          CREATE INDEX IF NOT EXISTS idx_focus_sessions_subject_id
+            ON focus_sessions(subject_id);
+        `);
+      }
+
+      const hasCalendarEvents = Boolean(
+        db.getFirstSync("SELECT 1 FROM sqlite_master WHERE type='table' AND name='calendar_events'")
+      );
+      if (hasCalendarEvents) {
+        const calendarColumns = getColumnNames('calendar_events');
+        if (!calendarColumns.has('subject_id')) {
+          db.execSync(
+            'ALTER TABLE calendar_events ADD COLUMN subject_id TEXT REFERENCES subjects(id) ON DELETE SET NULL;'
+          );
+        }
+        if (!calendarColumns.has('topic_id')) {
+          db.execSync(
+            'ALTER TABLE calendar_events ADD COLUMN topic_id TEXT REFERENCES topics(id) ON DELETE SET NULL;'
+          );
+        }
+        db.execSync(`
+          CREATE INDEX IF NOT EXISTS idx_calendar_events_subject_id
+            ON calendar_events(subject_id);
+          CREATE INDEX IF NOT EXISTS idx_calendar_events_topic_id
+            ON calendar_events(topic_id);
+        `);
+      }
+
+      const NEXT_SCHEMA_VERSION = 15;
+      db.runSync('UPDATE _schema_version SET version = ?', [NEXT_SCHEMA_VERSION]);
     });
   }
 }

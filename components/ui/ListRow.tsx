@@ -2,12 +2,13 @@ import React from 'react';
 import {
   StyleSheet,
   View,
+  Text,
+  Pressable,
   type ViewStyle,
   type StyleProp,
   type AccessibilityRole,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { HStack, VStack, GSText, Pressable as GSPressable } from './gluestack';
 import { useTheme } from '@/hooks/useTheme';
 import { Interaction } from '@/theme/interaction';
 import { FontFamily } from '@/theme/typography';
@@ -74,12 +75,11 @@ export function ListRow({
       ]}
       className={className}
     >
-      <HStack space="md" style={styles.hstack}>
+      <View style={[styles.hstack, { gap: spacing.md }]}>
         {leading ? <View style={styles.leading}>{leading}</View> : null}
 
-        <VStack space="xs" style={styles.textStack}>
-          <GSText
-            size="sm"
+        <View style={styles.textStack}>
+          <Text
             style={{
               color: destructive
                 ? colors.error
@@ -90,39 +90,41 @@ export function ListRow({
               fontWeight: '600',
               fontSize: 14,
               lineHeight: 20,
+              includeFontPadding: false,
             }}
             numberOfLines={2}
           >
             {title}
-          </GSText>
+          </Text>
           {subtitle ? (
-            <GSText
-              size="xs"
+            <Text
               style={{
                 color: colors.textSecondary,
                 fontFamily: FontFamily.regular,
                 fontSize: 12,
                 lineHeight: 16,
+                marginTop: spacing.xxs,
+                includeFontPadding: false,
               }}
               numberOfLines={2}
             >
               {subtitle}
-            </GSText>
+            </Text>
           ) : null}
-        </VStack>
+        </View>
 
         {value !== undefined ? (
           typeof value === 'string' || typeof value === 'number' ? (
-            <GSText
-              size="xs"
+            <Text
               style={{
                 color: colors.textMuted,
                 fontFamily: FontFamily.medium,
                 fontSize: 12,
+                includeFontPadding: false,
               }}
             >
               {value}
-            </GSText>
+            </Text>
           ) : (
             value
           )
@@ -138,13 +140,13 @@ export function ListRow({
             style={{ marginLeft: spacing.xxs }}
           />
         ) : null}
-      </HStack>
+      </View>
     </View>
   );
 
   if (isInteractive) {
     return (
-      <GSPressable
+      <Pressable
         onPress={onPress}
         disabled={disabled}
         accessibilityRole={accessibilityRole}
@@ -153,12 +155,12 @@ export function ListRow({
         }
         accessibilityHint={accessibilityHint}
         accessibilityState={{ disabled, selected }}
-        style={({ pressed }: { pressed: boolean }) => [
+        style={({ pressed }) => [
           { opacity: pressed ? Interaction.pressedOpacity : 1 },
         ]}
       >
         {rowContent}
-      </GSPressable>
+      </Pressable>
     );
   }
 
@@ -181,6 +183,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   hstack: {
+    flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
   },

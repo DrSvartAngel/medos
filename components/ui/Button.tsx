@@ -1,10 +1,14 @@
 import React from 'react';
-import { View, StyleSheet, type ViewStyle, type TextStyle, type StyleProp } from 'react-native';
 import {
-  Button as GSButton,
-  ButtonText,
-  ButtonSpinner,
-} from './button/index';
+  Pressable,
+  Text,
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  type ViewStyle,
+  type TextStyle,
+  type StyleProp,
+} from 'react-native';
 import { useTheme } from '@/hooks/useTheme';
 import { Interaction } from '@/theme/interaction';
 import { FontFamily } from '@/theme/typography';
@@ -59,21 +63,6 @@ export function Button({
   const { colors, spacing, radius, borders } = useTheme();
   const text = label ?? title ?? '';
 
-  // Map MedOS variant to Gluestack Button variant
-  const gsVariant =
-    variant === 'primary'
-      ? 'default'
-      : variant === 'danger' || variant === 'destructive'
-      ? 'destructive'
-      : variant === 'secondary'
-      ? 'secondary'
-      : variant === 'outline'
-      ? 'outline'
-      : 'ghost';
-
-  // Map MedOS size to Gluestack Button size
-  const gsSize = size === 'sm' ? 'sm' : size === 'lg' ? 'lg' : 'default';
-
   // Explicit semantic color overrides for exact Light/Dark parity
   const bgColors: Record<ButtonVariant, string> = {
     primary: colors.primary,
@@ -111,53 +100,54 @@ export function Button({
   const isBordered = variant === 'secondary' || variant === 'outline';
 
   return (
-    <GSButton
+    <Pressable
       onPress={onPress}
       disabled={disabled || loading}
-      variant={gsVariant}
-      size={gsSize}
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel ?? text}
       accessibilityState={{ disabled: disabled || loading, busy: loading }}
-      style={[
+      style={({ pressed }) => [
         styles.btn,
         {
-          minHeight: Interaction.minTarget,
+          minHeight: size === 'sm' ? 36 : size === 'lg' ? 52 : Interaction.minTarget,
           backgroundColor: bgColors[variant],
           borderColor: borderColors[variant],
           borderWidth: isBordered ? borders.standard : borders.none,
           borderRadius: radius.control,
           paddingHorizontal:
             size === 'sm' ? spacing.md : size === 'lg' ? spacing.xl : spacing.lg,
-          opacity: disabled ? Interaction.disabledOpacity : 1,
+          opacity: disabled ? Interaction.disabledOpacity : pressed ? Interaction.pressedOpacity : 1,
         },
         style,
       ]}
       className={className}
     >
       {loading ? (
-        <ButtonSpinner color={textColors[variant]} />
+        <ActivityIndicator size="small" color={textColors[variant]} />
       ) : (
         <>
           {icon ? <View style={{ marginRight: spacing.xs }}>{icon}</View> : null}
-          <ButtonText
-            style={[
-              {
-                color: textColors[variant],
-                fontFamily: FontFamily.semibold,
-                fontWeight: '600',
-                fontSize: size === 'sm' ? 13 : 14,
-                lineHeight: size === 'sm' ? 18 : 20,
-              },
-              textStyle,
-            ]}
-          >
-            {text}
-          </ButtonText>
+          {text ? (
+            <Text
+              style={[
+                styles.btnText,
+                {
+                  color: textColors[variant],
+                  fontFamily: FontFamily.semibold,
+                  fontWeight: '600',
+                  fontSize: size === 'sm' ? 13 : 14,
+                  lineHeight: size === 'sm' ? 18 : 20,
+                },
+                textStyle,
+              ]}
+            >
+              {text}
+            </Text>
+          ) : null}
           {iconRight ? <View style={{ marginLeft: spacing.xs }}>{iconRight}</View> : null}
         </>
       )}
-    </GSButton>
+    </Pressable>
   );
 }
 
@@ -167,5 +157,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
+  },
+  btnText: {
+    textAlign: 'center',
+    includeFontPadding: false,
   },
 });

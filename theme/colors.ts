@@ -125,6 +125,69 @@ export const DarkColors: Record<keyof typeof LightColors, string> = {
   tabBar: '#171B18',
 };
 
+/**
+ * Phase 15C.3 Midnight Clinical Zen Dark Palette
+ * Near-black midnight navy canvas, deep blue-charcoal surfaces,
+ * restrained desaturated blue accent, soft neutral text hierarchy.
+ */
+export const MidnightDarkColors: Record<keyof typeof LightColors, string> = {
+  // Canvas & Surfaces
+  canvas: '#0B0E14',          // Near-black midnight navy canvas
+  surface: '#111622',         // Deep blue-charcoal surface
+  surfaceSubtle: '#151B28',   // Recessed cool blue-charcoal surface
+  surfaceRaised: '#1A2234',   // Elevated cards, modals, popovers
+
+  // Typography
+  textPrimary: '#ECEFF4',     // Crisp neutral off-white
+  textSecondary: '#94A1B8',   // Soft blue-slate
+  textMuted: '#62718A',       // Restrained cool-grey
+  textInverse: '#0B0E14',     // Text on light accents/surfaces
+
+  // Borders & Dividers
+  borderSubtle: '#1F293D',    // 1px hairline cool blue-charcoal divider
+
+  // Semantic Accents (Restrained Desaturated Blue)
+  accent: '#7E9BC0',          // Restrained desaturated blue accent
+  accentStrong: '#9DB4D0',    // Clean desaturated blue for prominent CTA
+  accentSoft: '#162234',      // Soft deep slate-blue wash for pills/tags
+  accentSage: '#7E9BC0',      // Semantic slot mapped to clinical desaturated blue
+  accentMoss: '#9DB4D0',      // Semantic slot mapped to prominent clinical blue
+
+  // Status Roles (Clinical, Low Stimulation)
+  success: '#4A9E77',         // Subtle muted clinical green
+  successMuted: '#12261C',
+  warning: '#C4924A',         // Warm clinical amber
+  warningMuted: '#2B1F10',
+  error: '#C95A54',           // Clinical muted brick red
+  errorMuted: '#2E1615',
+  info: '#5E89B8',            // Calm desaturated blue
+  infoMuted: '#142233',
+
+  // Backward-Compatible Aliases
+  background: '#0B0E14',      // Alias to canvas
+  surfaceElevated: '#1A2234', // Alias to surfaceRaised
+  surfaceHighlight: '#151B28',// Alias to surfaceSubtle
+  border: '#1F293D',          // Alias to borderSubtle
+  borderFaint: '#172030',     // Subtler hairline border
+  borderMuted: '#1F293D',     // Alias to borderSubtle
+  cardBorder: '#1F293D',      // Alias to borderSubtle
+  cardBorderHover: '#2A3750',
+
+  // Interactive & Primary Aliases
+  primary: '#7E9BC0',         // Restrained desaturated blue CTA
+  primaryPressed: '#6986AB',
+  primaryMuted: '#162234',    // Soft clinical blue surface
+  accentMuted: '#162234',     // Alias to accentSoft
+  focus: '#7E9BC0',
+  focusRing: 'rgba(126, 155, 192, 0.28)',
+
+  // Navigation Shell Aliases
+  tabActive: '#7E9BC0',
+  tabInactive: '#62718A',
+  tabBar: '#111622',
+};
+
 export type ThemeColors = Record<keyof typeof LightColors, string>;
 export const Colors: ThemeColors = LightColors;
 export type ColorKey = keyof typeof LightColors;
+

@@ -1,17 +1,17 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 import { router, type Href } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
-import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
 import { CommitteeOverviewCard } from '@/components/dashboard/CommitteeOverviewCard';
 import { DailyStateCard } from '@/components/dashboard/DailyStateCard';
 import { QuickStartCard } from '@/components/dashboard/QuickStartCard';
 import { TodayAgenda } from '@/components/dashboard/TodayAgenda';
 import { TodayMetrics } from '@/components/dashboard/TodayMetrics';
 import { ScreenWrapper } from '@/components/layout/ScreenWrapper';
-import { TabTopHeader } from '@/components/layout/TabTopHeader';
+import { ScreenHeader } from '@/components/layout/ScreenHeader';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { AppText } from '@/components/ui/Typography';
 import { useDashboardRefresh } from '@/hooks/useDashboardRefresh';
 import { useResponsive } from '@/hooks/useResponsive';
 import { useTheme } from '@/hooks/useTheme';
@@ -29,7 +29,7 @@ import {
 import { useTranslation } from '@/i18n';
 
 export default function DashboardScreen() {
-  const { colors, spacing, radius } = useTheme();
+  const { colors, spacing, radius, borders } = useTheme();
   const { isTablet, isLargeTablet, isLandscape } = useResponsive();
   const t = useTranslation();
   const isDBReady = useAppStore((state) => state.isDBReady);
@@ -39,8 +39,32 @@ export default function DashboardScreen() {
   const sectionErrors = useDashboardStore((state) => state.sectionErrors);
   const refresh = useDashboardStore((state) => state.refresh);
   const timerStatus = useFocusStore((state) => state.timerStatus);
+  const selectedCommitteeId = useFocusStore((state) => state.selectedCommitteeId);
+  const selectedSubjectId = useFocusStore((state) => state.selectedSubjectId);
+  const selectedTopicId = useFocusStore((state) => state.selectedTopicId);
+  const setAcademicContext = useFocusStore((state) => state.setAcademicContext);
 
   useDashboardRefresh(isDBReady, refresh);
+
+  // Prefill active committee into focus store if idle and no context selected yet
+  useEffect(() => {
+    if (timerStatus === 'idle' && snapshot?.committee?.id && !selectedCommitteeId) {
+      setAcademicContext({
+        committeeId: snapshot.committee.id,
+      });
+    }
+  }, [timerStatus, snapshot?.committee?.id, selectedCommitteeId, setAcademicContext]);
+
+  // Pure analytics priority reference for weak topics
+  const weakTopics = useMemo(() => {
+    try {
+      if (!snapshot?.committee?.id) return [];
+      const evidences = analyticsRepo.getCommitteeTopicAnalytics(snapshot.committee.id);
+      return getWeakTopics(evidences);
+    } catch {
+      return [];
+    }
+  }, [snapshot?.committee?.id]);
 
   const recommendation = useMemo<DashboardQuickStart>(() => {
     if (timerStatus !== 'idle') {
@@ -62,8 +86,6 @@ export default function DashboardScreen() {
     );
   }, [snapshot?.quickStart, timerStatus, t]);
 
-
-
   function handleQuickStart() {
     const focusState = useFocusStore.getState();
     if (focusState.timerStatus !== 'idle' || recommendation.kind === 'continue_focus') {
@@ -76,12 +98,19 @@ export default function DashboardScreen() {
       return;
     }
 
-    const committeeId =
-      recommendation.kind === 'manual_focus' || recommendation.kind === 'committee_focus'
-        ? recommendation.committeeId
-        : null;
     focusState.setPlannedSec(DEFAULT_FOCUS_SEC);
-    focusState.setSelectedCommittee(committeeId);
+
+    // If context was not selected, fallback to recommendation/active committee
+    if (!focusState.selectedCommitteeId) {
+      const fallbackCommitteeId =
+        recommendation.kind === 'manual_focus' || recommendation.kind === 'committee_focus'
+          ? recommendation.committeeId
+          : snapshot?.committee?.id ?? null;
+      if (fallbackCommitteeId) {
+        focusState.setSelectedCommittee(fallbackCommitteeId);
+      }
+    }
+
     focusState.startTimer();
     router.push('/(tabs)/focus' as Href);
   }
@@ -93,11 +122,16 @@ export default function DashboardScreen() {
       return;
     }
 
-    const committeeId =
+    const fallbackCommitteeId =
       recommendation.kind === 'manual_focus' || recommendation.kind === 'committee_focus'
         ? recommendation.committeeId
-        : null;
-    const started = focusState.startEntrySession({ committeeId });
+        : snapshot?.committee?.id ?? null;
+
+    const started = focusState.startEntrySession({
+      committeeId: focusState.selectedCommitteeId ?? fallbackCommitteeId,
+      subjectId: focusState.selectedSubjectId,
+      topicId: focusState.selectedTopicId,
+    });
     if (!started) {
       router.push('/(tabs)/focus' as Href);
       return;
@@ -138,9 +172,9 @@ export default function DashboardScreen() {
     return (
       <ScreenWrapper scrollable={false} contentStyle={styles.centered}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <GSText size="sm" style={{ color: colors.textSecondary, marginTop: spacing.md }}>
+        <AppText variant="bodyS" style={{ color: colors.textSecondary, marginTop: spacing.md }}>
           {t.common.loading}
-        </GSText>
+        </AppText>
       </ScreenWrapper>
     );
   }
@@ -171,6 +205,12 @@ export default function DashboardScreen() {
       onAction={handleQuickStart}
       onStartSmall={timerStatus === 'idle' ? handleStartSmall : undefined}
       onCheckIn={timerStatus === 'idle' ? handleCheckIn : undefined}
+      academicContext={{
+        committeeId: selectedCommitteeId,
+        subjectId: selectedSubjectId,
+        topicId: selectedTopicId,
+      }}
+      onAcademicContextChange={timerStatus === 'idle' ? setAcademicContext : undefined}
     />
   );
 
@@ -187,8 +227,6 @@ export default function DashboardScreen() {
       onOpenQBank={() => router.push('/qbank/new' as Href)}
     />
   );
-
-
 
   const agenda = (
     <TodayAgenda
@@ -211,111 +249,84 @@ export default function DashboardScreen() {
           router.push('/(tabs)/ai' as Href);
         }
       }}
-      style={({ pressed }) => [{ opacity: pressed ? 0.75 : 1 }]}
+      style={({ pressed }) => [
+        styles.aiStrip,
+        {
+          backgroundColor: colors.surface,
+          borderColor: colors.borderSubtle,
+          borderWidth: borders.hairline,
+          borderRadius: radius.md,
+          paddingHorizontal: spacing.md,
+          paddingVertical: spacing.sm,
+          opacity: pressed ? 0.75 : 1,
+        },
+      ]}
     >
-      <Card style={styles.aiCard}>
-        <HStack style={styles.aiRow}>
-          <Box
-            style={[
-              styles.aiIcon,
-              {
-                backgroundColor: colors.primaryMuted,
-                borderRadius: radius.sm,
-              },
-            ]}
+      <View style={[styles.aiRow, { gap: spacing.sm }]}>
+        <Feather name="cpu" size={14} color={colors.accent} />
+        <View style={styles.aiText}>
+          <AppText
+            variant="labelS"
+            style={{
+              color: colors.textPrimary,
+              fontWeight: '600',
+            }}
           >
-            <Feather name="cpu" size={16} color={colors.primary} />
-          </Box>
-          <VStack space="xs" style={styles.aiText}>
-            <GSText
-              size="sm"
-              style={{
-                color: colors.primary,
-                fontWeight: '600',
-              }}
-            >
-              {snapshot.committee ? t.studyPlan.studyPlanButton : t.dashboard.aiAssistant}
-            </GSText>
-            <GSText size="xs" style={{ color: colors.textSecondary }}>
-              {snapshot.committee ? snapshot.committee.name : t.dashboard.aiAssistantDesc}
-            </GSText>
-          </VStack>
-          <Feather name="chevron-right" size={16} color={colors.textMuted} />
-        </HStack>
-      </Card>
+            {snapshot.committee ? t.studyPlan.studyPlanButton : t.dashboard.aiAssistant}
+          </AppText>
+          <AppText variant="labelS" style={{ color: colors.textSecondary }}>
+            {snapshot.committee ? snapshot.committee.name : t.dashboard.aiAssistantDesc}
+          </AppText>
+        </View>
+        <Feather name="chevron-right" size={14} color={colors.textMuted} />
+      </View>
     </Pressable>
   );
 
   return (
     <ScreenWrapper>
-      {/* Global Top Header Navigation: Dashboard (left) & Profile (right) */}
-      <TabTopHeader />
-
-      {/* Under Header Row: Greeting, Committee/countdown, Date, Quick Add Topic */}
-      <VStack space="xs" style={styles.header}>
-        <HStack style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <VStack space="xs" style={{ flex: 1, paddingRight: spacing.sm }}>
-            <Heading
-              size={isTablet ? '2xl' : 'xl'}
-              style={[styles.greetingHeading, { color: colors.textPrimary }]}
-            >
-              {t.dashboard.greeting(getDashboardGreeting())}
-            </Heading>
-
-            {snapshot.committee ? (
-              <GSText size="xs" style={{ color: colors.primary, fontWeight: '600' }}>
-                {snapshot.committee.name} · {t.dashboard.examTiming(snapshot.committee.daysToExam, snapshot.committee.status === 'recently_completed')}
-              </GSText>
-            ) : (
-              <GSText size="xs" style={{ color: colors.textSecondary }}>
-                {headerStatus}
-              </GSText>
-            )}
-
-            <GSText
-              size="xs"
-              style={[
-                styles.dateLabel,
-                {
-                  color: colors.textMuted,
-                },
-              ]}
-            >
-              {new Date(getLocalDayRange(snapshot.date).startMs).toLocaleDateString(
-                t.dashboard.locale,
-                { weekday: 'long', month: 'short', day: 'numeric' }
-              )}
-            </GSText>
-          </VStack>
-
+      {/* Editorial ScreenHeader with Greeting, Date, Committee Timing, and Add Topic */}
+      <ScreenHeader
+        title={t.dashboard.greeting(getDashboardGreeting())}
+        eyebrow={new Date(getLocalDayRange(snapshot.date).startMs).toLocaleDateString(
+          t.dashboard.locale,
+          { weekday: 'long', month: 'short', day: 'numeric' }
+        )}
+        subtitle={
+          snapshot.committee
+            ? `${snapshot.committee.name} · ${t.dashboard.examTiming(snapshot.committee.daysToExam, snapshot.committee.status === 'recently_completed')}`
+            : headerStatus
+        }
+        trailing={
           <Button
             label={t.dashboard.addTopic}
             variant="secondary"
             size="sm"
+            icon={<Feather name="plus" size={14} color={colors.textSecondary} />}
             onPress={() => router.push('/topics/new' as Href)}
             accessibilityLabel={t.dashboard.addTopic}
           />
-        </HStack>
-      </VStack>
+        }
+      />
 
       {partialErrorCount > 0 && (
         <Card
+          variant="default"
           style={[
             styles.partialError,
             {
-              borderColor: colors.cardBorder,
-              borderRadius: radius.md,
+              borderColor: colors.borderSubtle,
               backgroundColor: colors.surfaceElevated,
               marginTop: spacing.md,
               padding: spacing.sm,
             },
           ]}
         >
-          <HStack space="sm" style={{ alignItems: 'center' }}>
+          <View style={[styles.partialErrorRow, { gap: spacing.sm }]}>
             <Feather name="alert-circle" size={16} color={colors.textMuted} />
-            <GSText size="xs" style={[styles.partialErrorText, { color: colors.textSecondary }]}>
+            <AppText variant="bodyS" style={[styles.partialErrorText, { color: colors.textSecondary }]}>
               {t.dashboard.partialError}
-            </GSText>
+            </AppText>
             <Button
               label={t.common.retry}
               variant="ghost"
@@ -323,29 +334,49 @@ export default function DashboardScreen() {
               onPress={refresh}
               loading={isRefreshing}
             />
-          </HStack>
+          </View>
         </Card>
       )}
 
-      {/* Responsive Composition */}
-      {isLargeTablet || (isTablet && isLandscape) ? (
-        <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.lg }]}>
-          <View style={[styles.column, { gap: spacing.lg }]}>
-            {committee}
-            {dailyState}
+      {/* Responsive Editorial Composition: Tablet 2-Pane (Figma 23:110) vs Phone Single Column (Figma 23:7) */}
+      {isLargeTablet ? (
+        <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.md }]}>
+          {/* LEFT / PRIMARY: Screen context, study intention, daily state, committee */}
+          <View style={[styles.primaryColumn, { gap: spacing.md }]}>
             {quickStart}
-            {metrics}
+            {dailyState}
+            {committee}
           </View>
-          <View style={[styles.column, { gap: spacing.lg }]}>
+
+          {/* RIGHT / EVIDENCE: Agenda, metrics ledger, contextual action */}
+          <View style={[styles.evidenceColumn, { gap: spacing.md }]}>
             {agenda}
+            {metrics}
+            {aiContextual}
+          </View>
+        </View>
+      ) : isTablet && isLandscape ? (
+        <View style={[styles.twoPane, { gap: spacing.xl, marginTop: spacing.md }]}>
+          {/* LEFT / PRIMARY: Study intention, daily state, committee */}
+          <View style={[styles.primaryColumn, { gap: spacing.md }]}>
+            {quickStart}
+            {dailyState}
+            {committee}
+          </View>
+
+          {/* RIGHT / EVIDENCE: Agenda, metrics ledger, contextual action */}
+          <View style={[styles.evidenceColumn, { gap: spacing.md }]}>
+            {agenda}
+            {metrics}
             {aiContextual}
           </View>
         </View>
       ) : (
-        <View style={[styles.stacked, { gap: spacing.lg, marginTop: spacing.lg }]}>
-          {committee}
-          {dailyState}
+        /* PHONE (Figma 23:7): Single continuous editorial flow */
+        <View style={[styles.stacked, { gap: spacing.md, marginTop: spacing.md }]}>
           {quickStart}
+          {dailyState}
+          {committee}
           {metrics}
           {agenda}
           {aiContextual}
@@ -360,21 +391,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  header: {
-    paddingBottom: 4,
-    paddingTop: 4,
-  },
-  dateLabel: {
-    fontWeight: '600',
-    letterSpacing: 0.3,
-    marginTop: 2,
-  },
-  greetingHeading: {
-    fontWeight: '700',
-    letterSpacing: -0.5,
-  },
   partialError: {
-    borderWidth: 1,
+    width: '100%',
+  },
+  partialErrorRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    width: '100%',
   },
   partialErrorText: {
     flex: 1,
@@ -387,23 +410,21 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
   },
-  column: {
-    flex: 1,
+  primaryColumn: {
+    flex: 1.2,
     minWidth: 0,
   },
-  aiCard: {
-    padding: 12,
+  evidenceColumn: {
+    flex: 1.0,
+    minWidth: 0,
+  },
+  aiStrip: {
+    width: '100%',
   },
   aiRow: {
     alignItems: 'center',
+    flexDirection: 'row',
     width: '100%',
-  },
-  aiIcon: {
-    alignItems: 'center',
-    height: 32,
-    justifyContent: 'center',
-    marginRight: 10,
-    width: 32,
   },
   aiText: {
     flex: 1,

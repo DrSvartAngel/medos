@@ -11,7 +11,7 @@ import {
   View,
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { CommitteePicker } from '@/components/focus/CommitteePicker';
+import { AcademicContextSelector } from '@/components/curriculum/AcademicContextSelector';
 import { DurationPicker } from '@/components/focus/DurationPicker';
 import { EntryMilestone } from '@/components/focus/EntryMilestone';
 import { GentleReturnCard } from '@/components/focus/GentleReturnCard';
@@ -73,7 +73,11 @@ export default function FocusScreen() {
     (state) => state.entryMilestoneAnnounced
   );
   const selectedCommitteeId = useFocusStore((state) => state.selectedCommitteeId);
+  const selectedSubjectId = useFocusStore((state) => state.selectedSubjectId);
+  const selectedSubjectName = useFocusStore((state) => state.selectedSubjectName);
+  const selectedTopicId = useFocusStore((state) => state.selectedTopicId);
   const selectedTopicName = useFocusStore((state) => state.selectedTopicName);
+  const setAcademicContext = useFocusStore((state) => state.setAcademicContext);
   const gentleBreakStartedAt = useFocusStore(
     (state) => state.gentleBreakStartedAt
   );
@@ -255,7 +259,7 @@ export default function FocusScreen() {
             sessionMode={sessionMode}
             lowStimulation={lowStimulationMode}
           />
-          {selectedTopicName !== null && (
+          {(selectedTopicName !== null || selectedSubjectName !== null) && (
             <View
               style={{
                 flexDirection: 'row',
@@ -271,7 +275,11 @@ export default function FocusScreen() {
             >
               <Feather name="book-open" size={14} color={colors.primary} />
               <AppText variant="caption" color={colors.textSecondary}>
-                {t.topics.focusContext(selectedTopicName)}
+                {selectedTopicName !== null
+                  ? t.topics.focusContext(selectedTopicName)
+                  : selectedSubjectName !== null
+                  ? selectedSubjectName
+                  : ''}
               </AppText>
             </View>
           )}
@@ -365,7 +373,7 @@ export default function FocusScreen() {
       >
         <View style={[styles.workspace, { gap: spacing.md }]}>
           {showVictory && <MiniVictory kind="focus" lowStimulation={lowStimulationMode} />}
-          {selectedTopicName !== null && (
+          {(selectedTopicName !== null || selectedSubjectName !== null) && (
             <View
               style={{
                 flexDirection: 'row',
@@ -382,7 +390,11 @@ export default function FocusScreen() {
             >
               <Feather name="book-open" size={14} color={colors.primary} />
               <AppText variant="caption" color={colors.textSecondary}>
-                {t.topics.focusContext(selectedTopicName)}
+                {selectedTopicName !== null
+                  ? t.topics.focusContext(selectedTopicName)
+                  : selectedSubjectName !== null
+                  ? selectedSubjectName
+                  : ''}
               </AppText>
             </View>
           )}
@@ -404,10 +416,15 @@ export default function FocusScreen() {
             onReset={resetTimer}
           />
           <DurationPicker plannedSec={plannedSec} onSelect={setPlannedSec} />
-          <CommitteePicker
-            committees={committees}
-            selectedId={selectedCommitteeId}
-            onSelect={setSelectedCommittee}
+          <AcademicContextSelector
+            maxDepth="topic"
+            requiredDepth="none"
+            value={{
+              committeeId: selectedCommitteeId,
+              subjectId: selectedSubjectId,
+              topicId: selectedTopicId,
+            }}
+            onChange={(ctx) => setAcademicContext(ctx)}
           />
         </View>
 
@@ -424,7 +441,11 @@ export default function FocusScreen() {
               </AppText>
             </View>
           ) : (
-            <SessionHistoryList sessions={recentSessions} committees={committees} />
+            <SessionHistoryList
+              sessions={recentSessions}
+              committees={committees}
+              onSessionUpdated={loadRecentSessions}
+            />
           )}
         </View>
       </View>

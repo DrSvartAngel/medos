@@ -1,7 +1,6 @@
 import React from 'react';
-import { View, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
+import { View, Text, Pressable, StyleSheet, type ViewStyle, type StyleProp } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { HStack, VStack, Heading, GSText, Pressable as GSPressable } from './gluestack';
 import { Badge, type BadgeVariant } from './Badge';
 import { useTheme } from '@/hooks/useTheme';
 import { Interaction } from '@/theme/interaction';
@@ -41,10 +40,9 @@ export function SectionHeader({
 
   return (
     <View style={[styles.container, style]} className={className}>
-      <VStack space="xs" style={styles.left}>
-        <HStack space="sm" style={styles.titleRow}>
-          <Heading
-            size="md"
+      <View style={styles.left}>
+        <View style={[styles.titleRow, { gap: spacing.sm }]}>
+          <Text
             style={{
               color: colors.textPrimary,
               fontFamily: FontFamily.semibold,
@@ -52,39 +50,41 @@ export function SectionHeader({
               fontSize: 20,
               lineHeight: 26,
               letterSpacing: -0.3,
+              includeFontPadding: false,
             }}
           >
             {title}
-          </Heading>
+          </Text>
           {count !== undefined ? (
             <Badge label={count} variant="neutral" size="sm" />
           ) : null}
           {badge ? (
             <Badge label={badge} variant={badgeVariant} size="sm" />
           ) : null}
-        </HStack>
+        </View>
         {subtitle ? (
-          <GSText
-            size="xs"
+          <Text
             style={{
               color: colors.textSecondary,
               fontFamily: FontFamily.regular,
               fontSize: 12,
               lineHeight: 16,
+              marginTop: spacing.xxs,
+              includeFontPadding: false,
             }}
           >
             {subtitle}
-          </GSText>
+          </Text>
         ) : null}
-      </VStack>
+      </View>
 
       {action ? (
-        <GSPressable
+        <Pressable
           onPress={action.onPress}
           accessibilityRole="button"
           accessibilityLabel={action.label}
           hitSlop={8}
-          style={({ pressed }: { pressed: boolean }) => [
+          style={({ pressed }) => [
             styles.actionBtn,
             {
               opacity: pressed ? Interaction.pressedOpacity : 1,
@@ -93,17 +93,17 @@ export function SectionHeader({
             },
           ]}
         >
-          <GSText
-            size="xs"
+          <Text
             style={{
               color: colors.primary,
               fontFamily: FontFamily.semibold,
               fontWeight: '600',
               fontSize: 13,
+              includeFontPadding: false,
             }}
           >
             {action.label}
-          </GSText>
+          </Text>
           {action.icon ? (
             <Feather
               name={action.icon}
@@ -112,7 +112,7 @@ export function SectionHeader({
               style={{ marginLeft: spacing.xxs }}
             />
           ) : null}
-        </GSPressable>
+        </Pressable>
       ) : null}
     </View>
   );
@@ -130,6 +130,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   titleRow: {
+    flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
   },

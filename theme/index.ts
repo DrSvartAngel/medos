@@ -1,5 +1,5 @@
 // MedOS – Unified theme export
-export { Colors, LightColors, DarkColors } from './colors';
+export { Colors, LightColors, DarkColors, MidnightDarkColors } from './colors';
 export type { ColorKey, ThemeColors } from './colors';
 export { Spacing, Radius, SpacingTokens, RadiusTokens } from './spacing';
 export type { SpacingKey, RadiusKey, SpacingToken, RadiusToken } from './spacing';

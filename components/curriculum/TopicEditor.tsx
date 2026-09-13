@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import { FormField } from '@/components/ui/FormField';
 import { Modal } from '@/components/ui/Modal';
 import { TopicForm } from './TopicForm';
-import { SubjectSelector } from './SubjectSelector';
+import { AcademicContextSelector } from './AcademicContextSelector';
 import { committeeRepo } from '@/db/repositories/committeeRepo';
 import { subjectRepo } from '@/db/repositories/subjectRepo';
 import { topicRepo } from '@/db/repositories/topicRepo';
@@ -173,14 +173,17 @@ export function TopicEditor({ id, mode }: { id: string; mode: 'create' | 'edit' 
           {loaded.status === 'ready' && (
             <>
               <View style={{ marginVertical: spacing.sm }}>
-                <FormField label={t.subjects.title}>
-                  <SubjectSelector
-                    selectedSubjectId={selectedSubject?.id ?? null}
-                    selectedSubjectName={selectedSubject?.name ?? null}
-                    selectedCommitteeName={selectedCommittee?.name ?? null}
-                    error={subjectError}
-                    onSelectSubject={(chosen) => {
-                      const subj = subjectRepo.getById(chosen.id);
+                <AcademicContextSelector
+                  maxDepth="subject"
+                  requiredDepth="subject"
+                  value={{
+                    committeeId: selectedCommittee?.id ?? null,
+                    subjectId: selectedSubject?.id ?? null,
+                  }}
+                  error={subjectError}
+                  onChange={(ctx) => {
+                    if (ctx.subjectId) {
+                      const subj = subjectRepo.getById(ctx.subjectId);
                       if (subj) {
                         const comm = committeeRepo.getById(subj.committeeId);
                         setSelectedSubject(subj);
@@ -189,9 +192,20 @@ export function TopicEditor({ id, mode }: { id: string; mode: 'create' | 'edit' 
                         context.current.subjectId = subj.id;
                         context.current.committeeId = subj.committeeId;
                       }
-                    }}
-                  />
-                </FormField>
+                    } else if (ctx.committeeId) {
+                      const comm = committeeRepo.getById(ctx.committeeId);
+                      setSelectedCommittee(comm);
+                      setSelectedSubject(null);
+                      context.current.committeeId = ctx.committeeId;
+                      context.current.subjectId = '';
+                    } else {
+                      setSelectedCommittee(null);
+                      setSelectedSubject(null);
+                      context.current.committeeId = '';
+                      context.current.subjectId = '';
+                    }
+                  }}
+                />
               </View>
 
               <TopicForm

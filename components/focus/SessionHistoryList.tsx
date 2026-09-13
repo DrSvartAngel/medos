@@ -1,17 +1,25 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import React, { useState, useMemo } from 'react';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
 import { Badge } from '@/components/ui/Badge';
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { AppText } from '@/components/ui/Typography';
+import {
+  AcademicContextSelector,
+  type AcademicContextValue,
+} from '@/components/curriculum/AcademicContextSelector';
 import { FocusEmptyHistory } from '@/components/focus/FocusEmptyHistory';
 import { useTheme } from '@/hooks/useTheme';
+import { focusRepo } from '@/db/repositories/focusRepo';
+import { useFocusStore, type FocusSession } from '@/store/useFocusStore';
 import type { Committee } from '@/store/useCommitteeStore';
-import type { FocusSession } from '@/store/useFocusStore';
 import { useTranslation } from '@/i18n';
 
 interface SessionHistoryListProps {
   sessions: FocusSession[];
   committees: Committee[];
+  onSessionUpdated?: () => void;
 }
 
 function formatActual(seconds: number): string {
@@ -25,10 +33,91 @@ function formatActual(seconds: number): string {
     : `${minutes}:${String(remainder).padStart(2, '0')}`;
 }
 
-export function SessionHistoryList({ sessions, committees }: SessionHistoryListProps) {
-  const { colors, spacing } = useTheme();
+export function SessionHistoryList({ sessions, committees, onSessionUpdated }: SessionHistoryListProps) {
+  const { colors, spacing, radius, borders } = useTheme();
   const t = useTranslation();
-  const committeesById = new Map(committees.map((committee) => [committee.id, committee]));
+  const committeesById = useMemo(
+    () => new Map(committees.map((committee) => [committee.id, committee])),
+    [committees]
+  );
+
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editContextValue, setEditContextValue] = useState<AcademicContextValue>({
+    committeeId: null,
+    subjectId: null,
+    topicId: null,
+  });
+  const [editError, setEditError] = useState<string | null>(null);
+
+  function handleStartEdit(session: FocusSession) {
+    setEditingSessionId(session.id);
+    setEditContextValue({
+      committeeId: session.committeeId ?? null,
+      subjectId: session.subjectId ?? null,
+      topicId: session.topicId ?? null,
+    });
+    setEditError(null);
+  }
+
+  function handleCancelEdit() {
+    setEditingSessionId(null);
+    setEditError(null);
+  }
+
+  function handleSaveEdit(sessionId: string) {
+    try {
+      focusRepo.updateAcademicContext(sessionId, {
+        committeeId: editContextValue.committeeId ?? null,
+        subjectId: editContextValue.subjectId ?? null,
+        topicId: editContextValue.topicId ?? null,
+      });
+      setEditingSessionId(null);
+      setEditError(null);
+      useFocusStore.getState().loadRecentSessions();
+      onSessionUpdated?.();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Context update failed';
+      setEditError(message);
+    }
+  }
+
+  function resolveBreadcrumb(session: FocusSession): string {
+    const committee =
+      session.committeeId === null ? null : committeesById.get(session.committeeId);
+    const committeeName = committee?.name ?? t.focus.noCommittee;
+
+    if (session.topicId) {
+      try {
+        const topicContext = focusRepo.getTopicContext(session.topicId);
+        if (topicContext) {
+          const resolvedCommittee = committeesById.get(topicContext.committeeId);
+          const cName = resolvedCommittee?.name ?? committeeName;
+          return `${cName} · ${topicContext.subjectName} · ${topicContext.name}`;
+        }
+      } catch {
+        // Fallback to committee if topic lookup fails
+      }
+    }
+
+    if (session.subjectId) {
+      try {
+        const subjectContext = focusRepo.getSubjectContext(session.subjectId);
+        if (subjectContext) {
+          const resolvedCommittee = committeesById.get(subjectContext.committeeId);
+          const cName = resolvedCommittee?.name ?? committeeName;
+          return `${cName} · ${subjectContext.name}`;
+        }
+      } catch {
+        // Fallback to committee
+      }
+    }
+
+    if (session.committeeId) {
+      return committeeName;
+    }
+
+    return t.focus.history.noContext ?? t.focus.noCommittee;
+  }
 
   return (
     <View>
@@ -50,6 +139,8 @@ export function SessionHistoryList({ sessions, committees }: SessionHistoryListP
               session.committeeId === null
                 ? t.focus.noCommittee
                 : committee?.name ?? t.focus.noCommittee;
+            const breadcrumb = resolveBreadcrumb(session);
+            const isEditing = editingSessionId === session.id;
 
             return (
               <Card key={session.id}>
@@ -63,9 +154,26 @@ export function SessionHistoryList({ sessions, committees }: SessionHistoryListP
                     </AppText>
                   </View>
                   <Badge
-                    label={session.cancelled ? t.focus.history.status.cancelled : t.focus.history.status.completed}
+                    label={
+                      session.cancelled
+                        ? t.focus.history.status.cancelled
+                        : t.focus.history.status.completed
+                    }
                     variant={session.cancelled ? 'warning' : 'success'}
                   />
+                </View>
+
+                {/* Academic Context Breadcrumb */}
+                <View style={[styles.contextRow, { marginTop: spacing.xs }]}>
+                  <Feather name="book-open" size={12} color={colors.textMuted} />
+                  <AppText
+                    variant="caption"
+                    color={colors.textSecondary}
+                    numberOfLines={1}
+                    style={{ flex: 1, marginLeft: spacing.xs }}
+                  >
+                    {breadcrumb}
+                  </AppText>
                 </View>
 
                 <View style={[styles.details, { marginTop: spacing.sm }]}>
@@ -79,6 +187,99 @@ export function SessionHistoryList({ sessions, committees }: SessionHistoryListP
                     {t.common.dateTime(session.startedAt)}
                   </AppText>
                 </View>
+
+                {/* Edit Context Action Button */}
+                {session.completed && !isEditing && (
+                  <View style={[styles.actionRow, { marginTop: spacing.sm }]}>
+                    <TouchableOpacity
+                      accessibilityRole="button"
+                      accessibilityLabel={t.focus.history.editContext}
+                      onPress={() => handleStartEdit(session)}
+                      style={[
+                        styles.editButton,
+                        {
+                          borderColor: colors.borderSubtle,
+                          backgroundColor: colors.surfaceElevated,
+                          borderRadius: radius.sm,
+                          paddingHorizontal: spacing.sm,
+                          paddingVertical: spacing.xs,
+                        },
+                      ]}
+                    >
+                      <Feather
+                        name="edit-2"
+                        size={12}
+                        color={colors.primary}
+                        style={{ marginRight: 4 }}
+                      />
+                      <AppText
+                        variant="caption"
+                        color={colors.primary}
+                        style={{ fontWeight: '600' }}
+                      >
+                        {t.focus.history.editContext}
+                      </AppText>
+                    </TouchableOpacity>
+                  </View>
+                )}
+
+                {/* Inline Academic Context Editor */}
+                {isEditing && (
+                  <View
+                    style={[
+                      styles.editContainer,
+                      {
+                        borderTopColor: colors.borderSubtle,
+                        borderTopWidth: borders.hairline,
+                        marginTop: spacing.md,
+                        paddingTop: spacing.sm,
+                      },
+                    ]}
+                  >
+                    <AppText
+                      variant="bodySmall"
+                      style={{ fontWeight: '600', marginBottom: spacing.xs, color: colors.textPrimary }}
+                    >
+                      {t.focus.history.editContextTitle}
+                    </AppText>
+
+                    <AcademicContextSelector
+                      maxDepth="topic"
+                      requiredDepth="none"
+                      value={editContextValue}
+                      onChange={(ctx) => setEditContextValue(ctx)}
+                    />
+
+                    {editError && (
+                      <AppText
+                        variant="caption"
+                        color={colors.error}
+                        style={{ marginTop: spacing.xs }}
+                      >
+                        {editError}
+                      </AppText>
+                    )}
+
+                    <View style={[styles.editActions, { marginTop: spacing.sm, gap: spacing.sm }]}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        label={t.common.cancel}
+                        onPress={handleCancelEdit}
+                        accessibilityLabel={t.common.cancel}
+                        style={{ flex: 1 }}
+                      />
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        label={t.common.save}
+                        onPress={() => handleSaveEdit(session.id)}
+                        accessibilityLabel={t.common.save}
+                        style={{ flex: 1 }}
+                      />
+                    </View>
+                  </View>
+                )}
               </Card>
             );
           })
@@ -114,7 +315,25 @@ const styles = StyleSheet.create({
     marginRight: 8,
     width: 10,
   },
+  contextRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
   details: {
     gap: 2,
+  },
+  actionRow: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
+  editButton: {
+    alignItems: 'center',
+    borderWidth: 1,
+    flexDirection: 'row',
+  },
+  editContainer: {},
+  editActions: {
+    flexDirection: 'row',
   },
 });

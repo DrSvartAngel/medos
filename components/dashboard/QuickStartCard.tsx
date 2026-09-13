@@ -1,9 +1,14 @@
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Feather } from '@expo/vector-icons';
-import { Box, VStack, HStack, Heading, GSText } from '@/components/ui/gluestack';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { AppText } from '@/components/ui/Typography';
+import {
+  AcademicContextSelector,
+  type AcademicContextValue,
+  type AcademicContextResult,
+} from '@/components/curriculum/AcademicContextSelector';
 import { useTranslation } from '@/i18n';
 import type { Strings } from '@/i18n/en';
 import { useResponsive } from '@/hooks/useResponsive';
@@ -15,6 +20,8 @@ interface QuickStartCardProps {
   onAction: () => void;
   onStartSmall?: () => void;
   onCheckIn?: () => void;
+  academicContext?: AcademicContextValue;
+  onAcademicContextChange?: (result: AcademicContextResult) => void;
 }
 
 function actionLabel(recommendation: DashboardQuickStart, t: Strings): string {
@@ -28,8 +35,10 @@ export function QuickStartCard({
   onAction,
   onStartSmall,
   onCheckIn,
+  academicContext,
+  onAcademicContextChange,
 }: QuickStartCardProps) {
-  const { colors, spacing, radius } = useTheme();
+  const { colors, spacing } = useTheme();
   const t = useTranslation();
   const { isTablet } = useResponsive();
 
@@ -51,7 +60,7 @@ export function QuickStartCard({
 
   const isMemory = recommendation.kind === 'memory_review';
   const isContinue = recommendation.kind === 'continue_focus';
-  const accent = isMemory ? colors.accent : colors.primary;
+  const accent = isMemory ? colors.accentMoss : colors.primary;
 
   const iconName: React.ComponentProps<typeof Feather>['name'] = isMemory
     ? 'layers'
@@ -61,32 +70,21 @@ export function QuickStartCard({
 
   return (
     <Card
-      elevated
+      variant="default"
       style={[
         styles.heroSurface,
         {
-          borderLeftColor: accent,
-          borderLeftWidth: 4,
           padding: isTablet ? spacing.xl : spacing.lg,
+          borderColor: colors.borderSubtle,
         },
       ]}
     >
-      <VStack space="md" style={styles.contentStack}>
-        {/* Context Label Row with Gluestack HStack & Box */}
-        <HStack space="sm" style={styles.labelRow}>
-          <Box
-            style={[
-              styles.iconWrap,
-              {
-                backgroundColor: colors.primaryMuted,
-                borderRadius: radius.sm,
-              },
-            ]}
-          >
-            <Feather name={iconName} size={18} color={accent} />
-          </Box>
-          <GSText
-            size="xs"
+      <View style={[styles.contentStack, { gap: spacing.md }]}>
+        {/* Context Label Row */}
+        <View style={[styles.labelRow, { gap: spacing.xs }]}>
+          <Feather name={iconName} size={14} color={accent} />
+          <AppText
+            variant="labelS"
             style={[
               styles.contextLabel,
               {
@@ -95,13 +93,13 @@ export function QuickStartCard({
             ]}
           >
             {t.dashboard.nextBestStep.toUpperCase()}
-          </GSText>
-        </HStack>
+          </AppText>
+        </View>
 
-        {/* Dominant Headline using Gluestack Heading */}
-        <VStack space="xs">
-          <Heading
-            size={isTablet ? '2xl' : 'xl'}
+        {/* Dominant Headline & Calm Context */}
+        <View style={{ gap: spacing.xxs }}>
+          <AppText
+            variant={isTablet ? 'displayXL' : 'headingL'}
             style={[
               styles.heroTitle,
               {
@@ -110,11 +108,10 @@ export function QuickStartCard({
             ]}
           >
             {title}
-          </Heading>
+          </AppText>
 
-          {/* Calm supporting context using GSText */}
-          <GSText
-            size="sm"
+          <AppText
+            variant="bodyM"
             style={[
               styles.heroDetail,
               {
@@ -123,11 +120,22 @@ export function QuickStartCard({
             ]}
           >
             {detail}
-          </GSText>
-        </VStack>
+          </AppText>
+        </View>
 
-        {/* Primary Teal Action */}
-        <VStack space="sm" style={styles.actionContainer}>
+        {/* Compact Academic Context Selector */}
+        {onAcademicContextChange && (
+          <AcademicContextSelector
+            compact
+            maxDepth="topic"
+            requiredDepth="none"
+            value={academicContext ?? { committeeId: null, subjectId: null, topicId: null }}
+            onChange={onAcademicContextChange}
+          />
+        )}
+
+        {/* Primary Action */}
+        <View style={[styles.actionContainer, { gap: spacing.sm }]}>
           <Button
             label={actionLabel(recommendation, t)}
             onPress={onAction}
@@ -142,13 +150,13 @@ export function QuickStartCard({
 
           {/* Secondary Options Row */}
           {(onStartSmall || onCheckIn) && (
-            <HStack
-              space="sm"
+            <View
               style={[
                 styles.secondaryActions,
                 {
                   flexDirection: isTablet ? 'row' : 'column',
                   alignItems: isTablet ? 'center' : 'stretch',
+                  gap: spacing.sm,
                 },
               ]}
             >
@@ -177,10 +185,10 @@ export function QuickStartCard({
                   }}
                 />
               ) : null}
-            </HStack>
+            </View>
           )}
-        </VStack>
-      </VStack>
+        </View>
+      </View>
     </Card>
   );
 }
@@ -188,19 +196,13 @@ export function QuickStartCard({
 const styles = StyleSheet.create({
   heroSurface: {
     width: '100%',
-    borderWidth: 1,
   },
   contentStack: {
     width: '100%',
   },
   labelRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-  },
-  iconWrap: {
-    width: 32,
-    height: 32,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   contextLabel: {
     fontWeight: '700',
@@ -214,7 +216,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   actionContainer: {
-    marginTop: 6,
+    marginTop: 4,
     width: '100%',
   },
   secondaryActions: {

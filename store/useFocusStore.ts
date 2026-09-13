@@ -17,6 +17,8 @@ export type FocusSessionMode = 'standard' | 'entry';
 
 export interface StartEntrySessionOptions {
   committeeId?: string | null;
+  subjectId?: string | null;
+  topicId?: string | null;
 }
 
 export interface StartAdaptiveSessionOptions {
@@ -26,6 +28,7 @@ export interface StartAdaptiveSessionOptions {
 
 export interface FocusSession {
   id: string;
+  subjectId?: string | null;
   topicId?: string | null;
   /** Chosen session length in seconds. */
   plannedSec: number;
@@ -63,6 +66,8 @@ interface FocusState extends ElapsedState {
   /** Runtime-only start of an explicit Gentle Return break. */
   gentleBreakStartedAt: number | null;
   selectedCommitteeId: string | null;
+  selectedSubjectId: string | null;
+  selectedSubjectName: string | null;
   selectedTopicId: string | null;
   selectedTopicName: string | null;
 
@@ -72,6 +77,15 @@ interface FocusState extends ElapsedState {
 
   setPlannedSec: (sec: number) => void;
   setSelectedCommittee: (id: string | null) => void;
+  setSelectedSubject: (id: string | null, name?: string | null) => void;
+  setSelectedTopic: (id: string | null, name?: string | null) => void;
+  setAcademicContext: (context: {
+    committeeId: string | null;
+    subjectId?: string | null;
+    subjectName?: string | null;
+    topicId?: string | null;
+    topicName?: string | null;
+  }) => void;
   startTimer: () => void;
   startTopicSession: (topicId: string) => boolean;
   startEntrySession: (options?: StartEntrySessionOptions) => boolean;
@@ -105,6 +119,8 @@ function createEmptyTimer() {
     gentleBreakStartedAt: null,
     accumulatedSec: 0,
     selectedCommitteeId: null,
+    selectedSubjectId: null,
+    selectedSubjectName: null,
     selectedTopicId: null,
     selectedTopicName: null,
   };
@@ -153,6 +169,7 @@ function buildSession(state: FocusState, endedAt: number, cancelled: boolean): F
     completed: !cancelled,
     cancelled,
     committeeId: state.selectedCommitteeId,
+    subjectId: state.selectedSubjectId,
     topicId: state.selectedTopicId,
     startedAt: state.startedAt,
     endedAt,
@@ -178,7 +195,54 @@ export const useFocusStore = create<FocusState>()((set, get) => ({
 
   setSelectedCommittee: (id) => {
     if (get().timerStatus !== 'idle') return;
-    set({ selectedCommitteeId: id, error: null });
+    if (id !== get().selectedCommitteeId) {
+      set({
+        selectedCommitteeId: id,
+        selectedSubjectId: null,
+        selectedSubjectName: null,
+        selectedTopicId: null,
+        selectedTopicName: null,
+        error: null,
+      });
+    } else {
+      set({ selectedCommitteeId: id, error: null });
+    }
+  },
+
+  setSelectedSubject: (id, name = null) => {
+    if (get().timerStatus !== 'idle') return;
+    if (id !== get().selectedSubjectId) {
+      set({
+        selectedSubjectId: id,
+        selectedSubjectName: name,
+        selectedTopicId: null,
+        selectedTopicName: null,
+        error: null,
+      });
+    } else {
+      set({ selectedSubjectId: id, selectedSubjectName: name, error: null });
+    }
+  },
+
+  setSelectedTopic: (id, name = null) => {
+    if (get().timerStatus !== 'idle') return;
+    set({
+      selectedTopicId: id,
+      selectedTopicName: name,
+      error: null,
+    });
+  },
+
+  setAcademicContext: (context) => {
+    if (get().timerStatus !== 'idle') return;
+    set({
+      selectedCommitteeId: context.committeeId,
+      selectedSubjectId: context.subjectId ?? null,
+      selectedSubjectName: context.subjectName ?? null,
+      selectedTopicId: context.topicId ?? null,
+      selectedTopicName: context.topicName ?? null,
+      error: null,
+    });
   },
 
   startTimer: () => {
@@ -195,8 +259,6 @@ export const useFocusStore = create<FocusState>()((set, get) => ({
       entryMilestoneDismissed: false,
       entryMilestoneAnnounced: false,
       error: null,
-      selectedTopicId: null,
-      selectedTopicName: null,
     });
   },
 
@@ -206,11 +268,22 @@ export const useFocusStore = create<FocusState>()((set, get) => ({
     if (!context || get().timerStatus !== 'idle') return false;
     const now = Date.now();
     set({
-      timerStatus: 'running', plannedSec: normalizeFocusDurationSec(useAppStore.getState().defaultFocusSec),
-      startedAt: now, runningSince: now, pausedAt: null, gentleBreakStartedAt: null,
-      accumulatedSec: 0, sessionMode: 'standard', entryMilestoneDismissed: false,
-      entryMilestoneAnnounced: false, selectedCommitteeId: context.committeeId,
-      selectedTopicId: context.id, selectedTopicName: context.name, error: null,
+      timerStatus: 'running',
+      plannedSec: normalizeFocusDurationSec(useAppStore.getState().defaultFocusSec),
+      startedAt: now,
+      runningSince: now,
+      pausedAt: null,
+      gentleBreakStartedAt: null,
+      accumulatedSec: 0,
+      sessionMode: 'standard',
+      entryMilestoneDismissed: false,
+      entryMilestoneAnnounced: false,
+      selectedCommitteeId: context.committeeId,
+      selectedSubjectId: context.subjectId,
+      selectedSubjectName: context.subjectName,
+      selectedTopicId: context.id,
+      selectedTopicName: context.name,
+      error: null,
     });
     return true;
   },
@@ -219,6 +292,28 @@ export const useFocusStore = create<FocusState>()((set, get) => ({
     if (get().timerStatus !== 'idle') return false;
 
     const now = Date.now();
+    let committeeId = resolveSessionCommitteeId(options.committeeId !== undefined ? options.committeeId : get().selectedCommitteeId);
+    let subjectId = options.subjectId !== undefined ? options.subjectId : get().selectedSubjectId;
+    let subjectName = get().selectedSubjectName;
+    let topicId = options.topicId !== undefined ? options.topicId : get().selectedTopicId;
+    let topicName = get().selectedTopicName;
+
+    if (topicId) {
+      const topicContext = focusRepo.getTopicContext(topicId);
+      if (topicContext) {
+        committeeId = topicContext.committeeId;
+        subjectId = topicContext.subjectId;
+        subjectName = topicContext.subjectName;
+        topicName = topicContext.name;
+      }
+    } else if (subjectId) {
+      const subjectContext = focusRepo.getSubjectContext(subjectId);
+      if (subjectContext) {
+        committeeId = subjectContext.committeeId;
+        subjectName = subjectContext.name;
+      }
+    }
+
     set({
       timerStatus: 'running',
       plannedSec: ENTRY_FOCUS_SEC,
@@ -230,9 +325,11 @@ export const useFocusStore = create<FocusState>()((set, get) => ({
       pausedAt: null,
       gentleBreakStartedAt: null,
       accumulatedSec: 0,
-      selectedCommitteeId: resolveSessionCommitteeId(options.committeeId),
-      selectedTopicId: null,
-      selectedTopicName: null,
+      selectedCommitteeId: committeeId,
+      selectedSubjectId: subjectId,
+      selectedSubjectName: subjectName,
+      selectedTopicId: topicId,
+      selectedTopicName: topicName,
       error: null,
     });
     return true;

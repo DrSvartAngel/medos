@@ -8,6 +8,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -52,9 +53,14 @@ export function Modal({
 }: ModalProps) {
   const { colors, spacing, radius, borders } = useTheme();
   const { isTablet } = useResponsive();
+  const { height: windowHeight } = useWindowDimensions();
 
   const isSheet =
     presentation === 'sheet' || (presentation === 'auto' && !isTablet);
+
+  // Approximately 70-85% of viewport as required for mobile bottom sheet
+  const maxSheetHeight = Math.floor(windowHeight * 0.82);
+  const maxModalHeight = Math.floor(windowHeight * 0.85);
 
   return (
     <RNModal
@@ -66,7 +72,7 @@ export function Modal({
     >
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={styles.overlay}
+        style={[styles.overlay, isSheet ? styles.sheetOverlay : styles.modalOverlay]}
       >
         <TouchableWithoutFeedback onPress={onClose}>
           <View style={styles.scrim} />
@@ -82,6 +88,8 @@ export function Modal({
               borderRadius: isSheet ? radius.sheet : radius.modal,
               borderBottomLeftRadius: isSheet ? 0 : radius.modal,
               borderBottomRightRadius: isSheet ? 0 : radius.modal,
+              maxHeight: isSheet ? maxSheetHeight : maxModalHeight,
+              flexShrink: 1,
             },
             style,
           ]}
@@ -147,7 +155,7 @@ export function Modal({
           {scrollable ? (
             <ScrollView
               contentContainerStyle={[
-                styles.content,
+                styles.scrollableContent,
                 { padding: spacing.lg },
                 contentStyle,
               ]}
@@ -159,7 +167,7 @@ export function Modal({
           ) : (
             <View
               style={[
-                styles.content,
+                styles.unscrollableContent,
                 { padding: spacing.lg },
                 contentStyle,
               ]}
@@ -195,24 +203,29 @@ export function Modal({
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    justifyContent: 'flex-end',
     backgroundColor: 'rgba(0, 0, 0, 0.4)',
+  },
+  sheetOverlay: {
+    justifyContent: 'flex-end',
+  },
+  modalOverlay: {
+    justifyContent: 'center',
   },
   scrim: {
     ...StyleSheet.absoluteFill,
   },
   sheetContainer: {
     width: '100%',
-    maxHeight: '90%',
+    flexShrink: 1,
     overflow: 'hidden',
   },
   modalContainer: {
     width: '90%',
     maxWidth: 540,
-    maxHeight: '85%',
     alignSelf: 'center',
     marginBottom: 'auto',
     marginTop: 'auto',
+    flexShrink: 1,
     overflow: 'hidden',
   },
   header: {
@@ -225,16 +238,25 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   closeBtn: {
-    width: 32,
-    height: 32,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
   content: {
     flexGrow: 0,
   },
+  scrollableContent: {
+    flexGrow: 0,
+  },
+  unscrollableContent: {
+    flex: 1,
+    flexShrink: 1,
+    minHeight: 0,
+  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
   },
 });
+

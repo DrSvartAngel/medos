@@ -7,7 +7,6 @@ import {
   type ViewStyle,
   StyleSheet,
 } from 'react-native';
-import { Input as GSInput, InputField, InputSlot } from './input/index';
 import { AppText } from './Typography';
 import { useTheme } from '@/hooks/useTheme';
 import { Layout } from '@/theme/layout';
@@ -63,13 +62,13 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
     : Math.max(Interaction.minTarget, Layout.inputMinHeight);
 
   const inputNode = (
-    <GSInput
+    <View
       style={[
         styles.container,
         {
           minHeight,
           backgroundColor: colors.surface,
-          borderColor: hasError
+          borderColor: invalid ? colors.error : hasError
             ? colors.error
             : focused
             ? colors.accentMoss
@@ -84,11 +83,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
       className={className}
     >
       {leftIcon ? (
-        <InputSlot style={{ marginRight: spacing.xs }}>{leftIcon}</InputSlot>
+        <View style={{ marginRight: spacing.xs }}>{leftIcon}</View>
       ) : null}
-      <InputField
+      <TextInput
         {...props}
-        ref={ref as any}
+        ref={ref}
         multiline={multiline}
         editable={editable}
         placeholderTextColor={placeholderTextColor ?? colors.textMuted}
@@ -99,11 +98,11 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           disabled: !editable || accessibilityState?.disabled,
           invalid: hasError,
         }}
-        onFocus={(event: any) => {
+        onFocus={(event) => {
           setFocused(true);
           onFocus?.(event);
         }}
-        onBlur={(event: any) => {
+        onBlur={(event) => {
           setFocused(false);
           onBlur?.(event);
         }}
@@ -116,13 +115,14 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
             lineHeight: multiline ? 20 : undefined,
             textAlignVertical: multiline ? 'top' : 'center',
             paddingVertical: multiline ? spacing.sm : 0,
+            includeFontPadding: false,
           },
         ]}
       />
       {rightIcon ? (
-        <InputSlot style={{ marginLeft: spacing.xs }}>{rightIcon}</InputSlot>
+        <View style={{ marginLeft: spacing.xs }}>{rightIcon}</View>
       ) : null}
-    </GSInput>
+    </View>
   );
 
   if (!label && !helperText && !errorText) {
